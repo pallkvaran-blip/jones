@@ -21,6 +21,7 @@ export class ActionPanel {
     onAction: (id: string) => void,
   ): void {
     this.onAction = onAction;
+    this.el.classList.add('is-open');
 
     const btns = actions.map((action) => {
       const avail = action.available(state);
@@ -82,6 +83,7 @@ export class ActionPanel {
 
   hide(): void {
     this.el.innerHTML = '';
+    this.el.classList.remove('is-open');
     this.onAction = null;
   }
 }

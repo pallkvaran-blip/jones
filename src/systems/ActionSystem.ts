@@ -1,6 +1,6 @@
-import type { CareerTrack, GameState, LocationId } from '../state/types'
+import type { GameState, LocationId } from '../state/types'
 import { consumeTime } from './TimeSystem'
-import { CAREER_JOBS } from '../data/jobs'
+import { CAREER_JOBS, LOCATION_JOBS } from '../data/jobs'
 
 function cap(n: number): number {
   return Math.min(100, Math.max(0, n));
@@ -80,34 +80,7 @@ const cookMealAction: ActionDef = {
   },
 };
 
-// --- EMPLOYMENT actions ---
-const careerTracks: CareerTrack[] = ['trades', 'tech', 'finance', 'healthcare', 'creative'];
-
-function makeApplyAction(track: CareerTrack): ActionDef {
-  const careerDef = CAREER_JOBS[track];
-  const firstTier = careerDef.tiers[0];
-  return {
-    id: `apply_${track}`,
-    label: `Apply: ${careerDef.name}`,
-    detail: `Start as ${firstTier.title} ($${firstTier.dailyPay}/shift) | 15t`,
-    timeCost: 15,
-    available: () => true,
-    unavailableReason: () => '',
-    apply(state) {
-      return addLog({
-        ...state,
-        player: {
-          ...state.player,
-          jobId: track,
-          careerTrack: track,
-          jobTenure: 0,
-          jobRank: 1,
-        },
-      }, `Got hired as ${firstTier.title} in ${careerDef.name}!`);
-    },
-  };
-}
-
+// --- JOB SHIFT / QUIT (shared, used via getJobActions) ---
 const workShiftAction: ActionDef = {
   id: 'work_shift',
   label: 'Work a Shift',
@@ -125,14 +98,16 @@ const workShiftAction: ActionDef = {
     let newRank = player.jobRank;
     let promotionMsg: string | null = null;
 
-    // Check promotion
     if (newTenure >= tier.shiftsToPromote && player.jobRank < 4) {
-      const nextTier = careerDef.tiers[player.jobRank]; // 0-indexed = current rank = next tier index
+      const nextTier = careerDef.tiers[player.jobRank];
       const meetsEdu = player.education >= nextTier.educationRequired;
       const meetsWard = player.wardrobe >= nextTier.wardrobeRequired;
       if (meetsEdu && meetsWard) {
         newRank = player.jobRank + 1;
-        promotionMsg = `Promoted to ${nextTier.title} in ${careerDef.name}!`;
+        // Use location-specific title when available
+        const locJob = LOCATION_JOBS[player.jobId as LocationId];
+        const nextTitle = locJob ? locJob.titles[player.jobRank] : nextTier.title;
+        promotionMsg = `Promoted to ${nextTitle}!`;
       }
     }
 
@@ -584,49 +559,132 @@ const checkPricesAction: ActionDef = {
   },
 };
 
+// --- SEAFOOD GRILL actions (employment location) ---
+const seafoodDinnerAction: ActionDef = {
+  id: 'seafood_dinner',
+  label: 'Seafood Dinner',
+  detail: 'Hunger+55, Morale+20, -$35 | 8t',
+  timeCost: 8,
+  available: (state) => state.player.money >= 35,
+  unavailableReason: () => 'Need $35',
+  apply(state) {
+    return {
+      ...state,
+      player: {
+        ...state.player,
+        hunger: cap(state.player.hunger + 55),
+        morale: cap(state.player.morale + 20),
+        money: state.player.money - 35,
+      },
+    };
+  },
+};
+
+const clamChowderAction: ActionDef = {
+  id: 'clam_chowder',
+  label: 'Clam Chowder',
+  detail: 'Hunger+30, Morale+10, -$18 | 5t',
+  timeCost: 5,
+  available: (state) => state.player.money >= 18,
+  unavailableReason: () => 'Need $18',
+  apply(state) {
+    return {
+      ...state,
+      player: {
+        ...state.player,
+        hunger: cap(state.player.hunger + 30),
+        morale: cap(state.player.morale + 10),
+        money: state.player.money - 18,
+      },
+    };
+  },
+};
+
+// --- JOB APPLICATION helper ---
+// Returns [Apply] if unemployed, [Work, Quit] if employed here, or a disabled
+// "Employed Elsewhere" stub if employed somewhere else.
+function getJobActions(locationId: LocationId, state: GameState): ActionDef[] {
+  const locJob = LOCATION_JOBS[locationId];
+  if (!locJob) return [];
+
+  const { player } = state;
+
+  if (player.jobId === locationId) {
+    return [workShiftAction, quitJobAction];
+  }
+
+  if (player.jobId !== null) {
+    return [{
+      id: 'employed_elsewhere',
+      label: 'Apply for Job',
+      detail: 'Quit current job first',
+      timeCost: 0,
+      available: () => false,
+      unavailableReason: () => 'Already employed',
+      apply: (s) => s,
+    }];
+  }
+
+  const firstTier = CAREER_JOBS[locJob.track].tiers[0];
+  return [{
+    id: `apply_${locationId}`,
+    label: 'Apply for Job',
+    detail: `${locJob.titles[0]} – $${firstTier.dailyPay}/shift | 15t`,
+    timeCost: 15,
+    available: () => true,
+    unavailableReason: () => '',
+    apply(s) {
+      return addLog({
+        ...s,
+        player: {
+          ...s.player,
+          jobId: locationId,
+          careerTrack: locJob.track,
+          jobTenure: 0,
+          jobRank: 1,
+        },
+      }, `Hired as ${locJob.titles[0]}!`);
+    },
+  }];
+}
+
 export function getActionsForLocation(locationId: LocationId, state: GameState): ActionDef[] {
   switch (locationId) {
     case 'home':
       return [sleepAction, restAction, cookMealAction];
 
-    case 'employment': {
-      if (!state.player.jobId) {
-        // No job — show apply actions for each career track
-        return careerTracks.map(makeApplyAction);
-      }
-      // Has job — work or quit
-      return [workShiftAction, quitJobAction];
-    }
+    case 'employment':
+      return [seafoodDinnerAction, clamChowderAction, ...getJobActions(locationId, state)];
 
     case 'university':
-      return [takeClassAction, studyAction];
+      return [takeClassAction, studyAction, ...getJobActions(locationId, state)];
 
     case 'bank':
-      return [depositAllAction, withdraw200Action, takeLoanAction];
+      return [depositAllAction, withdraw200Action, takeLoanAction, ...getJobActions(locationId, state)];
 
     case 'grocery':
-      return [buyGroceriesAction, quickSnackAction];
+      return [buyGroceriesAction, quickSnackAction, ...getJobActions(locationId, state)];
 
     case 'electronics':
-      return [buyComputerAction, browseElectronicsAction];
+      return [buyComputerAction, browseElectronicsAction, ...getJobActions(locationId, state)];
 
     case 'clothing':
-      return [buyOutfitAction, windowShopAction];
+      return [buyOutfitAction, windowShopAction, ...getJobActions(locationId, state)];
 
     case 'restaurant':
-      return [eatMealAction, fastFoodAction];
+      return [eatMealAction, fastFoodAction, ...getJobActions(locationId, state)];
 
     case 'pawn':
-      return [pawnComputerAction, browsePawnAction];
+      return [pawnComputerAction, browsePawnAction, ...getJobActions(locationId, state)];
 
     case 'realty':
-      return [upgradeAptAction, browseListingsAction];
+      return [upgradeAptAction, browseListingsAction, ...getJobActions(locationId, state)];
 
     case 'hospital':
-      return [medicalCheckupAction, buyMedicineAction];
+      return [medicalCheckupAction, buyMedicineAction, ...getJobActions(locationId, state)];
 
     case 'stockexchange':
-      return [checkPricesAction];
+      return [checkPricesAction, ...getJobActions(locationId, state)];
 
     default:
       return [];

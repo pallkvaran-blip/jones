@@ -1,6 +1,6 @@
 import type { GameState } from '../../state/types'
 import { formatMoney, formatTime, dayName } from '../../utils/format'
-import { CAREER_JOBS } from '../../data/jobs'
+import { CAREER_JOBS, LOCATION_JOBS } from '../../data/jobs'
 
 function getBarClass(value: number): string {
   if (value >= 60) return 'high';
@@ -165,12 +165,19 @@ export class StatsPanel {
       }
     }
 
-    // Job display
+    // Job display — prefer location-specific titles, fall back to CAREER_JOBS
     const jobEl = this.el.querySelector('#sp-job');
     if (jobEl) {
-      if (player.careerTrack && player.jobRank >= 1) {
-        const tier = CAREER_JOBS[player.careerTrack].tiers[player.jobRank - 1];
-        jobEl.textContent = tier ? tier.title : 'Unemployed';
+      if (player.jobId && player.jobRank >= 1) {
+        const locJob = LOCATION_JOBS[player.jobId as import('../../state/types').LocationId];
+        if (locJob) {
+          jobEl.textContent = locJob.titles[player.jobRank - 1] ?? 'Unemployed';
+        } else if (player.careerTrack) {
+          const tier = CAREER_JOBS[player.careerTrack].tiers[player.jobRank - 1];
+          jobEl.textContent = tier ? tier.title : 'Unemployed';
+        } else {
+          jobEl.textContent = 'Unemployed';
+        }
       } else {
         jobEl.textContent = 'Unemployed';
       }

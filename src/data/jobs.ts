@@ -1,4 +1,4 @@
-import type { CareerTrack } from '../state/types'
+import type { CareerTrack, LocationId } from '../state/types'
 
 export interface JobTier {
   rank: number;
@@ -13,6 +13,26 @@ export interface CareerDef {
   name: string;
   tiers: JobTier[];
 }
+
+export interface LocationJobDef {
+  track: CareerTrack;
+  titles: [string, string, string, string];
+}
+
+/** Maps each location to the career track and titles available there. */
+export const LOCATION_JOBS: Partial<Record<LocationId, LocationJobDef>> = {
+  employment:    { track: 'creative',   titles: ['Line Cook', 'Sous Chef', 'Head Chef', 'Exec. Chef'] },
+  university:    { track: 'healthcare', titles: ['Tutor', 'Lecturer', 'Professor', 'Dept. Chair'] },
+  bank:          { track: 'finance',    titles: ['Teller', 'Loan Officer', 'Asst. Mgr', 'Branch Mgr'] },
+  grocery:       { track: 'trades',     titles: ['Stock Clerk', 'Cashier', 'Dept. Mgr', 'Store Mgr'] },
+  electronics:   { track: 'tech',       titles: ['Support Tech', 'Developer', 'Senior Dev', 'Lead Eng.'] },
+  clothing:      { track: 'creative',   titles: ['Sales Assoc', 'Buyer', 'Designer', 'Creative Dir'] },
+  restaurant:    { track: 'creative',   titles: ['Busboy', 'Server', "Maitre'd", 'Rest. Mgr'] },
+  pawn:          { track: 'finance',    titles: ['Sales Clerk', 'Buyer', 'Store Mgr', 'Owner'] },
+  realty:        { track: 'finance',    titles: ['Agent', 'Sr. Agent', 'Broker', 'Principal'] },
+  hospital:      { track: 'healthcare', titles: ['Orderly', 'Technician', 'Nurse', 'Doctor'] },
+  stockexchange: { track: 'finance',    titles: ['Jr. Trader', 'Trader', 'Portfolio Mgr', 'Partner'] },
+};
 
 export const CAREER_JOBS: Record<CareerTrack, CareerDef> = {
   trades: {

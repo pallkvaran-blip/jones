@@ -204,32 +204,40 @@ body {
 #sp-goals { letter-spacing: 4px; font-size: 10px; }
 
 /*
- * Action panel — fixed overlay on the CANVAS (left) side of the screen.
- * pointer-events: none on the container means clicks pass through the dark
- * background straight to the Phaser canvas below; only the buttons themselves
- * capture pointer events.
+ * Action panel — left-side vertical sidebar over the canvas.
+ * pointer-events: none on the container lets map clicks pass through to
+ * Phaser zones below; only the buttons themselves capture pointer events.
+ * Hidden by default; show() adds .is-open, hide() removes it.
  */
 #action-panel {
+  display: none;
   position: fixed;
   left: 0;
-  right: 240px;   /* flush against the stats sidebar */
+  top: 0;
   bottom: 0;
+  width: 152px;
   z-index: 150;
   pointer-events: none;
   font-family: var(--font-pixel);
-  background: rgba(13, 13, 23, 0.93);
-  border-top: 2px solid #4a4a66;
-  padding: 5px 8px 7px;
-  max-height: 45vh;
+  background: rgba(13, 13, 23, 0.94);
+  border-right: 2px solid #4a4a66;
+  box-shadow: inset -4px 0 0 #06060c;
+  padding: 6px 6px 8px;
   overflow-y: auto;
+}
+
+#action-panel.is-open {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 .action-header {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding-bottom: 4px;
-  margin-bottom: 5px;
+  flex-direction: column;
+  gap: 2px;
+  padding-bottom: 5px;
+  margin-bottom: 3px;
   border-bottom: 1px solid var(--color-border);
 }
 
@@ -237,6 +245,7 @@ body {
   font-size: 7px;
   color: var(--color-accent);
   letter-spacing: 1px;
+  word-break: break-word;
 }
 
 .action-hint {
@@ -245,19 +254,16 @@ body {
   letter-spacing: 1px;
 }
 
-/* Buttons laid out in a horizontal wrapping grid — 2 per row on phones */
+/* Buttons stacked vertically in the sidebar */
 .action-list {
   display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
+  flex-direction: column;
   gap: 4px;
 }
 
 .action-btn {
-  /* ~half width so two fit per row; grows if only one on a row */
-  flex: 1 1 calc(50% - 4px);
-  min-width: 120px;
-  padding: 7px 8px;
+  width: 100%;
+  padding: 7px 6px;
   background: #0e1020;
   border: 2px solid #3a3a52;
   color: var(--color-text);
