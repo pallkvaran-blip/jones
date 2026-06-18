@@ -1260,6 +1260,24 @@ export const ALL_LIFE_EVENTS: LifeEvent[] = [
   },
   // ── Career Events (triggered by bad work event choices, never rolled randomly) ──
   {
+    id: 'job_rejected_education',
+    title: 'Application Unsuccessful',
+    description: '"We appreciate your interest, but we require a certain level of formal education that you haven\'t completed yet. We\'d suggest enrolling at the university."',
+    weight: 0, cooldownWeeks: 0, canFire: () => false,
+    type: 'immediate',
+    immediateDelta: {},
+    immediateLog: 'Job application rejected — need more education.',
+  },
+  {
+    id: 'job_rejected_experience',
+    title: 'Application Unsuccessful',
+    description: '"Thanks for coming in. You\'ve got some of the right background, but we\'re looking for someone with more specific qualifications in this area. Keep studying."',
+    weight: 0, cooldownWeeks: 0, canFire: () => false,
+    type: 'immediate',
+    immediateDelta: {},
+    immediateLog: 'Job application rejected — need more specific qualifications.',
+  },
+  {
     id: 'job_fired',
     title: "You're Fired",
     description: "Your manager called you in. \"Pack your desk.\" Your workplace choices caught up with you. You can apply again elsewhere.",

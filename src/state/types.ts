@@ -27,6 +27,7 @@ export interface Player {
   hasTransport: boolean;
   jobRank: number;
   pets: string[];
+  completedCourses: string[];
   isStarving: boolean;
   lowHealthWarned: boolean;
 }

@@ -5,6 +5,7 @@ import { STOCKS, STOCK_NAMES, type StockId } from '../data/stocks'
 import { RENTAL_TIERS, OWN_TIERS, getHousingTier } from '../data/housing'
 import { PETS } from '../data/pets'
 import { rollWorkEvent } from '../data/workEvents'
+import { COURSES } from '../data/courses'
 
 function cap(n: number): number {
   return Math.min(100, Math.max(0, n));
@@ -174,49 +175,52 @@ const quitJobAction: ActionDef = {
   },
 };
 
-// --- UNIVERSITY actions ---
-const takeClassAction: ActionDef = {
-  id: 'take_class',
-  label: 'Take a Class',
-  detail: 'Education+1, -$200, Energy-15 | 20t',
-  timeCost: 20,
-  available: (state) => state.player.money >= 200 && state.player.energy >= 15,
-  unavailableReason: (state) => {
-    if (state.player.money < 200) return 'Need $200';
-    if (state.player.energy < 15) return 'Need Energy≥15';
-    return '';
-  },
-  apply(state) {
-    return {
-      ...state,
-      player: {
-        ...state.player,
-        education: state.player.education + 1,
-        money: state.player.money - 200,
-        energy: cap(state.player.energy - 15),
-      },
-    };
-  },
-};
+// --- UNIVERSITY: dynamic course actions ---
+function getCourseActions(state: GameState): ActionDef[] {
+  const completed = state.player.completedCourses ?? []
+  const available = COURSES.filter(c =>
+    !completed.includes(c.id) &&
+    c.prerequisites.every(p => completed.includes(p))
+  )
 
-const studyAction: ActionDef = {
-  id: 'study',
-  label: 'Study',
-  detail: 'Education+0.5, Energy-10 | 15t',
-  timeCost: 15,
-  available: (state) => state.player.energy >= 10,
-  unavailableReason: (s) => `Too tired to study (${Math.round(s.player.energy)}) — rest first!`,
-  apply(state) {
-    return {
-      ...state,
-      player: {
-        ...state.player,
-        education: state.player.education + 0.5,
-        energy: cap(state.player.energy - 10),
+  if (available.length === 0) {
+    return [{
+      id: 'free_study',
+      label: 'Study',
+      detail: 'Education+0.2 | 15t',
+      timeCost: 15,
+      available: () => true,
+      unavailableReason: () => '',
+      apply(s) {
+        return addLog({ ...s, player: { ...s.player, education: s.player.education + 0.2 } }, 'Studied independently — Education +0.2')
       },
-    };
-  },
-};
+    }]
+  }
+
+  return available.map(c => ({
+    id: `course_${c.id}`,
+    label: c.title,
+    detail: `Edu+${c.eduPoints} | -$${c.cost} | ${c.timeCost}t`,
+    timeCost: c.timeCost,
+    available: (s: GameState) => s.player.money >= c.cost && s.player.energy >= 10,
+    unavailableReason: (s: GameState) => {
+      if (s.player.money < c.cost) return `Need $${c.cost}`
+      return `Need Energy≥10`
+    },
+    apply(s: GameState) {
+      return addLog({
+        ...s,
+        player: {
+          ...s.player,
+          education: s.player.education + c.eduPoints,
+          money: s.player.money - c.cost,
+          energy: cap(s.player.energy - 10),
+          completedCourses: [...(s.player.completedCourses ?? []), c.id],
+        },
+      }, `Completed "${c.title}" — Education +${c.eduPoints}`)
+    },
+  }))
+}
 
 // --- BANK actions ---
 function makeRepayAction(amount: number | 'all'): ActionDef {
@@ -776,14 +780,21 @@ function getJobActions(locationId: LocationId, state: GameState): ActionDef[] {
   }
 
   const firstTier = CAREER_JOBS[locJob.track].tiers[0];
+  const required = locJob.requiredCourses ?? []
   return [{
     id: `apply_${locationId}`,
     label: 'Apply for Job',
-    detail: `${locJob.titles[0]} – $${firstTier.dailyPay}/shift | 15t`,
-    timeCost: 15,
-    available: (s) => s.player.education >= locJob.eduRequired,
-    unavailableReason: () => `Need Education ${locJob.eduRequired}`,
+    detail: `${locJob.titles[0]} – $${firstTier.dailyPay}/shift | 5t`,
+    timeCost: 5,
+    available: () => true,
+    unavailableReason: () => '',
     apply(s) {
+      const completed = s.player.completedCourses ?? []
+      const hasAll = required.every(c => completed.includes(c))
+      if (!hasAll) {
+        const hasAny = required.some(c => completed.includes(c))
+        return { ...s, pendingLifeEventId: hasAny ? 'job_rejected_experience' : 'job_rejected_education' }
+      }
       return addLog({
         ...s,
         player: {
@@ -807,7 +818,7 @@ export function getActionsForLocation(locationId: LocationId, state: GameState):
       return [...PET_SHOP_ACTIONS, ...getJobActions(locationId, state)];
 
     case 'university':
-      return [takeClassAction, studyAction, ...getJobActions(locationId, state)];
+      return [...getCourseActions(state), ...getJobActions(locationId, state)];
 
     case 'bank':
       return [depositAllAction, withdraw200Action, takeLoanAction, propertyLoan10k, propertyLoan25k, propertyLoan50k, repay200Action, repayAllAction, ...getJobActions(locationId, state)];

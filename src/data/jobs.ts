@@ -5,7 +5,6 @@ export interface JobTier {
   title: string;
   dailyPay: number;
   shiftsToPromote: number; // Infinity means no promotion
-  educationRequired: number;
   wardrobeRequired: number;
 }
 
@@ -17,68 +16,68 @@ export interface CareerDef {
 export interface LocationJobDef {
   track: CareerTrack;
   titles: [string, string, string, string];
-  eduRequired: number;
+  requiredCourses: string[];
 }
 
 /** Maps each location to the career track and titles available there. */
 export const LOCATION_JOBS: Partial<Record<LocationId, LocationJobDef>> = {
-  employment:    { track: 'creative',   titles: ['Pet Clerk', 'Pet Handler', 'Dept. Lead', 'Store Mgr'],    eduRequired: 0 },
-  grocery:       { track: 'trades',     titles: ['Stock Clerk', 'Cashier', 'Dept. Mgr', 'Store Mgr'],      eduRequired: 0 },
-  restaurant:    { track: 'creative',   titles: ['Busboy', 'Server', "Maitre'd", 'Rest. Mgr'],             eduRequired: 0 },
-  pawn:          { track: 'finance',    titles: ['Sales Clerk', 'Buyer', 'Store Mgr', 'Owner'],            eduRequired: 0 },
-  bank:          { track: 'finance',    titles: ['Teller', 'Loan Officer', 'Asst. Mgr', 'Branch Mgr'],     eduRequired: 1 },
-  clothing:      { track: 'creative',   titles: ['Sales Assoc', 'Buyer', 'Designer', 'Creative Dir'],      eduRequired: 1 },
-  hospital:      { track: 'healthcare', titles: ['Orderly', 'Technician', 'Nurse', 'Doctor'],              eduRequired: 1 },
-  university:    { track: 'healthcare', titles: ['Tutor', 'Lecturer', 'Professor', 'Dept. Chair'],         eduRequired: 1 },
-  electronics:   { track: 'tech',       titles: ['Support Tech', 'Developer', 'Senior Dev', 'Lead Eng.'],  eduRequired: 2 },
-  realty:        { track: 'finance',    titles: ['Agent', 'Sr. Agent', 'Broker', 'Principal'],             eduRequired: 2 },
-  stockexchange: { track: 'finance',    titles: ['Jr. Trader', 'Trader', 'Portfolio Mgr', 'Partner'],      eduRequired: 3 },
+  employment:    { track: 'creative',   titles: ['Pet Clerk', 'Pet Handler', 'Dept. Lead', 'Store Mgr'],   requiredCourses: [] },
+  grocery:       { track: 'trades',     titles: ['Stock Clerk', 'Cashier', 'Dept. Mgr', 'Store Mgr'],     requiredCourses: [] },
+  restaurant:    { track: 'creative',   titles: ['Busboy', 'Server', "Maitre'd", 'Rest. Mgr'],            requiredCourses: [] },
+  pawn:          { track: 'finance',    titles: ['Sales Clerk', 'Buyer', 'Store Mgr', 'Owner'],           requiredCourses: [] },
+  university:    { track: 'healthcare', titles: ['Tutor', 'Lecturer', 'Professor', 'Dept. Chair'],        requiredCourses: ['job_skills'] },
+  clothing:      { track: 'creative',   titles: ['Sales Assoc', 'Buyer', 'Designer', 'Creative Dir'],     requiredCourses: ['creative_arts'] },
+  hospital:      { track: 'healthcare', titles: ['Orderly', 'Technician', 'Nurse', 'Doctor'],             requiredCourses: ['health_basics'] },
+  bank:          { track: 'finance',    titles: ['Teller', 'Loan Officer', 'Asst. Mgr', 'Branch Mgr'],    requiredCourses: ['business_101'] },
+  electronics:   { track: 'tech',       titles: ['Support Tech', 'Developer', 'Senior Dev', 'Lead Eng.'], requiredCourses: ['intro_tech'] },
+  realty:        { track: 'finance',    titles: ['Agent', 'Sr. Agent', 'Broker', 'Principal'],            requiredCourses: ['accounting'] },
+  stockexchange: { track: 'finance',    titles: ['Jr. Trader', 'Trader', 'Portfolio Mgr', 'Partner'],     requiredCourses: ['finance_adv'] },
 };
 
 export const CAREER_JOBS: Record<CareerTrack, CareerDef> = {
   trades: {
     name: 'Construction',
     tiers: [
-      { rank: 1, title: 'Laborer',     dailyPay: 90,  shiftsToPromote: 5,        educationRequired: 0, wardrobeRequired: 0 },
-      { rank: 2, title: 'Apprentice',  dailyPay: 130, shiftsToPromote: 8,        educationRequired: 0, wardrobeRequired: 0 },
-      { rank: 3, title: 'Journeyman',  dailyPay: 185, shiftsToPromote: 12,       educationRequired: 1, wardrobeRequired: 0 },
-      { rank: 4, title: 'Foreman',     dailyPay: 260, shiftsToPromote: Infinity, educationRequired: 2, wardrobeRequired: 1 },
+      { rank: 1, title: 'Laborer',     dailyPay: 90,  shiftsToPromote: 5,        wardrobeRequired: 0 },
+      { rank: 2, title: 'Apprentice',  dailyPay: 130, shiftsToPromote: 8,        wardrobeRequired: 0 },
+      { rank: 3, title: 'Journeyman',  dailyPay: 185, shiftsToPromote: 12,       wardrobeRequired: 0 },
+      { rank: 4, title: 'Foreman',     dailyPay: 260, shiftsToPromote: Infinity, wardrobeRequired: 1 },
     ],
   },
   tech: {
     name: 'Tech',
     tiers: [
-      { rank: 1, title: 'Jr. Dev',    dailyPay: 110, shiftsToPromote: 5,        educationRequired: 0, wardrobeRequired: 0 },
-      { rank: 2, title: 'Developer',  dailyPay: 160, shiftsToPromote: 8,        educationRequired: 1, wardrobeRequired: 0 },
-      { rank: 3, title: 'Sr. Dev',    dailyPay: 230, shiftsToPromote: 12,       educationRequired: 2, wardrobeRequired: 0 },
-      { rank: 4, title: 'Team Lead',  dailyPay: 320, shiftsToPromote: Infinity, educationRequired: 3, wardrobeRequired: 1 },
+      { rank: 1, title: 'Jr. Dev',    dailyPay: 110, shiftsToPromote: 5,        wardrobeRequired: 0 },
+      { rank: 2, title: 'Developer',  dailyPay: 160, shiftsToPromote: 8,        wardrobeRequired: 0 },
+      { rank: 3, title: 'Sr. Dev',    dailyPay: 230, shiftsToPromote: 12,       wardrobeRequired: 0 },
+      { rank: 4, title: 'Team Lead',  dailyPay: 320, shiftsToPromote: Infinity, wardrobeRequired: 1 },
     ],
   },
   finance: {
     name: 'Finance',
     tiers: [
-      { rank: 1, title: 'Teller',    dailyPay: 100, shiftsToPromote: 5,        educationRequired: 0, wardrobeRequired: 1 },
-      { rank: 2, title: 'Analyst',   dailyPay: 155, shiftsToPromote: 8,        educationRequired: 1, wardrobeRequired: 1 },
-      { rank: 3, title: 'Manager',   dailyPay: 225, shiftsToPromote: 12,       educationRequired: 2, wardrobeRequired: 2 },
-      { rank: 4, title: 'Director',  dailyPay: 340, shiftsToPromote: Infinity, educationRequired: 3, wardrobeRequired: 2 },
+      { rank: 1, title: 'Teller',    dailyPay: 100, shiftsToPromote: 5,        wardrobeRequired: 1 },
+      { rank: 2, title: 'Analyst',   dailyPay: 155, shiftsToPromote: 8,        wardrobeRequired: 1 },
+      { rank: 3, title: 'Manager',   dailyPay: 225, shiftsToPromote: 12,       wardrobeRequired: 2 },
+      { rank: 4, title: 'Director',  dailyPay: 340, shiftsToPromote: Infinity, wardrobeRequired: 2 },
     ],
   },
   healthcare: {
     name: 'Healthcare',
     tiers: [
-      { rank: 1, title: 'Aide',        dailyPay: 95,  shiftsToPromote: 5,        educationRequired: 0, wardrobeRequired: 0 },
-      { rank: 2, title: 'Technician',  dailyPay: 145, shiftsToPromote: 8,        educationRequired: 1, wardrobeRequired: 0 },
-      { rank: 3, title: 'Nurse',       dailyPay: 210, shiftsToPromote: 12,       educationRequired: 2, wardrobeRequired: 1 },
-      { rank: 4, title: 'Doctor',      dailyPay: 380, shiftsToPromote: Infinity, educationRequired: 3, wardrobeRequired: 1 },
+      { rank: 1, title: 'Aide',        dailyPay: 95,  shiftsToPromote: 5,        wardrobeRequired: 0 },
+      { rank: 2, title: 'Technician',  dailyPay: 145, shiftsToPromote: 8,        wardrobeRequired: 0 },
+      { rank: 3, title: 'Nurse',       dailyPay: 210, shiftsToPromote: 12,       wardrobeRequired: 1 },
+      { rank: 4, title: 'Doctor',      dailyPay: 380, shiftsToPromote: Infinity, wardrobeRequired: 1 },
     ],
   },
   creative: {
     name: 'Creative',
     tiers: [
-      { rank: 1, title: 'Intern',         dailyPay: 60,  shiftsToPromote: 5,        educationRequired: 0, wardrobeRequired: 0 },
-      { rank: 2, title: 'Designer',       dailyPay: 110, shiftsToPromote: 8,        educationRequired: 0, wardrobeRequired: 1 },
-      { rank: 3, title: 'Art Dir.',       dailyPay: 175, shiftsToPromote: 12,       educationRequired: 1, wardrobeRequired: 2 },
-      { rank: 4, title: 'Creative Dir.',  dailyPay: 270, shiftsToPromote: Infinity, educationRequired: 2, wardrobeRequired: 2 },
+      { rank: 1, title: 'Intern',         dailyPay: 60,  shiftsToPromote: 5,        wardrobeRequired: 0 },
+      { rank: 2, title: 'Designer',       dailyPay: 110, shiftsToPromote: 8,        wardrobeRequired: 1 },
+      { rank: 3, title: 'Art Dir.',       dailyPay: 175, shiftsToPromote: 12,       wardrobeRequired: 2 },
+      { rank: 4, title: 'Creative Dir.',  dailyPay: 270, shiftsToPromote: Infinity, wardrobeRequired: 2 },
     ],
   },
 };
