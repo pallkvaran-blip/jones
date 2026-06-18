@@ -21,12 +21,16 @@ export function consumeTime(state: GameState, units: number): GameState {
 }
 
 export function advanceDay(state: GameState): GameState {
-  // If player ended the day away from home, they slept rough
-  if (state.currentLocationId !== 'home' && !state.pendingLifeEventId) {
-    state = {
-      ...state,
-      currentLocationId: 'home' as LocationId,
-      pendingLifeEventId: 'slept_on_street',
+  // Only penalise sleeping rough if energy ran out — otherwise just move home
+  if (state.currentLocationId !== 'home') {
+    if (state.player.energy <= 0 && !state.pendingLifeEventId) {
+      state = {
+        ...state,
+        currentLocationId: 'home' as LocationId,
+        pendingLifeEventId: 'slept_on_street',
+      }
+    } else {
+      state = { ...state, currentLocationId: 'home' as LocationId }
     }
   }
 
