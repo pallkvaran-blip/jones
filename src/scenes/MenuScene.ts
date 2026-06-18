@@ -5,7 +5,7 @@ import { audioSystem } from '../systems/AudioSystem'
 import type { Difficulty } from '../state/types'
 
 export class MenuScene extends Phaser.Scene {
-  private selectedDifficulty: Difficulty = 'normal';
+  private selectedDifficulty: Difficulty = 'medium';
   private numPlayers: 1 | 2 = 1;
   private player2Name: string = '';
   private nameInput: HTMLInputElement | null = null;
@@ -98,7 +98,7 @@ export class MenuScene extends Phaser.Scene {
         <div style="color:#6a6a82; margin-bottom:4px; letter-spacing:1px;">GOALS</div>
         <div>Earn $50k+ | Education 80+ | Reach Career Rank 4 | Happiness 80+</div>
         <div style="color:#6a6a82; margin-top:6px; margin-bottom:4px; letter-spacing:1px;">GAME LENGTH</div>
-        <div>20-30 weeks depending on difficulty.</div>
+        <div>Short: 20 wks | Medium: 24 wks | Long: 30 wks.</div>
         <div>Each week is one full day of actions.</div>
         <div>Miss a night at home and sleep rough.</div>
         <div>Run out of health and it's game over.</div>
@@ -206,11 +206,11 @@ export class MenuScene extends Phaser.Scene {
         </div>
 
         <div>
-          <label style="display:block; color:#8a8aa6; font-size:8px; letter-spacing:1px; text-transform:uppercase; margin-bottom:10px; font-family:${pf};">Difficulty</label>
+          <label style="display:block; color:#8a8aa6; font-size:8px; letter-spacing:1px; text-transform:uppercase; margin-bottom:10px; font-family:${pf};">Lifespan</label>
           <div style="display:flex; gap:8px;">
-            <button class="diff-btn" data-diff="easy" style="flex:1; padding:10px 2px; background:#0e2417; border:2px solid #2ECC71; color:#2ECC71; font-size:8px; cursor:pointer; font-family:${pf};">EASY</button>
-            <button class="diff-btn selected" data-diff="normal" style="flex:1; padding:10px 2px; background:#3a2a0a; border:2px solid #F5A623; color:#F5A623; font-size:8px; cursor:pointer; font-family:${pf};">NORM</button>
-            <button class="diff-btn" data-diff="hard" style="flex:1; padding:10px 2px; background:#2a0f0c; border:2px solid #E74C3C; color:#E74C3C; font-size:8px; cursor:pointer; font-family:${pf};">HARD</button>
+            <button class="diff-btn" data-diff="short" style="flex:1; padding:10px 2px; background:#2a0f0c; border:2px solid #E74C3C; color:#E74C3C; font-size:8px; cursor:pointer; font-family:${pf};">SHORT</button>
+            <button class="diff-btn selected" data-diff="medium" style="flex:1; padding:10px 2px; background:#3a2a0a; border:2px solid #F5A623; color:#F5A623; font-size:8px; cursor:pointer; font-family:${pf};">MED</button>
+            <button class="diff-btn" data-diff="long" style="flex:1; padding:10px 2px; background:#0e2417; border:2px solid #2ECC71; color:#2ECC71; font-size:8px; cursor:pointer; font-family:${pf};">LONG</button>
           </div>
         </div>
 
@@ -255,7 +255,7 @@ export class MenuScene extends Phaser.Scene {
     const diffBtns = this.menuContainer.querySelectorAll<HTMLButtonElement>('.diff-btn');
     diffBtns.forEach(btn => {
       btn.addEventListener('click', () => {
-        this.selectedDifficulty = (btn.dataset['diff'] as Difficulty) ?? 'normal';
+        this.selectedDifficulty = (btn.dataset['diff'] as Difficulty) ?? 'medium';
         this.updateDifficultyButtons(diffBtns);
         audioSystem.playSFX('click');
       });
@@ -320,13 +320,13 @@ export class MenuScene extends Phaser.Scene {
 
   private updateDifficultyButtons(buttons: NodeListOf<HTMLButtonElement>): void {
     const colors: Record<Difficulty, { dim: string; lit: string; border: string; color: string }> = {
-      easy:   { dim: '#0e2417', lit: '#1a4a2c', border: '#2ECC71', color: '#2ECC71' },
-      normal: { dim: '#3a2a0a', lit: '#5a4010', border: '#F5A623', color: '#F5A623' },
-      hard:   { dim: '#2a0f0c', lit: '#4a1a14', border: '#E74C3C', color: '#E74C3C' },
+      short:  { dim: '#2a0f0c', lit: '#4a1a14', border: '#E74C3C', color: '#E74C3C' },
+      medium: { dim: '#3a2a0a', lit: '#5a4010', border: '#F5A623', color: '#F5A623' },
+      long:   { dim: '#0e2417', lit: '#1a4a2c', border: '#2ECC71', color: '#2ECC71' },
     };
 
     buttons.forEach(btn => {
-      const diff = (btn.dataset['diff'] as Difficulty) ?? 'normal';
+      const diff = (btn.dataset['diff'] as Difficulty) ?? 'medium';
       const c = colors[diff];
       const selected = diff === this.selectedDifficulty;
       btn.style.background = selected ? c.lit : c.dim;
