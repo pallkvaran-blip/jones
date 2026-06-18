@@ -502,32 +502,27 @@ export class CityScene extends Phaser.Scene {
       () => {
         // Finalize: rebase on startTimeUnits so consumeTime handles day/week correctly.
         audioSystem.playSFX('arrive')
+        const prevDay = state.calendar.day
+        const prevWeek = state.calendar.week
         store.setState((s) => {
           const rebased = { ...s, calendar: { ...s.calendar, timeUnits: startTimeUnits } }
           const afterMove = consumeTime(rebased, timeCost)
           const withEnergy = { ...afterMove, player: { ...afterMove.player, energy: Math.max(0, afterMove.player.energy - energyCost) } }
-          const withLocation = { ...withEnergy, currentLocationId: id }
-
-          const dayAdvanced =
-            withLocation.calendar.day !== s.calendar.day ||
-            withLocation.calendar.week !== s.calendar.week
-          const weekAdvanced = withLocation.calendar.week !== s.calendar.week
-
-          if (weekAdvanced) {
-            audioSystem.playSFX('weekEnd')
-            this.showDayBanner(`Week ${withLocation.calendar.week}`)
-          } else if (dayAdvanced) {
-            audioSystem.playSFX('dayEnd')
-            this.showDayBanner(
-              `Day ${withLocation.calendar.day} — ${this.getDayName(withLocation.calendar.day)}`,
-            )
-          }
-
-          return withLocation
+          return { ...withEnergy, currentLocationId: id }
         })
+        // Side effects after state is settled — check what advanced
+        const newState = store.getState()
+        const dayAdvanced = newState.calendar.day !== prevDay || newState.calendar.week !== prevWeek
+        const weekAdvanced = newState.calendar.week !== prevWeek
+        if (weekAdvanced) {
+          audioSystem.playSFX('weekEnd')
+          this.showDayBanner(`Week ${newState.calendar.week}`)
+        } else if (dayAdvanced) {
+          audioSystem.playSFX('dayEnd')
+          this.showDayBanner(`Day ${newState.calendar.day} — ${this.getDayName(newState.calendar.day)}`)
+        }
         targetSprite.setLocationActive(true)
         // Show actions for the new location
-        const newState = store.getState()
         this.hud.showActions(id, newState, (actionId) => this.handleAction(actionId), (msg) => this.showToast(msg))
       },
       (progress) => {
