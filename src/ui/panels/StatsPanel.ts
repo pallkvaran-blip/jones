@@ -102,6 +102,7 @@ export class StatsPanel {
               <div class="bar-fill high" id="sp-hunger-bar" style="width:80%"></div>
             </div>
           </div>
+          <span class="need-val" id="sp-hunger-val">80</span>
         </div>
         <div class="need-row">
           <span class="need-icon">&#x26A1;</span>
@@ -111,6 +112,7 @@ export class StatsPanel {
               <div class="bar-fill high" id="sp-energy-bar" style="width:80%"></div>
             </div>
           </div>
+          <span class="need-val" id="sp-energy-val">80</span>
         </div>
         <div class="need-row">
           <span class="need-icon">&#x2764;&#xFE0F;</span>
@@ -120,6 +122,7 @@ export class StatsPanel {
               <div class="bar-fill high" id="sp-health-bar" style="width:80%"></div>
             </div>
           </div>
+          <span class="need-val" id="sp-health-val">80</span>
         </div>
         <div class="need-row">
           <span class="need-icon">&#x1F60A;</span>
@@ -129,6 +132,7 @@ export class StatsPanel {
               <div class="bar-fill high" id="sp-morale-bar" style="width:80%"></div>
             </div>
           </div>
+          <span class="need-val" id="sp-morale-val">80</span>
         </div>
       </div>
     `;
@@ -187,11 +191,11 @@ export class StatsPanel {
     });
 
     // Needs bars
-    const needs: Array<{ id: string; value: number }> = [
-      { id: 'sp-hunger-bar', value: player.hunger },
-      { id: 'sp-energy-bar', value: player.energy },
-      { id: 'sp-health-bar', value: player.health },
-      { id: 'sp-morale-bar', value: player.morale },
+    const needs: Array<{ id: string; valId: string; value: number }> = [
+      { id: 'sp-hunger-bar', valId: 'sp-hunger-val', value: player.hunger },
+      { id: 'sp-energy-bar', valId: 'sp-energy-val', value: player.energy },
+      { id: 'sp-health-bar', valId: 'sp-health-val', value: player.health },
+      { id: 'sp-morale-bar', valId: 'sp-morale-val', value: player.morale },
     ];
 
     for (const need of needs) {
@@ -200,6 +204,8 @@ export class StatsPanel {
         el.style.width = `${need.value}%`;
         el.className = `bar-fill ${getBarClass(need.value)}`;
       }
+      const valEl = this.el.querySelector<HTMLElement>(`#${need.valId}`);
+      if (valEl) valEl.textContent = Math.round(need.value).toString();
     }
 
     // Job display — prefer location-specific titles, fall back to CAREER_JOBS

@@ -34,6 +34,13 @@ export function applyWeeklyEconomy(state: GameState): GameState {
     entries.push(`Rent -$${rent}`)
   }
 
+  // --- Property appreciation (3% / week) ---
+  if (s.player.isOwner && s.player.propertyValue > 0) {
+    const appreciation = Math.floor(s.player.propertyValue * 0.03)
+    s = { ...s, player: { ...s.player, propertyValue: s.player.propertyValue + appreciation } }
+    entries.push(`Property +$${appreciation}`)
+  }
+
   // --- Housing morale bonus ---
   const moraleBonus = housing?.weeklyMoraleBonus ?? 0
   if (moraleBonus > 0) {

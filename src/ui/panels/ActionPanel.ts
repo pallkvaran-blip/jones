@@ -4,6 +4,7 @@ import type { GameState } from '../../state/types'
 export class ActionPanel {
   private el: HTMLElement;
   private onAction: ((id: string) => void) | null = null;
+  private onUnavailable: ((msg: string) => void) | null = null;
 
   constructor() {
     this.el = document.createElement('div');
@@ -19,8 +20,10 @@ export class ActionPanel {
     actions: ActionDef[],
     state: GameState,
     onAction: (id: string) => void,
+    onUnavailable?: (msg: string) => void,
   ): void {
     this.onAction = onAction;
+    this.onUnavailable = onUnavailable ?? null;
     this.el.classList.add('is-open');
 
     const btns = actions.map((action) => {
@@ -48,11 +51,13 @@ export class ActionPanel {
     // Wire click listeners
     this.el.querySelectorAll<HTMLButtonElement>('.action-btn').forEach((btn) => {
       btn.addEventListener('click', () => {
-        if (btn.classList.contains('disabled')) return;
-        const id = btn.dataset.actionId;
-        if (id && this.onAction) {
-          this.onAction(id);
+        if (btn.classList.contains('disabled')) {
+          const reason = btn.querySelector('.action-detail')?.textContent ?? '';
+          if (reason && this.onUnavailable) this.onUnavailable(reason);
+          return;
         }
+        const id = btn.dataset.actionId;
+        if (id && this.onAction) this.onAction(id);
       });
     });
   }

@@ -12,6 +12,7 @@ export class HUD {
   private currentLocationId: LocationId | null = null;
   private currentActionIds: string = '';
   private onActionCallback: ((id: string) => void) | null = null;
+  private onUnavailableCallback: ((msg: string) => void) | null = null;
 
   constructor() {
     const root = document.getElementById('ui-root');
@@ -43,7 +44,7 @@ export class HUD {
         // Action set changed (e.g. applied for job, upgraded housing) — full re-render
         this.currentActionIds = newIds;
         const name = locations.find(l => l.id === this.currentLocationId)?.name ?? this.currentLocationId!;
-        this.actionPanel.show(name, newActions, state, this.onActionCallback);
+        this.actionPanel.show(name, newActions, state, this.onActionCallback, this.onUnavailableCallback ?? undefined);
       } else {
         this.actionPanel.update(newActions, state);
       }
@@ -54,20 +55,23 @@ export class HUD {
     locationId: LocationId,
     state: GameState,
     onAction: (id: string) => void,
+    onUnavailable?: (msg: string) => void,
   ): void {
     this.currentLocationId = locationId;
     this.onActionCallback = onAction;
+    this.onUnavailableCallback = onUnavailable ?? null;
     const locDef = locations.find(l => l.id === locationId);
     const locationName = locDef ? locDef.name : locationId;
     const actions = getActionsForLocation(locationId, state);
     this.currentActionIds = actions.map(a => a.id).join(',');
-    this.actionPanel.show(locationName, actions, state, onAction);
+    this.actionPanel.show(locationName, actions, state, onAction, onUnavailable);
   }
 
   hideActions(): void {
     this.currentLocationId = null;
     this.currentActionIds = '';
     this.onActionCallback = null;
+    this.onUnavailableCallback = null;
     this.actionPanel.hide();
   }
 

@@ -81,7 +81,7 @@ export class CityScene extends Phaser.Scene {
     this.hud.update(state)
 
     // Show actions for initial location (home)
-    this.hud.showActions(state.currentLocationId, state, (id) => this.handleAction(id))
+    this.hud.showActions(state.currentLocationId, state, (id) => this.handleAction(id), (msg) => this.showToast(msg))
 
     // --- Mute button ---
     this.createMuteButton()
@@ -278,7 +278,7 @@ export class CityScene extends Phaser.Scene {
         targetSprite.setLocationActive(true)
         // Show actions for the new location
         const newState = store.getState()
-        this.hud.showActions(id, newState, (actionId) => this.handleAction(actionId))
+        this.hud.showActions(id, newState, (actionId) => this.handleAction(actionId), (msg) => this.showToast(msg))
       },
       (progress) => {
         // Smoothly interpolate timeUnits as the avatar walks.

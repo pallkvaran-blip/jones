@@ -31,7 +31,7 @@ const studyAtHomeAction: ActionDef = {
   detail: 'Education+0.3, Energy-8 | 12t',
   timeCost: 12,
   available: (state) => state.player.energy >= 8,
-  unavailableReason: () => 'Need Energy≥8',
+  unavailableReason: (s) => `Too tired to study (${Math.round(s.player.energy)}) — rest first!`,
   apply(state) {
     return {
       ...state,
@@ -101,55 +101,55 @@ const cookMealAction: ActionDef = {
   },
 };
 
-// --- JOB SHIFT / QUIT (shared, used via getJobActions) ---
-const workShiftAction: ActionDef = {
-  id: 'work_shift',
-  label: 'Work a Shift',
-  detail: 'Energy-20, +Pay | 25t',
-  timeCost: 25,
-  available: (state) => state.player.energy >= 20,
-  unavailableReason: () => 'Need Energy≥20',
-  apply(state) {
-    const { player } = state;
-    const track = player.careerTrack!;
-    const careerDef = CAREER_JOBS[track];
-    const tierIdx = player.jobRank - 1;
-    const tier = careerDef.tiers[tierIdx];
-    const newTenure = player.jobTenure + 1;
-    let newRank = player.jobRank;
-    let promotionMsg: string | null = null;
+// --- JOB SHIFT / QUIT ---
+function applyWorkShift(state: GameState): GameState {
+  const { player } = state;
+  const track = player.careerTrack!;
+  const careerDef = CAREER_JOBS[track];
+  const tierIdx = player.jobRank - 1;
+  const tier = careerDef.tiers[tierIdx];
+  const newTenure = player.jobTenure + 1;
+  let newRank = player.jobRank;
+  let promotionMsg: string | null = null;
 
-    if (newTenure >= tier.shiftsToPromote && player.jobRank < 4) {
-      const nextTier = careerDef.tiers[player.jobRank];
-      const meetsEdu = player.education >= nextTier.educationRequired;
-      const meetsWard = player.wardrobe >= nextTier.wardrobeRequired;
-      if (meetsEdu && meetsWard) {
-        newRank = player.jobRank + 1;
-        // Use location-specific title when available
-        const locJob = LOCATION_JOBS[player.jobId as LocationId];
-        const nextTitle = locJob ? locJob.titles[player.jobRank] : nextTier.title;
-        promotionMsg = `Promoted to ${nextTitle}!`;
-      }
+  if (newTenure >= tier.shiftsToPromote && player.jobRank < 4) {
+    const nextTier = careerDef.tiers[player.jobRank];
+    const meetsEdu = player.education >= nextTier.educationRequired;
+    const meetsWard = player.wardrobe >= nextTier.wardrobeRequired;
+    if (meetsEdu && meetsWard) {
+      newRank = player.jobRank + 1;
+      const locJob = LOCATION_JOBS[player.jobId as LocationId];
+      const nextTitle = locJob ? locJob.titles[player.jobRank] : nextTier.title;
+      promotionMsg = `Promoted to ${nextTitle}!`;
     }
+  }
 
-    let newState: GameState = {
-      ...state,
-      player: {
-        ...state.player,
-        energy: cap(player.energy - 20),
-        money: player.money + tier.dailyPay,
-        jobTenure: newRank > player.jobRank ? 0 : newTenure,
-        jobRank: newRank,
-      },
-    };
+  let newState: GameState = {
+    ...state,
+    player: {
+      ...state.player,
+      energy: cap(player.energy - 20),
+      money: player.money + tier.dailyPay,
+      jobTenure: newRank > player.jobRank ? 0 : newTenure,
+      jobRank: newRank,
+    },
+  };
 
-    if (promotionMsg) {
-      newState = addLog(newState, promotionMsg);
-    }
+  if (promotionMsg) newState = addLog(newState, promotionMsg);
+  return newState;
+}
 
-    return newState;
-  },
-};
+function makeWorkShiftAction(pay: number): ActionDef {
+  return {
+    id: 'work_shift',
+    label: 'Work a Shift',
+    detail: `Energy-20, +$${pay} | 25t`,
+    timeCost: 25,
+    available: (s) => s.player.energy >= 20,
+    unavailableReason: (s) => `Not enough energy (${Math.round(s.player.energy)}) — go home and sleep!`,
+    apply: applyWorkShift,
+  };
+}
 
 const quitJobAction: ActionDef = {
   id: 'quit_job',
@@ -203,7 +203,7 @@ const studyAction: ActionDef = {
   detail: 'Education+0.5, Energy-10 | 15t',
   timeCost: 15,
   available: (state) => state.player.energy >= 10,
-  unavailableReason: () => 'Need Energy≥10',
+  unavailableReason: (s) => `Too tired to study (${Math.round(s.player.energy)}) — rest first!`,
   apply(state) {
     return {
       ...state,
@@ -772,7 +772,10 @@ function getJobActions(locationId: LocationId, state: GameState): ActionDef[] {
   const { player } = state;
 
   if (player.jobId === locationId) {
-    return [workShiftAction, quitJobAction];
+    const careerDef = CAREER_JOBS[locJob.track];
+    const tier = careerDef.tiers[player.jobRank - 1];
+    const pay = tier?.dailyPay ?? 60;
+    return [makeWorkShiftAction(pay), quitJobAction];
   }
 
   if (player.jobId !== null) {

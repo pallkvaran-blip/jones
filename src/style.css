@@ -157,6 +157,14 @@ body {
   flex: 1;
 }
 
+.need-val {
+  font-size: 7px;
+  color: var(--color-text-dim);
+  min-width: 20px;
+  text-align: right;
+  font-family: var(--font-pixel);
+}
+
 .need-label {
   font-size: 7px;
   color: var(--color-text-dim);
