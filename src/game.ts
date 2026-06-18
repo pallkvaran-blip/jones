@@ -7,18 +7,20 @@ import { GameOverScene } from './scenes/GameOverScene'
 export function createGame(): Phaser.Game {
   const config: Phaser.Types.Core.GameConfig = {
     type: Phaser.AUTO,
-    width: 800,
-    height: 450,
-    backgroundColor: '#1a1a2e',
+    width: 960,
+    height: 540,
+    backgroundColor: '#0d0d17',
     parent: 'game-container',
+    pixelArt: true,
     scale: {
       mode: Phaser.Scale.FIT,
       autoCenter: Phaser.Scale.CENTER_BOTH,
     },
     scene: [BootScene, MenuScene, CityScene, GameOverScene],
     render: {
-      antialias: true,
-      pixelArt: false,
+      antialias: false,
+      pixelArt: true,
+      roundPixels: true,
     },
   }
 

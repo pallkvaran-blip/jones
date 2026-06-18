@@ -1,87 +1,94 @@
 import Phaser from 'phaser'
 
-// ASSET: swap in character spritesheet here
+// ASSET: replace with real character spritesheet here
 
 export class Avatar {
-  private scene: Phaser.Scene;
-  private container: Phaser.GameObjects.Container;
-  private body: Phaser.GameObjects.Arc;
-  private directionIndicator: Phaser.GameObjects.Triangle;
-  private isMoving = false;
+  private scene: Phaser.Scene
+  private container: Phaser.GameObjects.Container
+  private sprite: Phaser.GameObjects.Image
+  private shadow: Phaser.GameObjects.Image
+  private isMoving = false
+  private walkTimer: Phaser.Time.TimerEvent | null = null
+  private frame = 0
 
   constructor(scene: Phaser.Scene, x: number, y: number) {
-    this.scene = scene;
+    this.scene = scene
 
-    // Body: yellow circle
-    this.body = scene.add.circle(0, 0, 12, 0xF5A623);
-    this.body.setStrokeStyle(2, 0xFFFFFF);
+    // Soft elliptical shadow under the character.
+    this.shadow = scene.add.image(0, 22, 'soft-shadow')
+    this.shadow.setOrigin(0.5, 0.5)
+    this.shadow.setScale(0.7)
 
-    // Direction arrow: small triangle pointing right by default
-    this.directionIndicator = scene.add.triangle(
-      16, 0,   // center
-      0, -5,   // point 1
-      0,  5,   // point 2
-      8,  0,   // point 3 (tip)
-      0xFFFFFF
-    );
+    // Character body uses the standing frame by default.
+    this.sprite = scene.add.image(0, 0, 'avatar-0')
+    this.sprite.setOrigin(0.5, 0.85) // feet near the doorstep point
 
-    this.container = scene.add.container(x, y, [this.body, this.directionIndicator]);
-    this.container.setDepth(10);
+    this.container = scene.add.container(x, y, [this.shadow, this.sprite])
+    this.container.setDepth(20)
   }
 
   getContainer(): Phaser.GameObjects.Container {
-    return this.container;
+    return this.container
   }
 
   getPosition(): { x: number; y: number } {
-    return { x: this.container.x, y: this.container.y };
+    return { x: this.container.x, y: this.container.y }
+  }
+
+  private startWalk(): void {
+    this.walkTimer?.remove()
+    this.walkTimer = this.scene.time.addEvent({
+      delay: 140,
+      loop: true,
+      callback: () => {
+        this.frame = this.frame === 0 ? 1 : 0
+        this.sprite.setTexture(this.frame === 0 ? 'avatar-0' : 'avatar-1')
+      },
+    })
+  }
+
+  private stopWalk(): void {
+    this.walkTimer?.remove()
+    this.walkTimer = null
+    this.frame = 0
+    this.sprite.setTexture('avatar-0')
   }
 
   moveTo(x: number, y: number, onComplete: () => void): void {
-    if (this.isMoving) return;
-    this.isMoving = true;
+    if (this.isMoving) return
+    this.isMoving = true
 
-    // Update direction indicator angle
-    const dx = x - this.container.x;
-    const dy = y - this.container.y;
-    const angle = Math.atan2(dy, dx);
-    this.directionIndicator.setRotation(angle);
+    // Face travel direction by flipping horizontally.
+    const dx = x - this.container.x
+    if (dx < -1) this.sprite.setFlipX(true)
+    else if (dx > 1) this.sprite.setFlipX(false)
 
-    // Scale pulse tween during movement
-    const pulseTween = this.scene.tweens.add({
-      targets: this.container,
-      scaleX: { from: 0.9, to: 1.1 },
-      scaleY: { from: 0.9, to: 1.1 },
-      duration: 200,
-      yoyo: true,
-      repeat: -1,
-    });
+    this.startWalk()
 
-    // Movement tween
     this.scene.tweens.add({
       targets: this.container,
       x,
       y,
-      duration: 600,
-      ease: 'Power2',
+      duration: 700,
+      ease: 'Sine.InOut',
       onComplete: () => {
-        pulseTween.stop();
-        this.container.setScale(1);
-        this.isMoving = false;
-        onComplete();
+        this.stopWalk()
+        this.isMoving = false
+        onComplete()
       },
-    });
+    })
   }
 
   setPosition(x: number, y: number): void {
-    this.container.setPosition(x, y);
+    this.container.setPosition(x, y)
   }
 
   isCurrentlyMoving(): boolean {
-    return this.isMoving;
+    return this.isMoving
   }
 
   destroy(): void {
-    this.container.destroy();
+    this.walkTimer?.remove()
+    this.container.destroy()
   }
 }

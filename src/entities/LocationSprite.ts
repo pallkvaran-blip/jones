@@ -2,125 +2,135 @@ import Phaser from 'phaser'
 import type { LocationDef } from '../data/locations'
 import type { LocationId } from '../state/types'
 
-// ASSET: swap in real building sprite here
+// ASSET: replace generated pixel facade with real sprite here
 
 export class LocationSprite extends Phaser.GameObjects.Container {
-  private locationDef: LocationDef;
-  private building: Phaser.GameObjects.Rectangle;
-  private roof: Phaser.GameObjects.Rectangle;
-  private iconText: Phaser.GameObjects.Text;
-  private nameText: Phaser.GameObjects.Text;
-  private glowRect: Phaser.GameObjects.Rectangle;
-  private isActive = false;
+  private locationDef: LocationDef
+  private building: Phaser.GameObjects.Image
+  private dropShadow: Phaser.GameObjects.Rectangle
+  private namePlate: Phaser.GameObjects.Rectangle
+  private nameText: Phaser.GameObjects.Text
+  private glow: Phaser.GameObjects.Rectangle
+  private pin: Phaser.GameObjects.Container
+  private isActive = false
 
   constructor(scene: Phaser.Scene, def: LocationDef) {
-    super(scene, def.x + def.width / 2, def.y + def.height / 2);
-    this.locationDef = def;
+    // Container anchored at building top-left so the Image lines up exactly.
+    super(scene, def.x, def.y)
+    this.locationDef = def
 
-    const hw = def.width / 2;
-    const hh = def.height / 2;
-    const roofH = 18;
+    const w = def.width
+    const h = def.height
 
-    // Glow rectangle (hidden by default, shown when active)
-    this.glowRect = scene.add.rectangle(0, 0, def.width + 8, def.height + 8, 0xFFFFFF, 0.15);
-    this.glowRect.setVisible(false);
-    this.add(this.glowRect);
+    // Bright active-glow outline (hidden unless active).
+    this.glow = scene.add.rectangle(w / 2, h / 2, w + 10, h + 10, 0xfff2a8, 0.0)
+    this.glow.setStrokeStyle(3, 0xffe066, 0.9)
+    this.glow.setVisible(false)
+    this.add(this.glow)
 
-    // Building body
-    this.building = scene.add.rectangle(0, roofH / 2, def.width, def.height - roofH, Phaser.Display.Color.HexStringToColor(def.color).color);
-    this.add(this.building);
+    // Soft drop shadow (offset dark block).
+    this.dropShadow = scene.add.rectangle(w / 2 + 6, h / 2 + 8, w, h, 0x000000, 0.3)
+    this.add(this.dropShadow)
 
-    // Roof strip (darker)
-    this.roof = scene.add.rectangle(0, -hh + roofH / 2, def.width, roofH, Phaser.Display.Color.HexStringToColor(def.darkColor).color);
-    this.add(this.roof);
+    // The detailed pixel-art building texture.
+    this.building = scene.add.image(0, 0, `building-${def.id}`)
+    this.building.setOrigin(0, 0)
+    this.building.setDisplaySize(w, h)
+    this.add(this.building)
 
-    // Icon emoji (centered on building body)
-    this.iconText = scene.add.text(0, 4, def.icon, {
-      fontSize: '28px',
+    // Sign plate + name beneath the building.
+    const plateW = w - 8
+    const plateY = h + 18
+    this.namePlate = scene.add.rectangle(w / 2, plateY, plateW, 22, 0x14141f, 0.92)
+    this.namePlate.setStrokeStyle(2, 0x3a3a52, 1)
+    this.add(this.namePlate)
+
+    this.nameText = scene.add.text(w / 2, plateY, def.name.toUpperCase(), {
+      fontFamily: '"Press Start 2P", monospace',
+      fontSize: '8px',
+      color: '#e8e8f0',
       align: 'center',
-    });
-    this.iconText.setOrigin(0.5, 0.5);
-    this.add(this.iconText);
+      wordWrap: { width: plateW - 6 },
+    })
+    this.nameText.setOrigin(0.5, 0.5)
+    this.nameText.setResolution(3)
+    this.add(this.nameText)
 
-    // Name label below building
-    this.nameText = scene.add.text(0, hh + 10, def.name, {
-      fontSize: '9px',
-      color: '#e0e0e0',
+    // "YOU ARE HERE" pin/flag (hidden unless active).
+    this.pin = this.buildPin(scene, w / 2, -10)
+    this.pin.setVisible(false)
+    this.add(this.pin)
+
+    // Interactive region covers the building footprint.
+    this.setSize(w, h)
+    this.setInteractive({
+      hitArea: new Phaser.Geom.Rectangle(0, 0, w, h),
+      hitAreaCallback: Phaser.Geom.Rectangle.Contains,
+      cursor: 'pointer',
+    })
+
+    this.on('pointerover', this.onPointerOver, this)
+    this.on('pointerout', this.onPointerOut, this)
+    this.on('pointerdown', this.onPointerDown, this)
+
+    scene.add.existing(this as unknown as Phaser.GameObjects.GameObject)
+  }
+
+  private buildPin(scene: Phaser.Scene, x: number, y: number): Phaser.GameObjects.Container {
+    const flagPole = scene.add.rectangle(0, 4, 2, 14, 0x222230)
+    const flag = scene.add.triangle(8, -2, 0, 0, 0, 8, 12, 4, 0xff5a3c)
+    const label = scene.add.text(0, -14, 'YOU ARE HERE', {
+      fontFamily: '"Press Start 2P", monospace',
+      fontSize: '7px',
+      color: '#ffe066',
+      backgroundColor: '#14141f',
+      padding: { x: 3, y: 2 },
       align: 'center',
-      wordWrap: { width: def.width + 10 },
-    });
-    this.nameText.setOrigin(0.5, 0);
-    this.add(this.nameText);
-
-    // Enable input
-    this.setSize(def.width, def.height + 30);
-    this.setInteractive({ cursor: 'pointer' });
-
-    // Hover effects
-    this.on('pointerover', this.onPointerOver, this);
-    this.on('pointerout', this.onPointerOut, this);
-    this.on('pointerdown', this.onPointerDown, this);
-
-    scene.add.existing(this as unknown as Phaser.GameObjects.GameObject);
+    })
+    label.setOrigin(0.5, 1)
+    label.setResolution(3)
+    return scene.add.container(x, y, [flagPole, flag, label])
   }
 
   private onPointerOver(): void {
     if (!this.isActive) {
-      this.scene.tweens.add({
-        targets: this,
-        scaleX: 1.05,
-        scaleY: 1.05,
-        duration: 100,
-        ease: 'Power1',
-      });
+      this.building.setTint(0xfff0c0)
     }
-    this.building.setStrokeStyle(2, 0xFFFFFF);
-    this.roof.setStrokeStyle(2, 0xFFFFFF);
   }
 
   private onPointerOut(): void {
-    if (!this.isActive) {
-      this.scene.tweens.add({
-        targets: this,
-        scaleX: 1,
-        scaleY: 1,
-        duration: 100,
-        ease: 'Power1',
-      });
-    }
-    this.building.setStrokeStyle(0);
-    this.roof.setStrokeStyle(0);
+    this.building.clearTint()
   }
 
   private onPointerDown(): void {
-    this.emit('locationClicked', this.locationDef.id as LocationId);
+    this.emit('locationClicked', this.locationDef.id as LocationId)
   }
 
   setLocationActive(active: boolean): void {
-    this.isActive = active;
-    this.glowRect.setVisible(active);
+    this.isActive = active
+    this.glow.setVisible(active)
+    this.pin.setVisible(active)
     if (active) {
-      this.setScale(1.05);
-      // Pulse glow
+      this.building.clearTint()
       this.scene.tweens.add({
-        targets: this.glowRect,
-        alpha: { from: 0.1, to: 0.3 },
-        duration: 800,
+        targets: this.glow,
+        alpha: { from: 0.0, to: 0.35 },
+        duration: 700,
         yoyo: true,
         repeat: -1,
-      });
+      })
     } else {
-      this.setScale(1);
-      this.scene.tweens.killTweensOf(this.glowRect);
-      this.glowRect.setAlpha(0.15);
+      this.scene.tweens.killTweensOf(this.glow)
+      this.glow.setAlpha(0)
     }
   }
 
   getId(): LocationId {
-    return this.locationDef.id;
+    return this.locationDef.id
   }
 
+  /** Doorstep point the avatar walks to. */
   getCenter(): { x: number; y: number } {
-    return { x: this.x, y: this.y };
+    return { x: this.locationDef.cx, y: this.locationDef.cy }
   }
 }

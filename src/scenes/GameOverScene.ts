@@ -16,8 +16,8 @@ export class GameOverScene extends Phaser.Scene {
 
     // Dark background
     const bg = this.add.graphics();
-    bg.fillGradientStyle(0x0d0d1a, 0x0d0d1a, 0x1a0033, 0x1a0033, 1);
-    bg.fillRect(0, 0, 800, 450);
+    bg.fillGradientStyle(0x0d0d17, 0x0d0d17, 0x1a0033, 0x1a0033, 1);
+    bg.fillRect(0, 0, 960, 540);
 
     // Get final state
     const store = getStore();
@@ -43,65 +43,66 @@ export class GameOverScene extends Phaser.Scene {
 
     const isWin = state.winCondition === 'won';
     const titleColor = isWin ? '#F5A623' : '#E74C3C';
-    const titleText = isWin ? '🎉 WEEK COMPLETE!' : "TIME'S UP!";
+    const titleText = isWin ? 'WEEK COMPLETE!' : "TIME'S UP!";
     const subtitleText = state.lossReason ?? (isWin ? 'Great job!' : 'Game over');
+    const pf = `'Press Start 2P', 'Courier New', monospace`;
 
     this.uiContainer.innerHTML = `
-      <div style="text-align:center; max-width:500px; padding: 0 20px;">
+      <div style="text-align:center; max-width:560px; padding: 0 20px; font-family:${pf};">
         <h1 style="
-          font-size: clamp(36px, 8vw, 64px);
-          font-weight: 900;
+          font-family:${pf};
+          font-size: clamp(24px, 6vw, 44px);
           color: ${titleColor};
-          text-shadow: 0 0 20px ${titleColor}88;
-          letter-spacing: 4px;
-          margin-bottom: 8px;
+          text-shadow: 4px 4px 0 #000, 0 0 20px ${titleColor}88;
+          letter-spacing: 3px;
+          line-height: 1.3;
+          margin-bottom: 16px;
         ">${titleText}</h1>
-        <p style="color: #888; font-size: 14px; letter-spacing: 2px; text-transform: uppercase;">
+        <p style="color: #8a8aa6; font-size: 9px; letter-spacing: 1px; text-transform: uppercase; font-family:${pf};">
           ${subtitleText}
         </p>
       </div>
 
       <div style="
-        background: rgba(13,13,30,0.9);
-        border: 1px solid #333;
-        border-radius: 8px;
-        padding: 24px 32px;
-        min-width: 260px;
+        background: #14141f;
+        border: 3px solid #4a4a66;
+        box-shadow: inset -3px -3px 0 #06060c;
+        padding: 22px 26px;
+        min-width: 280px;
         display: flex;
         flex-direction: column;
-        gap: 12px;
+        gap: 14px;
+        font-family:${pf};
       ">
-        <div style="display:flex; justify-content:space-between; color:#e0e0e0;">
-          <span style="color:#888; font-size:12px; text-transform:uppercase; letter-spacing:1px;">Player</span>
-          <span style="font-weight:600;">${state.player.name}</span>
+        <div style="display:flex; justify-content:space-between; gap:16px; color:#e8e8f0; font-size:8px;">
+          <span style="color:#8a8aa6; text-transform:uppercase;">Player</span>
+          <span>${state.player.name}</span>
         </div>
-        <div style="display:flex; justify-content:space-between; color:#e0e0e0;">
-          <span style="color:#888; font-size:12px; text-transform:uppercase; letter-spacing:1px;">Weeks Survived</span>
-          <span style="font-weight:600;">${state.calendar.week - 1} / ${state.calendar.maxWeeks}</span>
+        <div style="display:flex; justify-content:space-between; gap:16px; color:#e8e8f0; font-size:8px;">
+          <span style="color:#8a8aa6; text-transform:uppercase;">Weeks</span>
+          <span>${state.calendar.week - 1} / ${state.calendar.maxWeeks}</span>
         </div>
-        <div style="display:flex; justify-content:space-between; color:#e0e0e0;">
-          <span style="color:#888; font-size:12px; text-transform:uppercase; letter-spacing:1px;">Final Cash</span>
-          <span style="font-weight:600; color:#F5A623;">${formatMoney(state.player.money)}</span>
+        <div style="display:flex; justify-content:space-between; gap:16px; color:#e8e8f0; font-size:8px;">
+          <span style="color:#8a8aa6; text-transform:uppercase;">Cash</span>
+          <span style="color:#ffd24a;">${formatMoney(state.player.money)}</span>
         </div>
-        <div style="display:flex; justify-content:space-between; color:#e0e0e0;">
-          <span style="color:#888; font-size:12px; text-transform:uppercase; letter-spacing:1px;">Difficulty</span>
-          <span style="font-weight:600; text-transform:capitalize;">${state.difficulty}</span>
+        <div style="display:flex; justify-content:space-between; gap:16px; color:#e8e8f0; font-size:8px;">
+          <span style="color:#8a8aa6; text-transform:uppercase;">Diff</span>
+          <span style="text-transform:capitalize;">${state.difficulty}</span>
         </div>
       </div>
 
       <button id="play-again-btn" style="
-        padding: 14px 40px;
+        padding: 14px 36px;
         background: #F5A623;
-        border: none;
-        border-radius: 6px;
-        color: #0d0d1a;
-        font-size: 16px;
-        font-weight: 900;
+        border: 3px solid #ffd24a;
+        box-shadow: inset -3px -3px 0 #b87d20;
+        color: #14141f;
+        font-size: 11px;
         letter-spacing: 2px;
         cursor: pointer;
-        font-family: inherit;
+        font-family:${pf};
         text-transform: uppercase;
-        transition: all 0.15s;
       ">PLAY AGAIN</button>
     `;
 

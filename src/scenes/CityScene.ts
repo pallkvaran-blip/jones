@@ -1,6 +1,6 @@
 import Phaser from 'phaser'
 import { getStore } from '../state/store'
-import { locations, getLocationById } from '../data/locations'
+import { locations, getLocationById, BOARD_W, FRAME } from '../data/locations'
 import { consumeTime } from '../systems/TimeSystem'
 import { audioSystem } from '../systems/AudioSystem'
 import { Avatar } from '../entities/Avatar'
@@ -8,222 +8,272 @@ import { LocationSprite } from '../entities/LocationSprite'
 import { HUD } from '../ui/HUD'
 import type { LocationId } from '../state/types'
 
-const MAP_WIDTH = 520;
-const MAP_HEIGHT = 450;
+const GAME_W = 960
+const GAME_H = 540
+const BOARD_H = GAME_H
 
 export class CityScene extends Phaser.Scene {
-  private avatar!: Avatar;
-  private locationSprites: Map<LocationId, LocationSprite> = new Map();
-  private hud!: HUD;
-  private skyGraphics!: Phaser.GameObjects.Graphics;
-  private roadGraphics!: Phaser.GameObjects.Graphics;
-  private overlayText: Phaser.GameObjects.Text | null = null;
-  private unsubscribeStore: (() => void) | null = null;
-  private muteButton: HTMLButtonElement | null = null;
+  private avatar!: Avatar
+  private locationSprites: Map<LocationId, LocationSprite> = new Map()
+  private hud!: HUD
+  private streetGraphics!: Phaser.GameObjects.Graphics
+  private frameGraphics!: Phaser.GameObjects.Graphics
+  private nightOverlay!: Phaser.GameObjects.Rectangle
+  private overlayText: Phaser.GameObjects.Text | null = null
+  private unsubscribeStore: (() => void) | null = null
+  private muteButton: HTMLButtonElement | null = null
 
   constructor() {
-    super({ key: 'CityScene' });
+    super({ key: 'CityScene' })
   }
 
   create(): void {
-    const store = getStore();
-    const state = store.getState();
+    const store = getStore()
+    const state = store.getState()
 
-    // --- Background ---
-    this.add.rectangle(MAP_WIDTH / 2, 225, MAP_WIDTH, 450, 0x1a1a2e);
+    // --- Base background ---
+    this.add.rectangle(BOARD_W / 2, BOARD_H / 2, BOARD_W, BOARD_H, 0x232733).setDepth(0)
+    // HUD backing strip behind the DOM panel.
+    this.add
+      .rectangle(BOARD_W + (GAME_W - BOARD_W) / 2, BOARD_H / 2, GAME_W - BOARD_W, BOARD_H, 0x0d0d17)
+      .setDepth(0)
 
-    // Right panel background (behind HUD)
-    this.add.rectangle(MAP_WIDTH + (800 - MAP_WIDTH) / 2, 225, 800 - MAP_WIDTH, 450, 0x0d0d1a);
+    // --- Streets / sidewalks (the board surface) ---
+    this.streetGraphics = this.add.graphics().setDepth(1)
+    this.drawStreets()
 
-    // Sky gradient strip (top 30px of map)
-    this.skyGraphics = this.add.graphics();
-    this.drawSky(state.calendar.timeUnits);
-
-    // --- Roads ---
-    this.roadGraphics = this.add.graphics();
-    this.drawRoads();
-
-    // --- Location sprites ---
+    // --- Location buildings ---
     for (const loc of locations) {
-      const sprite = new LocationSprite(this, loc);
-      this.locationSprites.set(loc.id, sprite);
+      const sprite = new LocationSprite(this, loc)
+      sprite.setDepth(5)
+      this.locationSprites.set(loc.id, sprite)
 
       sprite.on('locationClicked', (id: LocationId) => {
-        this.handleLocationClick(id);
-      });
+        this.handleLocationClick(id)
+      })
     }
 
-    // Set initial active location
-    const activeLoc = this.locationSprites.get(state.currentLocationId);
-    if (activeLoc) activeLoc.setLocationActive(true);
+    // Initial active location indicator.
+    const activeLoc = this.locationSprites.get(state.currentLocationId)
+    if (activeLoc) activeLoc.setLocationActive(true)
 
-    // --- Avatar ---
-    const homeLoc = getLocationById('home');
-    const homeSprite = this.locationSprites.get('home');
-    const startX = homeSprite ? homeSprite.getCenter().x : homeLoc.x + homeLoc.width / 2;
-    const startY = homeSprite ? homeSprite.getCenter().y : homeLoc.y + homeLoc.height / 2;
-    this.avatar = new Avatar(this, startX, startY);
+    // --- Avatar (starts on the current location's doorstep) ---
+    const startSprite = this.locationSprites.get(state.currentLocationId)
+    const startLoc = getLocationById(state.currentLocationId)
+    const start = startSprite ? startSprite.getCenter() : { x: startLoc.cx, y: startLoc.cy }
+    this.avatar = new Avatar(this, start.x, start.y)
+
+    // --- Day/night ambient tint overlay (over the board, under banners) ---
+    this.nightOverlay = this.add
+      .rectangle(BOARD_W / 2, BOARD_H / 2, BOARD_W, BOARD_H, 0x101a3a, 0)
+      .setDepth(30)
+    this.nightOverlay.setBlendMode(Phaser.BlendModes.MULTIPLY)
+    this.updateAmbient(state.calendar.timeUnits)
+
+    // --- Beveled board frame (drawn on top of everything board-side) ---
+    this.frameGraphics = this.add.graphics().setDepth(40)
+    this.drawFrame()
 
     // --- HUD ---
-    this.hud = new HUD();
-    this.hud.mount();
-    this.hud.update(state);
+    this.hud = new HUD()
+    this.hud.mount()
+    this.hud.update(state)
 
     // --- Mute button ---
-    this.createMuteButton();
+    this.createMuteButton()
 
-    // --- Store subscription ---
+    // --- Store subscription (unchanged wiring) ---
     this.unsubscribeStore = store.subscribe((newState) => {
-      this.hud.update(newState);
-      this.drawSky(newState.calendar.timeUnits);
+      this.hud.update(newState)
+      this.updateAmbient(newState.calendar.timeUnits)
 
       if (newState.isGameOver) {
         this.time.delayedCall(500, () => {
-          this.scene.start('GameOverScene');
-        });
+          this.scene.start('GameOverScene')
+        })
       }
-    });
+    })
   }
 
-  private drawSky(timeUnits: number): void {
-    this.skyGraphics.clear();
-
-    // Lerp sky color based on time units:
-    // 100 = pale blue (#87CEEB)
-    // 50  = orange (#FF8C00)
-    // 0   = deep purple (#1a0033)
-    let r: number, g: number, b: number;
-
+  /** Drive a semi-transparent tint by time of day: morning clear → dusk → night. */
+  private updateAmbient(timeUnits: number): void {
+    // timeUnits: 100 = morning (clear), 50 = golden dusk, 0 = night.
+    let color: number
+    let alpha: number
     if (timeUnits >= 50) {
-      const t = (timeUnits - 50) / 50;
-      r = Math.round(0xFF * (1 - t) + 0x87 * t);
-      g = Math.round(0x8C * (1 - t) + 0xCE * t);
-      b = Math.round(0x00 * (1 - t) + 0xEB * t);
+      const t = (timeUnits - 50) / 50 // 1=morning, 0=dusk
+      // dusk gold -> clear
+      const r = Math.round(0xff * (1 - t) + 0xff * t)
+      const g = Math.round(0xb0 * (1 - t) + 0xff * t)
+      const b = Math.round(0x6a * (1 - t) + 0xff * t)
+      color = (r << 16) | (g << 8) | b
+      alpha = (1 - t) * 0.28
     } else {
-      const t = timeUnits / 50;
-      r = Math.round(0x1a * (1 - t) + 0xFF * t);
-      g = Math.round(0x00 * (1 - t) + 0x8C * t);
-      b = Math.round(0x33 * (1 - t) + 0x00 * t);
+      const t = timeUnits / 50 // 1=dusk, 0=deep night
+      const r = Math.round(0x20 * (1 - t) + 0xff * t)
+      const g = Math.round(0x28 * (1 - t) + 0xb0 * t)
+      const b = Math.round(0x5a * (1 - t) + 0x6a * t)
+      color = (r << 16) | (g << 8) | b
+      alpha = 0.28 + (1 - t) * 0.34
     }
-
-    const color = (r << 16) | (g << 8) | b;
-    this.skyGraphics.fillStyle(color, 1);
-    this.skyGraphics.fillRect(0, 0, MAP_WIDTH, 30);
+    this.nightOverlay.setFillStyle(color)
+    this.nightOverlay.setAlpha(alpha)
   }
 
-  private drawRoads(): void {
-    const g = this.roadGraphics;
-    g.clear();
+  private drawStreets(): void {
+    const g = this.streetGraphics
+    g.clear()
 
-    const ROAD_COLOR = 0xf5f0e8;
-    const SIDEWALK_COLOR = 0xe8e0cc;
+    const ASPHALT = 0x2b2f3a
+    const SIDEWALK = 0x9aa0ad
+    const SIDEWALK_DARK = 0x7f8593
+    const LINE = 0xf2c94c
 
-    // Column positions (x of road centers) between building columns
-    // Columns at x=15,140,265,390 with width 110
-    // Roads between: after col0 (125), after col1 (250), after col2 (375)
-    // Row positions (y of road centers) between building rows
-    // Rows at y=40,170,300 with height 100
-    // Roads between: after row0 (140), after row1 (270)
-    // Also borders
+    // Asphalt fills the whole board interior.
+    g.fillStyle(ASPHALT, 1)
+    g.fillRect(FRAME, FRAME, BOARD_W - FRAME * 2, BOARD_H - FRAME * 2)
 
-    const roadWidth = 20;
-    const sidewalkWidth = 4;
+    // Road centerlines run down the streets between columns and across rows.
+    // Column gaps centers (between the 4 building columns + edges).
+    const colCenters = [24, 196, 366, 536, 702]
+    const rowCenters = [26, 186, 346, BOARD_H - 26]
 
-    // Vertical roads (between columns + left/right edges)
-    const vRoadXs = [0, 125, 250, 375, MAP_WIDTH];
-    for (const x of vRoadXs) {
-      // Sidewalk
-      g.fillStyle(SIDEWALK_COLOR, 1);
-      g.fillRect(x - sidewalkWidth / 2, 30, sidewalkWidth + roadWidth, MAP_HEIGHT - 30);
-      // Road
-      g.fillStyle(ROAD_COLOR, 0.7);
-      g.fillRect(x, 30, roadWidth, MAP_HEIGHT - 30);
+    const roadW = 18
+
+    // Vertical roads
+    for (const cx of colCenters) {
+      g.fillStyle(0x363b48, 1)
+      g.fillRect(cx - roadW / 2, FRAME, roadW, BOARD_H - FRAME * 2)
+      // dashed yellow center line
+      g.fillStyle(LINE, 0.9)
+      for (let y = FRAME + 6; y < BOARD_H - FRAME; y += 16) {
+        g.fillRect(cx - 1, y, 2, 8)
+      }
+    }
+    // Horizontal roads
+    for (const cy of rowCenters) {
+      g.fillStyle(0x363b48, 1)
+      g.fillRect(FRAME, cy - roadW / 2, BOARD_W - FRAME * 2, roadW)
+      g.fillStyle(LINE, 0.9)
+      for (let x = FRAME + 6; x < BOARD_W - FRAME; x += 16) {
+        g.fillRect(x, cy - 1, 8, 2)
+      }
     }
 
-    // Horizontal roads (between rows + top/bottom edges)
-    const hRoadYs = [30, 140, 270, 400];
-    for (const y of hRoadYs) {
-      g.fillStyle(SIDEWALK_COLOR, 1);
-      g.fillRect(0, y - sidewalkWidth / 2, MAP_WIDTH, sidewalkWidth + roadWidth);
-      g.fillStyle(ROAD_COLOR, 0.7);
-      g.fillRect(0, y, MAP_WIDTH, roadWidth);
+    // Sidewalks bordering each building footprint.
+    for (const loc of locations) {
+      const pad = 6
+      g.fillStyle(SIDEWALK, 1)
+      g.fillRect(loc.x - pad, loc.y - pad, loc.width + pad * 2, loc.height + pad * 2 + 26)
+      g.fillStyle(SIDEWALK_DARK, 1)
+      g.fillRect(loc.x - pad, loc.y + loc.height + pad + 24, loc.width + pad * 2, 2)
     }
+
+    // Crosswalk stripes at intersections (where roads cross).
+    g.fillStyle(0xe6e6ee, 0.55)
+    for (const cx of colCenters) {
+      for (const cy of rowCenters) {
+        for (let i = -2; i <= 2; i++) {
+          g.fillRect(cx + i * 4 - 1, cy - roadW / 2, 2, roadW)
+        }
+      }
+    }
+  }
+
+  private drawFrame(): void {
+    const g = this.frameGraphics
+    g.clear()
+    const t = FRAME
+    // Outer dark border
+    g.fillStyle(0x14141f, 1)
+    g.fillRect(0, 0, BOARD_W, t)
+    g.fillRect(0, BOARD_H - t, BOARD_W, t)
+    g.fillRect(0, 0, t, BOARD_H)
+    g.fillRect(BOARD_W - t, 0, t, BOARD_H)
+    // Inner highlight bevel (top/left light, bottom/right dark)
+    g.fillStyle(0x4a4a66, 1)
+    g.fillRect(t - 3, t - 3, BOARD_W - (t - 3) * 2, 3)
+    g.fillRect(t - 3, t - 3, 3, BOARD_H - (t - 3) * 2)
+    g.fillStyle(0x080810, 1)
+    g.fillRect(t - 3, BOARD_H - t, BOARD_W - (t - 3) * 2, 3)
+    g.fillRect(BOARD_W - t, t - 3, 3, BOARD_H - (t - 3) * 2)
   }
 
   private handleLocationClick(id: LocationId): void {
-    audioSystem.playSFX('click');
+    audioSystem.playSFX('click')
 
-    const store = getStore();
-    const state = store.getState();
+    const store = getStore()
+    const state = store.getState()
 
     if (state.currentLocationId === id) {
-      // Already here — show toast
-      this.showToast(`You are at ${getLocationById(id).name}`);
-      return;
+      this.showToast(`You are at ${getLocationById(id).name}`)
+      return
     }
 
-    if (this.avatar.isCurrentlyMoving()) return;
+    if (this.avatar.isCurrentlyMoving()) return
 
-    const targetSprite = this.locationSprites.get(id);
-    if (!targetSprite) return;
+    const targetSprite = this.locationSprites.get(id)
+    if (!targetSprite) return
 
-    // Update active location indicator
-    const prevSprite = this.locationSprites.get(state.currentLocationId);
-    if (prevSprite) prevSprite.setLocationActive(false);
+    const prevSprite = this.locationSprites.get(state.currentLocationId)
+    if (prevSprite) prevSprite.setLocationActive(false)
 
-    const targetCenter = targetSprite.getCenter();
+    const targetCenter = targetSprite.getCenter()
 
-    audioSystem.playSFX('move');
+    audioSystem.playSFX('move')
 
-    // Start movement
     this.avatar.moveTo(targetCenter.x, targetCenter.y, () => {
-      audioSystem.playSFX('arrive');
+      audioSystem.playSFX('arrive')
 
-      store.setState(s => {
-        const afterMove = consumeTime(s, 10);
-        const withLocation = { ...afterMove, currentLocationId: id };
+      store.setState((s) => {
+        const afterMove = consumeTime(s, 10)
+        const withLocation = { ...afterMove, currentLocationId: id }
 
-        // Check if day advanced
-        const dayAdvanced = withLocation.calendar.day !== s.calendar.day ||
-                            withLocation.calendar.week !== s.calendar.week;
-        const weekAdvanced = withLocation.calendar.week !== s.calendar.week;
+        const dayAdvanced =
+          withLocation.calendar.day !== s.calendar.day ||
+          withLocation.calendar.week !== s.calendar.week
+        const weekAdvanced = withLocation.calendar.week !== s.calendar.week
 
         if (weekAdvanced) {
-          audioSystem.playSFX('weekEnd');
-          this.showDayBanner(`Week ${withLocation.calendar.week}`);
+          audioSystem.playSFX('weekEnd')
+          this.showDayBanner(`Week ${withLocation.calendar.week}`)
         } else if (dayAdvanced) {
-          audioSystem.playSFX('dayEnd');
-          this.showDayBanner(`Day ${withLocation.calendar.day} — ${this.getDayName(withLocation.calendar.day)}`);
+          audioSystem.playSFX('dayEnd')
+          this.showDayBanner(
+            `Day ${withLocation.calendar.day} — ${this.getDayName(withLocation.calendar.day)}`,
+          )
         }
 
-        return withLocation;
-      });
+        return withLocation
+      })
 
-      targetSprite.setLocationActive(true);
-    });
+      targetSprite.setLocationActive(true)
+    })
   }
 
   private getDayName(day: number): string {
-    const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-    return days[Math.max(0, Math.min(6, day - 1))];
+    const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+    return days[Math.max(0, Math.min(6, day - 1))]
   }
 
   private showToast(message: string): void {
     if (this.overlayText) {
-      this.overlayText.destroy();
-      this.overlayText = null;
+      this.overlayText.destroy()
+      this.overlayText = null
     }
 
-    const text = this.add.text(MAP_WIDTH / 2, 225, message, {
-      fontSize: '16px',
+    const text = this.add.text(BOARD_W / 2, BOARD_H / 2, message, {
+      fontFamily: '"Press Start 2P", monospace',
+      fontSize: '12px',
       color: '#ffffff',
-      backgroundColor: 'rgba(0,0,0,0.75)',
-      padding: { x: 16, y: 8 },
+      backgroundColor: 'rgba(0,0,0,0.8)',
+      padding: { x: 14, y: 10 },
       align: 'center',
-    });
-    text.setOrigin(0.5, 0.5);
-    text.setDepth(50);
-    this.overlayText = text;
+    })
+    text.setOrigin(0.5, 0.5)
+    text.setResolution(3)
+    text.setDepth(50)
+    this.overlayText = text
 
     this.tweens.add({
       targets: text,
@@ -231,29 +281,30 @@ export class CityScene extends Phaser.Scene {
       delay: 1500,
       duration: 500,
       onComplete: () => {
-        text.destroy();
-        if (this.overlayText === text) this.overlayText = null;
+        text.destroy()
+        if (this.overlayText === text) this.overlayText = null
       },
-    });
+    })
   }
 
   private showDayBanner(message: string): void {
-    const text = this.add.text(MAP_WIDTH / 2, 225, message, {
-      fontSize: '24px',
-      fontStyle: 'bold',
+    const text = this.add.text(BOARD_W / 2, BOARD_H / 2, message, {
+      fontFamily: '"Press Start 2P", monospace',
+      fontSize: '18px',
       color: '#F5A623',
-      backgroundColor: 'rgba(0,0,0,0.8)',
-      padding: { x: 24, y: 12 },
+      backgroundColor: 'rgba(0,0,0,0.85)',
+      padding: { x: 20, y: 14 },
       align: 'center',
-    });
-    text.setOrigin(0.5, 0.5);
-    text.setDepth(50);
-    text.setAlpha(0);
+    })
+    text.setOrigin(0.5, 0.5)
+    text.setResolution(3)
+    text.setDepth(50)
+    text.setAlpha(0)
 
     this.tweens.add({
       targets: text,
       alpha: { from: 0, to: 1 },
-      y: { from: 260, to: 225 },
+      y: { from: BOARD_H / 2 + 35, to: BOARD_H / 2 },
       duration: 300,
       ease: 'Power2',
       onComplete: () => {
@@ -263,27 +314,26 @@ export class CityScene extends Phaser.Scene {
           delay: 1800,
           duration: 500,
           onComplete: () => text.destroy(),
-        });
+        })
       },
-    });
+    })
   }
 
   private createMuteButton(): void {
-    const uiRoot = document.getElementById('ui-root');
-    if (!uiRoot) return;
+    const uiRoot = document.getElementById('ui-root')
+    if (!uiRoot) return
 
-    this.muteButton = document.createElement('button');
-    this.muteButton.id = 'mute-btn';
-    this.muteButton.textContent = '🔊';
+    this.muteButton = document.createElement('button')
+    this.muteButton.id = 'mute-btn'
+    this.muteButton.textContent = '🔊'
     this.muteButton.style.cssText = `
       position: fixed;
       top: 8px;
-      right: 270px;
+      right: 250px;
       width: 32px;
       height: 32px;
-      background: rgba(13,13,30,0.85);
-      border: 1px solid #444;
-      border-radius: 4px;
+      background: rgba(13,13,23,0.9);
+      border: 2px solid #3a3a52;
       color: #e0e0e0;
       font-size: 16px;
       cursor: pointer;
@@ -293,31 +343,30 @@ export class CityScene extends Phaser.Scene {
       justify-content: center;
       pointer-events: auto;
       padding: 0;
-    `;
+    `
 
     this.muteButton.addEventListener('click', () => {
-      const muted = !audioSystem.isMuted();
-      audioSystem.setMuted(muted);
+      const muted = !audioSystem.isMuted()
+      audioSystem.setMuted(muted)
       if (this.muteButton) {
-        this.muteButton.textContent = muted ? '🔇' : '🔊';
+        this.muteButton.textContent = muted ? '🔇' : '🔊'
       }
-    });
+    })
 
-    uiRoot.appendChild(this.muteButton);
+    uiRoot.appendChild(this.muteButton)
   }
 
   shutdown(): void {
     if (this.unsubscribeStore) {
-      this.unsubscribeStore();
-      this.unsubscribeStore = null;
+      this.unsubscribeStore()
+      this.unsubscribeStore = null
     }
-    this.hud.unmount();
-    audioSystem.stopBGM();
+    this.hud.unmount()
+    audioSystem.stopBGM()
 
-    // Remove mute button
     if (this.muteButton?.parentNode) {
-      this.muteButton.parentNode.removeChild(this.muteButton);
-      this.muteButton = null;
+      this.muteButton.parentNode.removeChild(this.muteButton)
+      this.muteButton = null
     }
   }
 }

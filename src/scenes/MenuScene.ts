@@ -16,8 +16,8 @@ export class MenuScene extends Phaser.Scene {
   create(): void {
     // Background gradient
     const bg = this.add.graphics();
-    bg.fillGradientStyle(0x0d0d1a, 0x0d0d1a, 0x1a1a3e, 0x1a1a3e, 1);
-    bg.fillRect(0, 0, 800, 450);
+    bg.fillGradientStyle(0x0d0d17, 0x0d0d17, 0x1a1a3e, 0x1a1a3e, 1);
+    bg.fillRect(0, 0, 960, 540);
 
     // Draw some decorative city silhouette
     this.drawCitySilhouette();
@@ -45,15 +45,18 @@ export class MenuScene extends Phaser.Scene {
     ];
 
     for (const b of buildings) {
-      g.fillRect(b.x, 450 - b.h, b.w, b.h);
+      g.fillRect(b.x, 540 - b.h, b.w, b.h);
     }
+    // a couple extra to span the wider canvas
+    g.fillRect(810, 540 - 150, 80, 150);
+    g.fillRect(900, 540 - 110, 60, 110);
 
     // Stars
     g.fillStyle(0xFFFFFF, 0.6);
-    for (let i = 0; i < 50; i++) {
-      const sx = Math.random() * 800;
-      const sy = Math.random() * 200;
-      g.fillRect(sx, sy, 1, 1);
+    for (let i = 0; i < 60; i++) {
+      const sx = Math.random() * 960;
+      const sy = Math.random() * 240;
+      g.fillRect(sx, sy, 2, 2);
     }
   }
 
@@ -76,82 +79,82 @@ export class MenuScene extends Phaser.Scene {
       z-index: 200;
     `;
 
+    const pf = `'Press Start 2P', 'Courier New', monospace`;
     this.menuContainer.innerHTML = `
-      <div style="text-align:center; margin-bottom: 8px;">
+      <div style="text-align:center; margin-bottom: 12px; font-family:${pf};">
         <h1 style="
-          font-size: clamp(48px, 10vw, 80px);
-          font-weight: 900;
-          letter-spacing: 12px;
+          font-family:${pf};
+          font-size: clamp(40px, 9vw, 72px);
+          letter-spacing: 6px;
           color: #F5A623;
-          text-shadow: 0 0 20px rgba(245,166,35,0.5), 0 2px 4px rgba(0,0,0,0.8);
+          text-shadow: 4px 4px 0 #000, 0 0 24px rgba(245,166,35,0.4);
           margin: 0;
           line-height: 1;
         ">JONES</h1>
         <p style="
-          color: #888;
-          font-size: 12px;
-          letter-spacing: 3px;
+          color: #8a8aa6;
+          font-size: 8px;
+          letter-spacing: 2px;
           text-transform: uppercase;
-          margin-top: 6px;
+          margin-top: 14px;
+          font-family:${pf};
         ">Life in the Fast Lane</p>
       </div>
 
       <div style="
-        background: rgba(13,13,30,0.85);
-        border: 1px solid #333;
-        border-radius: 8px;
-        padding: 24px 32px;
+        background: #14141f;
+        border: 3px solid #4a4a66;
+        box-shadow: inset -3px -3px 0 #06060c, 6px 6px 0 rgba(0,0,0,0.5);
+        padding: 22px 26px;
         display: flex;
         flex-direction: column;
-        gap: 16px;
+        gap: 18px;
         min-width: 280px;
         max-width: 360px;
         width: 90%;
+        font-family:${pf};
       ">
         <div>
-          <label style="display:block; color:#888; font-size:11px; letter-spacing:1px; text-transform:uppercase; margin-bottom:6px;">Your Name</label>
+          <label style="display:block; color:#8a8aa6; font-size:8px; letter-spacing:1px; text-transform:uppercase; margin-bottom:8px; font-family:${pf};">Your Name</label>
           <input
             id="player-name-input"
             type="text"
-            placeholder="Enter your name..."
+            placeholder="ENTER NAME"
             maxlength="20"
             style="
               width: 100%;
-              padding: 10px 12px;
-              background: rgba(255,255,255,0.05);
-              border: 1px solid #444;
-              border-radius: 4px;
-              color: #e0e0e0;
-              font-size: 15px;
+              padding: 10px 10px;
+              background: #06060c;
+              border: 2px solid #3a3a52;
+              color: #e8e8f0;
+              font-size: 10px;
               outline: none;
-              font-family: inherit;
+              font-family:${pf};
             "
           />
         </div>
 
         <div>
-          <label style="display:block; color:#888; font-size:11px; letter-spacing:1px; text-transform:uppercase; margin-bottom:8px;">Difficulty</label>
+          <label style="display:block; color:#8a8aa6; font-size:8px; letter-spacing:1px; text-transform:uppercase; margin-bottom:10px; font-family:${pf};">Difficulty</label>
           <div style="display:flex; gap:8px;">
-            <button class="diff-btn" data-diff="easy" style="flex:1; padding:8px 4px; background:rgba(46,204,113,0.15); border:1px solid #2ECC71; border-radius:4px; color:#2ECC71; font-size:12px; cursor:pointer; font-family:inherit; transition: all 0.15s;">Easy</button>
-            <button class="diff-btn selected" data-diff="normal" style="flex:1; padding:8px 4px; background:rgba(245,166,35,0.3); border:2px solid #F5A623; border-radius:4px; color:#F5A623; font-size:12px; cursor:pointer; font-family:inherit; font-weight:700; transition: all 0.15s;">Normal</button>
-            <button class="diff-btn" data-diff="hard" style="flex:1; padding:8px 4px; background:rgba(231,76,60,0.15); border:1px solid #E74C3C; border-radius:4px; color:#E74C3C; font-size:12px; cursor:pointer; font-family:inherit; transition: all 0.15s;">Hard</button>
+            <button class="diff-btn" data-diff="easy" style="flex:1; padding:10px 2px; background:#0e2417; border:2px solid #2ECC71; color:#2ECC71; font-size:8px; cursor:pointer; font-family:${pf};">EASY</button>
+            <button class="diff-btn selected" data-diff="normal" style="flex:1; padding:10px 2px; background:#3a2a0a; border:2px solid #F5A623; color:#F5A623; font-size:8px; cursor:pointer; font-family:${pf};">NORM</button>
+            <button class="diff-btn" data-diff="hard" style="flex:1; padding:10px 2px; background:#2a0f0c; border:2px solid #E74C3C; color:#E74C3C; font-size:8px; cursor:pointer; font-family:${pf};">HARD</button>
           </div>
         </div>
 
         <button id="start-game-btn" style="
           padding: 14px;
           background: #F5A623;
-          border: none;
-          border-radius: 6px;
-          color: #0d0d1a;
-          font-size: 16px;
-          font-weight: 900;
+          border: 3px solid #ffd24a;
+          box-shadow: inset -3px -3px 0 #b87d20;
+          color: #14141f;
+          font-size: 11px;
           letter-spacing: 2px;
           cursor: pointer;
-          font-family: inherit;
-          transition: all 0.15s;
+          font-family:${pf};
           text-transform: uppercase;
-        ">START GAME</button>
+        ">START</button>
       </div>
     `;
 
@@ -196,26 +199,20 @@ export class MenuScene extends Phaser.Scene {
   }
 
   private updateDifficultyButtons(buttons: NodeListOf<HTMLButtonElement>): void {
-    const colors: Record<Difficulty, { bg: string; border: string; color: string }> = {
-      easy:   { bg: 'rgba(46,204,113,0.15)',  border: '#2ECC71', color: '#2ECC71' },
-      normal: { bg: 'rgba(245,166,35,0.15)',  border: '#F5A623', color: '#F5A623' },
-      hard:   { bg: 'rgba(231,76,60,0.15)',   border: '#E74C3C', color: '#E74C3C' },
+    const colors: Record<Difficulty, { dim: string; lit: string; border: string; color: string }> = {
+      easy:   { dim: '#0e2417', lit: '#1a4a2c', border: '#2ECC71', color: '#2ECC71' },
+      normal: { dim: '#3a2a0a', lit: '#5a4010', border: '#F5A623', color: '#F5A623' },
+      hard:   { dim: '#2a0f0c', lit: '#4a1a14', border: '#E74C3C', color: '#E74C3C' },
     };
 
     buttons.forEach(btn => {
       const diff = (btn.dataset['diff'] as Difficulty) ?? 'normal';
       const c = colors[diff];
-      if (diff === this.selectedDifficulty) {
-        btn.style.background = c.bg.replace('0.15', '0.35');
-        btn.style.border = `2px solid ${c.border}`;
-        btn.style.color = c.color;
-        btn.style.fontWeight = '700';
-      } else {
-        btn.style.background = c.bg;
-        btn.style.border = `1px solid ${c.border}`;
-        btn.style.color = c.color;
-        btn.style.fontWeight = '400';
-      }
+      const selected = diff === this.selectedDifficulty;
+      btn.style.background = selected ? c.lit : c.dim;
+      btn.style.border = `2px solid ${c.border}`;
+      btn.style.color = c.color;
+      btn.style.boxShadow = selected ? `0 0 8px ${c.border}` : 'none';
     });
   }
 
