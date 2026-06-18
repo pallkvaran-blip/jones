@@ -43,9 +43,24 @@ export class GameOverScene extends Phaser.Scene {
 
     const isWin = state.winCondition === 'won';
     const titleColor = isWin ? '#F5A623' : '#E74C3C';
-    const titleText = isWin ? 'WEEK COMPLETE!' : "TIME'S UP!";
-    const subtitleText = state.lossReason ?? (isWin ? 'Great job!' : 'Game over');
+    const titleText = isWin ? 'YOU WIN!' : "TIME'S UP!";
+    const subtitleText = state.lossReason ?? (isWin ? 'All goals achieved!' : 'Game over');
     const pf = `'Press Start 2P', 'Courier New', monospace`;
+
+    // Goals summary rows
+    const goalNames = ['Wealth', 'Education', 'Career', 'Happiness'];
+    const goalKeys: Array<keyof typeof state.goalsMet> = ['targetWealth', 'targetEducation', 'targetCareerRank', 'targetHappiness'];
+    const goalsRows = goalKeys.map((key, i) => {
+      const met = state.goalsMet[key];
+      const icon = met ? '&#x2713;' : '&#x2717;';
+      const color = met ? '#2ECC71' : '#E74C3C';
+      return `
+        <div style="display:flex; justify-content:space-between; gap:16px; color:#e8e8f0; font-size:8px;">
+          <span style="color:#8a8aa6; text-transform:uppercase;">${goalNames[i]}</span>
+          <span style="color:${color};">${icon}</span>
+        </div>
+      `;
+    }).join('');
 
     this.uiContainer.innerHTML = `
       <div style="text-align:center; max-width:560px; padding: 0 20px; font-family:${pf};">
@@ -90,6 +105,9 @@ export class GameOverScene extends Phaser.Scene {
           <span style="color:#8a8aa6; text-transform:uppercase;">Diff</span>
           <span style="text-transform:capitalize;">${state.difficulty}</span>
         </div>
+        <hr style="border:none; border-top:1px solid #3a3a52; margin:2px 0;" />
+        <div style="color:#8a8aa6; font-size:7px; text-transform:uppercase; letter-spacing:1px; margin-bottom:4px;">Goals</div>
+        ${goalsRows}
       </div>
 
       <button id="play-again-btn" style="

@@ -2,6 +2,7 @@ import Phaser from 'phaser'
 import { getStore } from '../state/store'
 import { locations, getLocationById, BOARD_W, FRAME } from '../data/locations'
 import { consumeTime } from '../systems/TimeSystem'
+import { executeAction } from '../systems/ActionSystem'
 import { audioSystem } from '../systems/AudioSystem'
 import { Avatar } from '../entities/Avatar'
 import { LocationSprite } from '../entities/LocationSprite'
@@ -79,6 +80,9 @@ export class CityScene extends Phaser.Scene {
     this.hud.mount()
     this.hud.update(state)
 
+    // Show actions for initial location (home)
+    this.hud.showActions(state.currentLocationId, state, (id) => this.handleAction(id))
+
     // --- Mute button ---
     this.createMuteButton()
 
@@ -93,6 +97,12 @@ export class CityScene extends Phaser.Scene {
         })
       }
     })
+  }
+
+  private handleAction(actionId: string): void {
+    const store = getStore()
+    const state = store.getState()
+    store.setState((_s) => executeAction(actionId, state.currentLocationId, state))
   }
 
   /** Drive a semi-transparent tint by time of day: morning clear → dusk → night. */
@@ -218,6 +228,9 @@ export class CityScene extends Phaser.Scene {
     const prevSprite = this.locationSprites.get(state.currentLocationId)
     if (prevSprite) prevSprite.setLocationActive(false)
 
+    // Hide actions while traveling
+    this.hud.hideActions()
+
     const targetCenter = targetSprite.getCenter()
 
     // Distance-proportional time cost and tween duration.
@@ -260,6 +273,9 @@ export class CityScene extends Phaser.Scene {
           return withLocation
         })
         targetSprite.setLocationActive(true)
+        // Show actions for the new location
+        const newState = store.getState()
+        this.hud.showActions(id, newState, (actionId) => this.handleAction(actionId))
       },
       (progress) => {
         // Smoothly interpolate timeUnits as the avatar walks.

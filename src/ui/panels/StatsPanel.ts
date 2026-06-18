@@ -1,5 +1,6 @@
 import type { GameState } from '../../state/types'
 import { formatMoney, formatTime, dayName } from '../../utils/format'
+import { CAREER_JOBS } from '../../data/jobs'
 
 function getBarClass(value: number): string {
   if (value >= 60) return 'high';
@@ -58,12 +59,22 @@ export class StatsPanel {
         <span class="stat-value location-name" id="sp-location">Your Apartment</span>
       </div>
 
+      <div class="stat-row">
+        <span class="stat-label">Job</span>
+        <span class="stat-value" id="sp-job">Unemployed</span>
+      </div>
+
+      <div class="stat-row">
+        <span class="stat-label">Goals</span>
+        <span class="stat-value" id="sp-goals">&#x25CB; &#x25CB; &#x25CB; &#x25CB;</span>
+      </div>
+
       <hr class="section-divider" />
 
       <div class="stat-label" style="margin-bottom:4px">NEEDS</div>
       <div class="needs-section">
         <div class="need-row">
-          <span class="need-icon">🍎</span>
+          <span class="need-icon">&#x1F34E;</span>
           <span class="need-label">Hunger</span>
           <div class="need-bar-wrap">
             <div class="bar-container">
@@ -72,7 +83,7 @@ export class StatsPanel {
           </div>
         </div>
         <div class="need-row">
-          <span class="need-icon">⚡</span>
+          <span class="need-icon">&#x26A1;</span>
           <span class="need-label">Energy</span>
           <div class="need-bar-wrap">
             <div class="bar-container">
@@ -81,7 +92,7 @@ export class StatsPanel {
           </div>
         </div>
         <div class="need-row">
-          <span class="need-icon">❤️</span>
+          <span class="need-icon">&#x2764;&#xFE0F;</span>
           <span class="need-label">Health</span>
           <div class="need-bar-wrap">
             <div class="bar-container">
@@ -90,7 +101,7 @@ export class StatsPanel {
           </div>
         </div>
         <div class="need-row">
-          <span class="need-icon">😊</span>
+          <span class="need-icon">&#x1F60A;</span>
           <span class="need-label">Morale</span>
           <div class="need-bar-wrap">
             <div class="bar-container">
@@ -152,6 +163,33 @@ export class StatsPanel {
         el.style.width = `${need.value}%`;
         el.className = `bar-fill ${getBarClass(need.value)}`;
       }
+    }
+
+    // Job display
+    const jobEl = this.el.querySelector('#sp-job');
+    if (jobEl) {
+      if (player.careerTrack && player.jobRank >= 1) {
+        const tier = CAREER_JOBS[player.careerTrack].tiers[player.jobRank - 1];
+        jobEl.textContent = tier ? tier.title : 'Unemployed';
+      } else {
+        jobEl.textContent = 'Unemployed';
+      }
+    }
+
+    // Goals indicators
+    const goalsEl = this.el.querySelector('#sp-goals');
+    if (goalsEl) {
+      const { goalsMet } = state;
+      const met = '#2ECC71';
+      const unmet = '#5a5a72';
+      const dot = (isMet: boolean) =>
+        `<span style="color:${isMet ? met : unmet}">${isMet ? '&#x25CF;' : '&#x25CB;'}</span>`;
+      goalsEl.innerHTML = [
+        dot(goalsMet.targetWealth),
+        dot(goalsMet.targetEducation),
+        dot(goalsMet.targetCareerRank),
+        dot(goalsMet.targetHappiness),
+      ].join(' ');
     }
   }
 

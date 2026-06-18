@@ -26,6 +26,7 @@ export interface Player {
   wardrobe: number;
   hasComputer: boolean;
   hasTransport: boolean;
+  jobRank: number;
 }
 
 export interface Calendar {
