@@ -26,8 +26,9 @@ export function createInitialState(name: string, difficulty: Difficulty): GameSt
       morale: 80,
       jobId: null,
       careerTrack: null,
-      jobPerformance: 0,
+      jobPerformance: 50,
       jobTenure: 0,
+      jobWarningWeeks: 0,
       jobRank: 0,
       experience,
       education: 0,
@@ -42,7 +43,6 @@ export function createInitialState(name: string, difficulty: Difficulty): GameSt
       hasComputer: false,
       hasTransport: false,
       pets: [],
-      jobWarningWeeks: 0,
     },
     calendar: {
       week: 1,
@@ -73,5 +73,6 @@ export function createInitialState(name: string, difficulty: Difficulty): GameSt
     winCondition: null,
     lossReason: null,
     pendingLifeEventId: null,
+    pendingWorkEventId: null,
   };
 }

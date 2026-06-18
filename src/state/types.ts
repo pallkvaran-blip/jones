@@ -14,6 +14,7 @@ export interface Player {
   careerTrack: CareerTrack | null;
   jobPerformance: number;
   jobTenure: number;
+  jobWarningWeeks: number;
   experience: Record<CareerTrack, number>;
   education: number;
   bankBalance: number;
@@ -28,7 +29,6 @@ export interface Player {
   hasTransport: boolean;
   jobRank: number;
   pets: string[];
-  jobWarningWeeks: number;
 }
 
 export interface Calendar {
@@ -75,4 +75,5 @@ export interface GameState {
   winCondition: 'won' | 'lost' | null;
   lossReason: string | null;
   pendingLifeEventId: string | null;
+  pendingWorkEventId: string | null;
 }

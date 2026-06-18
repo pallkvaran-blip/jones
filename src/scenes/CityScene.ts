@@ -11,6 +11,7 @@ import type { LocationId } from '../state/types'
 import { ALL_LIFE_EVENTS } from '../data/lifeEvents'
 import { applyImmediateEvent, resolveEventChoice } from '../systems/EventSystem'
 import { EventModal } from '../ui/EventModal'
+import { getWorkEvent } from '../data/workEvents'
 
 const GAME_W = 960
 const GAME_H = 540
@@ -28,6 +29,7 @@ export class CityScene extends Phaser.Scene {
   private muteButton: HTMLButtonElement | null = null
   private eventModal: EventModal = new EventModal()
   private lastPendingEventId: string | null = null
+  private lastWorkEventId: string | null = null
 
   constructor() {
     super({ key: 'CityScene' })
@@ -91,7 +93,7 @@ export class CityScene extends Phaser.Scene {
     // --- Mute button ---
     this.createMuteButton()
 
-    // --- Store subscription (unchanged wiring) ---
+    // --- Store subscription ---
     this.unsubscribeStore = store.subscribe((newState) => {
       this.hud.update(newState)
       this.updateAmbient(newState.calendar.timeUnits)
@@ -102,6 +104,7 @@ export class CityScene extends Phaser.Scene {
         })
       }
 
+      // Life event modal
       if (newState.pendingLifeEventId && newState.pendingLifeEventId !== this.lastPendingEventId) {
         this.lastPendingEventId = newState.pendingLifeEventId
         const event = ALL_LIFE_EVENTS.find(e => e.id === newState.pendingLifeEventId)
@@ -123,6 +126,56 @@ export class CityScene extends Phaser.Scene {
 
       if (!newState.pendingLifeEventId) {
         this.lastPendingEventId = null
+      }
+
+      // Work event modal
+      if (newState.pendingWorkEventId && newState.pendingWorkEventId !== this.lastWorkEventId) {
+        this.lastWorkEventId = newState.pendingWorkEventId
+        const track = newState.player.careerTrack
+        if (track) {
+          const workEvent = getWorkEvent(track, newState.pendingWorkEventId)
+          if (workEvent) {
+            // Clear immediately so it doesn't re-trigger
+            store.setState(prev => ({ ...prev, pendingWorkEventId: null }))
+            this.lastWorkEventId = null
+
+            this.eventModal.show(
+              {
+                id: workEvent.id,
+                title: workEvent.title,
+                description: workEvent.description,
+                type: 'choice',
+                choices: workEvent.choices,
+              },
+              (choiceIdx) => {
+                const choice = workEvent.choices[choiceIdx]
+                store.setState(prev => {
+                  const p = prev.player
+                  const cap = (v: number) => Math.min(100, Math.max(0, v))
+                  const d = choice.delta
+                  return {
+                    ...prev,
+                    player: {
+                      ...p,
+                      jobPerformance: d.performance != null ? cap(p.jobPerformance + d.performance) : p.jobPerformance,
+                      money: d.money != null ? Math.max(0, p.money + d.money) : p.money,
+                      morale: d.morale != null ? cap(p.morale + d.morale) : p.morale,
+                      energy: d.energy != null ? cap(p.energy + d.energy) : p.energy,
+                      health: d.health != null ? cap(p.health + d.health) : p.health,
+                      education: d.education != null ? p.education + d.education : p.education,
+                      creditScore: d.creditScore != null ? cap(p.creditScore + d.creditScore) : p.creditScore,
+                    },
+                    eventLog: [choice.logMsg, ...prev.eventLog].slice(0, 30),
+                  }
+                })
+              }
+            )
+          }
+        }
+      }
+
+      if (!newState.pendingWorkEventId) {
+        this.lastWorkEventId = null
       }
     })
   }

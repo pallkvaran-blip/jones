@@ -1,9 +1,17 @@
 import type { LifeEvent } from '../data/lifeEvents'
 
+export interface WorkEventShape {
+  id: string
+  title: string
+  description: string
+  type: 'choice'
+  choices: Array<{ label: string }>
+}
+
 export class EventModal {
   private backdrop: HTMLElement | null = null
 
-  show(event: LifeEvent, onChoice: (index: number) => void): void {
+  show(event: LifeEvent | WorkEventShape, onChoice: (index: number) => void): void {
     this.hide()
 
     const pf = `'Press Start 2P', 'Courier New', monospace`

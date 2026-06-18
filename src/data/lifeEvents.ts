@@ -1284,7 +1284,7 @@ export const ALL_LIFE_EVENTS: LifeEvent[] = [
   {
     id: 'job_fired',
     title: "You're Fired",
-    description: 'Your manager called you in. "We're letting you go." You've been fired for sustained poor performance.',
+    description: "Your manager called you in. \"We're letting you go.\" You've been fired for sustained poor performance.",
     weight: 0,
     cooldownWeeks: 0,
     canFire: () => false,

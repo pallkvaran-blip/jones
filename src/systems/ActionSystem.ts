@@ -4,6 +4,7 @@ import { CAREER_JOBS, LOCATION_JOBS } from '../data/jobs'
 import { STOCKS, STOCK_NAMES, type StockId } from '../data/stocks'
 import { RENTAL_TIERS, OWN_TIERS, getHousingTier } from '../data/housing'
 import { PETS } from '../data/pets'
+import { rollWorkEvent } from '../data/workEvents'
 
 function cap(n: number): number {
   return Math.min(100, Math.max(0, n));
@@ -159,6 +160,15 @@ function applyWorkShift(state: GameState): GameState {
   };
 
   if (promotionMsg) newState = addLog(newState, promotionMsg);
+
+  // 40% chance of a work event modal
+  if (Math.random() < 0.4) {
+    const eventId = rollWorkEvent(track);
+    if (eventId) {
+      newState = { ...newState, pendingWorkEventId: eventId };
+    }
+  }
+
   return newState;
 }
 
