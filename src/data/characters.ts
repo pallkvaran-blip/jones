@@ -1,0 +1,315 @@
+export interface CharacterDef {
+  name: string
+  // 8 palette entries: [0]=transparent, [1]=shadow/dark, [2]=skin, [3]=hair,
+  // [4]=outfit-top, [5]=outfit-bottom, [6]=accent, [7]=shoes
+  palette: string[]
+  // 12 rows × 8 cols, each value is a palette index (0 = skip/transparent)
+  pixels: number[][]
+  lines: string[]
+}
+
+export const CHARACTERS: Record<string, CharacterDef> = {
+  home: {
+    name: 'Harold',
+    palette: ['transparent','#3a1a00','#f5c8a0','#8b5e3c','#c4956a','#9e7a55','#4a7fb5','#f5c8a0'],
+    pixels: [
+      [0,3,0,3,3,0,3,0],
+      [0,3,3,2,2,3,3,0],
+      [0,2,2,2,2,2,2,0],
+      [0,2,6,2,2,6,2,0],
+      [0,2,2,2,6,2,2,0],
+      [0,4,4,2,2,4,4,0],
+      [4,4,4,2,2,4,4,4],
+      [0,4,5,5,5,5,4,0],
+      [0,4,4,5,5,4,4,0],
+      [0,5,5,0,0,5,5,0],
+      [0,5,5,0,0,5,5,0],
+      [0,7,7,0,0,7,7,0],
+    ],
+    lines: [
+      "My couch won't judge you.",
+      "Napping is basically free energy recovery.",
+      "Home-cooked meals beat takeout any day.",
+      "Pro tip: elastic waistbands change lives.",
+    ],
+  },
+
+  employment: {
+    name: 'Beatrice',
+    palette: ['transparent','#0d0d17','#f5c8a0','#4a2000','#f0f0f0','#1e3a5f','#ff6b35','#2a1a00'],
+    pixels: [
+      [0,4,4,4,4,4,4,0],
+      [0,4,4,4,4,4,4,0],
+      [0,2,2,2,2,2,2,0],
+      [0,2,6,2,2,6,2,0],
+      [0,2,2,6,2,2,2,0],
+      [0,3,4,4,4,4,3,0],
+      [0,4,4,4,4,4,4,0],
+      [4,4,6,4,4,6,4,4],
+      [0,4,4,5,5,4,4,0],
+      [0,5,5,0,0,5,5,0],
+      [0,5,5,0,0,5,5,0],
+      [0,1,1,0,0,1,1,0],
+    ],
+    lines: [
+      "Fresh clam chowder fixes everything.",
+      "I've been here 12 years. Definitely hire me.",
+      "Best seafood in town. I made it myself.",
+      "Want fries with that career change?",
+    ],
+  },
+
+  university: {
+    name: 'Prof. Aldric',
+    palette: ['transparent','#111111','#f0d5b0','#aaaaaa','#1a2040','#333355','#d4a017','#3a2010'],
+    pixels: [
+      [0,3,3,3,3,3,3,0],
+      [0,3,2,2,2,2,3,0],
+      [0,6,6,2,2,6,6,0],
+      [0,2,6,2,2,6,2,0],
+      [0,2,2,2,6,2,2,0],
+      [0,4,4,2,2,4,4,0],
+      [0,4,4,4,4,4,4,0],
+      [4,4,5,4,4,5,4,4],
+      [0,4,4,5,5,4,4,0],
+      [0,5,5,0,0,5,5,0],
+      [0,5,5,0,0,5,5,0],
+      [0,7,7,0,0,7,7,0],
+    ],
+    lines: [
+      "Education compounds like interest. Invest wisely.",
+      "Every class is a deposit in your future.",
+      "I have tenure. It is very, very powerful.",
+      "My students call me intimidating. I prefer 'motivating'.",
+    ],
+  },
+
+  bank: {
+    name: 'Sandra',
+    palette: ['transparent','#0d0d0d','#f5c8a0','#1a1a1a','#1e3060','#1e3060','#d4a017','#1a1a1a'],
+    pixels: [
+      [0,3,3,3,3,3,3,0],
+      [0,3,2,2,2,2,3,0],
+      [0,2,2,2,2,2,2,0],
+      [0,2,6,2,2,6,2,0],
+      [0,2,2,2,6,2,2,0],
+      [0,4,4,2,2,4,4,0],
+      [0,4,6,4,4,6,4,0],
+      [4,4,4,4,4,4,4,4],
+      [0,4,4,5,5,4,4,0],
+      [0,5,5,0,0,5,5,0],
+      [0,5,5,0,0,5,5,0],
+      [0,7,7,0,0,7,7,0],
+    ],
+    lines: [
+      "Debt has feelings. They're expensive.",
+      "Compound interest: the 8th wonder of the world.",
+      "Your credit score is basically your reputation.",
+      "Your future self called. Save more.",
+    ],
+  },
+
+  grocery: {
+    name: 'Dmitri',
+    palette: ['transparent','#1a0a00','#f5b8a0','#4a2800','#2e7d32','#f0f0f0','#1a4a1a','#4a3020'],
+    pixels: [
+      [0,3,3,3,3,3,3,0],
+      [0,3,2,2,2,2,3,0],
+      [0,2,2,2,2,2,2,0],
+      [0,2,6,2,2,6,2,0],
+      [0,2,2,6,2,2,2,0],
+      [0,5,4,2,2,4,5,0],
+      [0,4,4,4,4,4,4,0],
+      [5,5,4,4,4,4,5,5],
+      [0,4,4,5,5,4,4,0],
+      [0,5,5,0,0,5,5,0],
+      [0,5,5,0,0,5,5,0],
+      [0,7,7,0,0,7,7,0],
+    ],
+    lines: [
+      "An apple a day is cheaper than a doctor.",
+      "Groceries: the fuel behind every hustle.",
+      "Never shop on an empty stomach. Trust me.",
+      "Potatoes go with absolutely everything.",
+    ],
+  },
+
+  electronics: {
+    name: 'Kenji',
+    palette: ['transparent','#111111','#fcd5b0','#111111','#2a4c7a','#1a2a4a','#00e5ff','#e0e0e0'],
+    pixels: [
+      [0,3,3,3,3,3,3,0],
+      [0,3,2,2,2,2,3,0],
+      [0,6,6,2,2,6,6,0],
+      [0,2,6,2,2,6,2,0],
+      [0,2,2,6,2,2,2,0],
+      [0,4,4,2,2,4,4,0],
+      [0,4,4,4,4,4,4,0],
+      [4,4,4,6,4,4,4,4],
+      [0,4,4,5,5,4,4,0],
+      [0,5,5,0,0,5,5,0],
+      [0,5,5,0,0,5,5,0],
+      [0,7,7,0,0,7,7,0],
+    ],
+    lines: [
+      "This computer will genuinely change your life.",
+      "Buy now. Regret? Not in my vocabulary.",
+      "Tech depreciates. Your skills don't.",
+      "I've rebuilt my PC from scratch 7 times. For fun.",
+    ],
+  },
+
+  clothing: {
+    name: 'Valentina',
+    palette: ['transparent','#220000','#f5c8a0','#cc2200','#e91e8c','#7b1fa2','#ffd700','#1a1a1a'],
+    pixels: [
+      [0,3,3,3,3,3,3,0],
+      [3,3,2,2,2,2,3,3],
+      [0,2,2,2,2,2,2,0],
+      [0,2,6,2,2,6,2,0],
+      [0,2,2,6,6,2,2,0],
+      [0,4,4,2,2,4,4,0],
+      [0,4,4,4,4,4,4,0],
+      [4,4,4,6,6,4,4,4],
+      [0,5,5,5,5,5,5,0],
+      [0,5,5,5,5,5,5,0],
+      [0,0,5,5,5,5,0,0],
+      [0,7,7,0,0,7,7,0],
+    ],
+    lines: [
+      "Dress for the job you want, not the debt you have.",
+      "Confidence is an outfit. Wear it every single day.",
+      "Fashion fades. Style is eternal.",
+      "We can't put a price on fabulous. Actually we can.",
+    ],
+  },
+
+  restaurant: {
+    name: 'Lenny',
+    palette: ['transparent','#1a0a00','#f5c8a0','#d4a017','#c0392b','#1a1a1a','#f5c200','#2a1a00'],
+    pixels: [
+      [0,6,6,6,6,6,6,0],
+      [0,3,3,3,3,3,3,0],
+      [0,2,2,2,2,2,2,0],
+      [0,2,6,2,2,6,2,0],
+      [0,2,2,6,2,2,2,0],
+      [0,4,4,2,2,4,4,0],
+      [0,4,4,4,4,4,4,0],
+      [4,4,4,4,4,4,4,4],
+      [0,4,4,5,5,4,4,0],
+      [0,5,5,0,0,5,5,0],
+      [0,5,5,0,0,5,5,0],
+      [0,7,7,0,0,7,7,0],
+    ],
+    lines: [
+      "You literally cannot work on an empty stomach.",
+      "Today's special? Whatever's still in the back.",
+      "Eat good, feel good, work good. Simple math.",
+      "I started as a dishwasher. Now I manage the dishwasher.",
+    ],
+  },
+
+  pawn: {
+    name: 'Duke',
+    palette: ['transparent','#111111','#e8b88a','#111111','#3a2010','#2a1a00','#c0c0c0','#111111'],
+    pixels: [
+      [3,0,3,3,3,3,0,3],
+      [3,3,3,2,2,3,3,3],
+      [0,2,2,2,2,2,2,0],
+      [0,6,6,2,2,6,6,0],
+      [0,2,2,2,6,2,2,0],
+      [0,4,4,2,2,4,4,0],
+      [0,4,4,4,4,4,4,0],
+      [4,4,4,4,4,4,4,4],
+      [0,4,4,5,5,4,4,0],
+      [0,5,5,0,0,5,5,0],
+      [0,5,5,0,0,5,5,0],
+      [0,7,7,0,0,7,7,0],
+    ],
+    lines: [
+      "Everything has value. Absolutely everything.",
+      "One man's junk is my entire inventory.",
+      "I never ask where it came from.",
+      "The economy is organized trading. I'm very organized.",
+    ],
+  },
+
+  realty: {
+    name: 'Clarissa',
+    palette: ['transparent','#111111','#f5c8a0','#6b3a1f','#1e3060','#1e3060','#f0f0f0','#6b3a1f'],
+    pixels: [
+      [0,3,3,3,3,3,3,0],
+      [0,3,2,2,2,2,3,0],
+      [0,2,2,2,2,2,2,0],
+      [0,2,6,2,2,6,2,0],
+      [0,2,2,6,6,2,2,0],
+      [0,4,4,2,2,4,4,0],
+      [0,4,6,4,4,6,4,0],
+      [4,4,4,4,4,4,4,4],
+      [0,5,5,5,5,5,5,0],
+      [0,5,5,5,5,5,5,0],
+      [0,0,5,5,5,5,0,0],
+      [0,7,7,0,0,7,7,0],
+    ],
+    lines: [
+      "Location, location, location. Also: location.",
+      "Real estate always goes up. Eventually.",
+      "A mortgage is just a very long subscription.",
+      "Your home is your biggest asset. Buy wisely.",
+    ],
+  },
+
+  hospital: {
+    name: 'Dr. Chen',
+    palette: ['transparent','#111111','#fcd5b0','#1a1a1a','#f0f0f0','#00796b','#c0392b','#e8e8e8'],
+    pixels: [
+      [0,3,3,3,3,3,3,0],
+      [0,3,2,2,2,2,3,0],
+      [0,2,2,2,2,2,2,0],
+      [0,2,6,2,2,6,2,0],
+      [0,2,2,2,6,2,2,0],
+      [0,4,4,2,2,4,4,0],
+      [0,4,6,4,4,6,4,0],
+      [4,4,4,4,4,4,4,4],
+      [0,4,4,5,5,4,4,0],
+      [0,5,5,0,0,5,5,0],
+      [0,5,5,0,0,5,5,0],
+      [0,7,7,0,0,7,7,0],
+    ],
+    lines: [
+      "Prevention is always cheaper than treatment.",
+      "Eat, sleep, hydrate. In that exact order.",
+      "Your health bar is your most important stat.",
+      "Stress kills careers early. Get regular checkups.",
+    ],
+  },
+
+  stockexchange: {
+    name: 'Max',
+    palette: ['transparent','#111111','#f5c8a0','#3a2010','#1a1a2a','#1a1a2a','#d4a017','#1a1a1a'],
+    pixels: [
+      [0,3,3,3,3,3,3,0],
+      [0,3,2,2,2,2,3,0],
+      [0,2,2,2,2,2,2,0],
+      [0,2,6,2,2,6,2,0],
+      [0,2,2,2,6,2,2,0],
+      [0,4,4,2,2,4,4,0],
+      [0,4,6,4,4,6,4,0],
+      [4,4,4,6,6,4,4,4],
+      [0,4,4,5,5,4,4,0],
+      [0,5,5,0,0,5,5,0],
+      [0,5,5,0,0,5,5,0],
+      [0,7,7,0,0,7,7,0],
+    ],
+    lines: [
+      "Buy low. Sell when you inevitably panic.",
+      "The market is always right. Until it isn't.",
+      "Diversification: owning stuff you don't understand.",
+      "My tie costs more than your portfolio. Let's fix that.",
+    ],
+  },
+}
+
+export function getCharacter(locationId: string): CharacterDef | undefined {
+  return CHARACTERS[locationId]
+}

@@ -314,6 +314,65 @@ body {
   color: var(--color-text-dim);
 }
 
+/* Character portrait + speech bubble */
+.char-section {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding-bottom: 6px;
+  margin-bottom: 2px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.char-header {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+}
+
+.char-portrait {
+  image-rendering: pixelated;
+  flex-shrink: 0;
+}
+
+.char-name {
+  font-size: 6px;
+  color: var(--color-accent);
+  letter-spacing: 1px;
+  word-break: break-word;
+  padding-bottom: 2px;
+}
+
+.char-speech {
+  font-size: 6px;
+  color: var(--color-text);
+  line-height: 1.6;
+  background: #0e1020;
+  border: 1px solid var(--color-border);
+  padding: 5px 6px;
+  position: relative;
+}
+
+.char-speech::before {
+  content: '';
+  position: absolute;
+  top: -6px;
+  left: 12px;
+  border: 6px solid transparent;
+  border-bottom-color: var(--color-border);
+  border-top: none;
+}
+
+.char-speech::after {
+  content: '';
+  position: absolute;
+  top: -4px;
+  left: 13px;
+  border: 5px solid transparent;
+  border-bottom-color: #0e1020;
+  border-top: none;
+}
+
 /* Compress on short landscape phones */
 @media (max-height: 520px) {
   #stats-panel {

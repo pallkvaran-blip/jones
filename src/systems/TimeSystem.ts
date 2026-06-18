@@ -28,7 +28,7 @@ export function advanceDay(state: GameState): GameState {
   const updatedPlayer = {
     ...state.player,
     morale: Math.max(0, state.player.morale - 5),
-    hunger: Math.max(0, state.player.hunger - 5),
+    hunger: Math.max(0, state.player.hunger - 20),
     energy: Math.min(100, Math.max(0, state.player.energy - 5 + energyBonus)),
   };
 

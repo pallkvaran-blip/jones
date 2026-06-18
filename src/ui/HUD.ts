@@ -44,7 +44,7 @@ export class HUD {
         // Action set changed (e.g. applied for job, upgraded housing) — full re-render
         this.currentActionIds = newIds;
         const name = locations.find(l => l.id === this.currentLocationId)?.name ?? this.currentLocationId!;
-        this.actionPanel.show(name, newActions, state, this.onActionCallback, this.onUnavailableCallback ?? undefined);
+        this.actionPanel.show(this.currentLocationId!, name, newActions, state, this.onActionCallback, this.onUnavailableCallback ?? undefined);
       } else {
         this.actionPanel.update(newActions, state);
       }
@@ -64,7 +64,7 @@ export class HUD {
     const locationName = locDef ? locDef.name : locationId;
     const actions = getActionsForLocation(locationId, state);
     this.currentActionIds = actions.map(a => a.id).join(',');
-    this.actionPanel.show(locationName, actions, state, onAction, onUnavailable);
+    this.actionPanel.show(locationId, locationName, actions, state, onAction, onUnavailable);
   }
 
   hideActions(): void {
