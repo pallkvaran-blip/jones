@@ -12,9 +12,7 @@ export interface Player {
   morale: number;   // 0-100
   jobId: string | null;
   careerTrack: CareerTrack | null;
-  jobPerformance: number;
   jobTenure: number;
-  jobWarningWeeks: number;
   experience: Record<CareerTrack, number>;
   education: number;
   bankBalance: number;

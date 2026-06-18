@@ -31,7 +31,6 @@ export class CityScene extends Phaser.Scene {
   private lastWorkEventId: string | null = null
   private turnHandoffOverlay = new TurnHandoffOverlay()
   private lastHandoffState = false
-  private lastJobRank = 0
 
   constructor() {
     super({ key: 'CityScene' })
@@ -92,7 +91,6 @@ export class CityScene extends Phaser.Scene {
     this.createMuteButton()
 
     // --- Store subscription ---
-    this.lastJobRank = state.player.jobRank
     this.unsubscribeStore = store.subscribe((newState) => {
       this.hud.update(newState)
       this.updateAmbient(newState.calendar.timeUnits)
@@ -100,12 +98,6 @@ export class CityScene extends Phaser.Scene {
       // Switch to danger BGM if health or hunger critically low
       const isDanger = newState.player.health <= 20 || newState.player.hunger <= 15
       audioSystem.setDangerMode(isDanger)
-
-      // Detect job rank promotion
-      if (newState.player.jobRank > this.lastJobRank) {
-        audioSystem.playSFX('levelUp')
-      }
-      this.lastJobRank = newState.player.jobRank
 
       if (newState.isGameOver) {
         // In 2-player mode, check if the other player is still alive
@@ -181,7 +173,7 @@ export class CityScene extends Phaser.Scene {
         const event = ALL_LIFE_EVENTS.find(e => e.id === newState.pendingLifeEventId)
         if (event) {
           // Play appropriate SFX for this event
-          if (event.id === 'job_demotion' || event.id === 'job_fired') {
+          if (event.id === 'job_fired') {
             audioSystem.playSFX('demotion')
           } else if (event.type === 'immediate' && event.immediateDelta) {
             const d = event.immediateDelta
@@ -240,21 +232,29 @@ export class CityScene extends Phaser.Scene {
                   const p = prev.player
                   const cap = (v: number) => Math.min(100, Math.max(0, v))
                   const d = choice.delta
+                  const fired = d.fired === true
                   return {
                     ...prev,
                     player: {
                       ...p,
-                      jobPerformance: d.performance != null ? cap(p.jobPerformance + d.performance) : p.jobPerformance,
                       money: d.money != null ? Math.max(0, p.money + d.money) : p.money,
                       morale: d.morale != null ? cap(p.morale + d.morale) : p.morale,
                       energy: d.energy != null ? cap(p.energy + d.energy) : p.energy,
                       health: d.health != null ? cap(p.health + d.health) : p.health,
                       education: d.education != null ? p.education + d.education : p.education,
                       creditScore: d.creditScore != null ? cap(p.creditScore + d.creditScore) : p.creditScore,
+                      pets: d.petId && !p.pets.includes(d.petId) ? [...p.pets, d.petId] : p.pets,
+                      // If fired, clear job
+                      jobId: fired ? null : p.jobId,
+                      careerTrack: fired ? null : p.careerTrack,
+                      jobRank: fired ? 0 : p.jobRank,
+                      jobTenure: fired ? 0 : p.jobTenure,
                     },
+                    pendingLifeEventId: fired ? (prev.pendingLifeEventId ?? 'job_fired') : prev.pendingLifeEventId,
                     eventLog: [choice.logMsg, ...prev.eventLog].slice(0, 30),
                   }
                 })
+                if (choice.delta.fired) audioSystem.playSFX('demotion')
               }
             )
           }

@@ -144,57 +144,7 @@ export function advanceWeek(state: GameState): GameState {
 
   weekState = applyWeeklyEconomy(weekState);
 
-  // Job performance warning / demotion / firing check (no decay — performance is event-driven)
-  const p = weekState.player;
-  if (p.jobId !== null) {
-    if (p.jobPerformance < 30) {
-      const newWarningWeeks = p.jobWarningWeeks + 1;
-      if (newWarningWeeks >= 2) {
-        // Demote or fire
-        if (p.jobRank > 1) {
-          weekState = {
-            ...weekState,
-            player: {
-              ...weekState.player,
-              jobRank: p.jobRank - 1,
-              jobTenure: 0,
-              jobWarningWeeks: 0,
-              jobPerformance: 50,
-            },
-            pendingLifeEventId: weekState.pendingLifeEventId ?? 'job_demotion',
-          };
-        } else {
-          weekState = {
-            ...weekState,
-            player: {
-              ...weekState.player,
-              jobId: null,
-              careerTrack: null,
-              jobRank: 0,
-              jobTenure: 0,
-              jobWarningWeeks: 0,
-              jobPerformance: 0,
-            },
-            pendingLifeEventId: weekState.pendingLifeEventId ?? 'job_fired',
-          };
-        }
-      } else {
-        weekState = {
-          ...weekState,
-          player: { ...weekState.player, jobWarningWeeks: newWarningWeeks },
-          pendingLifeEventId: weekState.pendingLifeEventId ?? 'performance_warning',
-        };
-      }
-    } else {
-      // Performance is acceptable — reset warning counter
-      weekState = {
-        ...weekState,
-        player: { ...weekState.player, jobWarningWeeks: 0 },
-      };
-    }
-  }
-
-  // Roll a random life event only if no performance event is pending
+  // Roll a random life event
   if (weekState.pendingLifeEventId === null) {
     const event = rollLifeEvent(weekState);
     if (event) {

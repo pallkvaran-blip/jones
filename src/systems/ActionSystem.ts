@@ -126,25 +126,7 @@ function applyWorkShift(state: GameState): GameState {
   const { player } = state;
   const track = player.careerTrack!;
   const careerDef = CAREER_JOBS[track];
-  const tierIdx = player.jobRank - 1;
-  const tier = careerDef.tiers[tierIdx];
-  const newTenure = player.jobTenure + 1;
-  let newRank = player.jobRank;
-  let promotionMsg: string | null = null;
-
-  if (newTenure >= tier.shiftsToPromote && player.jobRank < 4) {
-    const nextTier = careerDef.tiers[player.jobRank];
-    const meetsEdu = player.education >= nextTier.educationRequired;
-    const meetsWard = player.wardrobe >= nextTier.wardrobeRequired;
-    if (meetsEdu && meetsWard) {
-      newRank = player.jobRank + 1;
-      const locJob = LOCATION_JOBS[player.jobId as LocationId];
-      const nextTitle = locJob ? locJob.titles[player.jobRank] : nextTier.title;
-      promotionMsg = `Promoted to ${nextTitle}!`;
-    }
-  }
-
-  const perfGain = player.energy >= 40 ? 10 : 4;
+  const tier = careerDef.tiers[player.jobRank - 1];
 
   let newState: GameState = {
     ...state,
@@ -152,14 +134,9 @@ function applyWorkShift(state: GameState): GameState {
       ...state.player,
       energy: cap(player.energy - 20),
       money: player.money + tier.dailyPay,
-      jobTenure: newRank > player.jobRank ? 0 : newTenure,
-      jobRank: newRank,
-      jobPerformance: Math.min(100, player.jobPerformance + perfGain),
-      jobWarningWeeks: 0,
+      jobTenure: player.jobTenure + 1,
     },
   };
-
-  if (promotionMsg) newState = addLog(newState, promotionMsg);
 
   // 40% chance of a work event modal
   if (Math.random() < 0.4) {
@@ -184,36 +161,6 @@ function makeWorkShiftAction(pay: number): ActionDef {
   };
 }
 
-function makeCoastShiftAction(pay: number): ActionDef {
-  return {
-    id: 'coast_shift',
-    label: 'Coast through shift',
-    detail: `Energy-10, +$${pay}, Perf-8 | 25t`,
-    timeCost: 25,
-    available: (s) => s.player.jobId !== null && s.player.energy >= 10,
-    unavailableReason: (s) => `Not enough energy (${Math.round(s.player.energy)})`,
-    apply(state) {
-      const { player } = state;
-      const track = player.careerTrack!;
-      const careerDef = CAREER_JOBS[track];
-      const tierIdx = player.jobRank - 1;
-      const tier = careerDef.tiers[tierIdx];
-      const newTenure = player.jobTenure + 1;
-      return {
-        ...state,
-        player: {
-          ...state.player,
-          energy: cap(player.energy - 10),
-          money: player.money + tier.dailyPay,
-          jobTenure: newTenure,
-          jobPerformance: Math.max(0, player.jobPerformance - 8),
-          jobWarningWeeks: 0,
-        },
-      };
-    },
-  };
-}
-
 const quitJobAction: ActionDef = {
   id: 'quit_job',
   label: 'Quit Job',
@@ -222,16 +169,7 @@ const quitJobAction: ActionDef = {
   available: () => true,
   unavailableReason: () => '',
   apply(state) {
-    return addLog({
-      ...state,
-      player: {
-        ...state.player,
-        jobId: null,
-        careerTrack: null,
-        jobRank: 0,
-        jobTenure: 0,
-      },
-    }, 'Quit your job.');
+    return addLog({ ...state, player: { ...state.player, jobId: null, careerTrack: null, jobRank: 0, jobTenure: 0 } }, 'Quit your job.');
   },
 };
 
@@ -821,7 +759,7 @@ function getJobActions(locationId: LocationId, state: GameState): ActionDef[] {
     const careerDef = CAREER_JOBS[locJob.track];
     const tier = careerDef.tiers[player.jobRank - 1];
     const pay = tier?.dailyPay ?? 60;
-    return [makeWorkShiftAction(pay), makeCoastShiftAction(pay), quitJobAction];
+    return [makeWorkShiftAction(pay), quitJobAction];
   }
 
   if (player.jobId !== null) {

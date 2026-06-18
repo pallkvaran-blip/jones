@@ -9,11 +9,6 @@ function getBarClass(value: number): string {
   return 'low';
 }
 
-function getPerfBarClass(value: number): string {
-  if (value >= 70) return 'high';
-  if (value >= 40) return 'mid';
-  return 'low';
-}
 
 export class StatsPanel {
   private el: HTMLElement;
@@ -86,16 +81,7 @@ export class StatsPanel {
         <span class="stat-value" id="sp-job">Unemployed</span>
       </div>
 
-      <div class="need-row" id="sp-perf-row" style="display:none">
-        <span class="need-icon"></span>
-        <span class="need-label">PERF</span>
-        <div class="need-bar-wrap">
-          <div class="bar-container">
-            <div class="bar-fill high" id="sp-perf-bar" style="width:0%"></div>
-          </div>
-        </div>
-        <span class="need-val" id="sp-perf-val">0</span>
-      </div>
+
 
       <div class="stat-row">
         <span class="stat-label">Home</span>
@@ -242,17 +228,6 @@ export class StatsPanel {
         jobEl.textContent = 'Unemployed';
       }
     }
-
-    // Performance bar — only visible when employed
-    const perfRow = this.el.querySelector<HTMLElement>('#sp-perf-row');
-    const perfBarEl = this.el.querySelector<HTMLElement>('#sp-perf-bar');
-    const perfValEl = this.el.querySelector<HTMLElement>('#sp-perf-val');
-    if (perfRow) perfRow.style.display = player.jobId !== null ? '' : 'none';
-    if (perfBarEl) {
-      perfBarEl.style.width = `${player.jobPerformance}%`;
-      perfBarEl.className = `bar-fill ${getPerfBarClass(player.jobPerformance)}`;
-    }
-    if (perfValEl) perfValEl.textContent = Math.round(player.jobPerformance).toString();
 
     // Housing
     const housingEl = this.el.querySelector<HTMLElement>('#sp-housing');
