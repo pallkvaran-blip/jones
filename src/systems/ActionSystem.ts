@@ -124,7 +124,8 @@ const cookMealAction: ActionDef = {
 // --- JOB SHIFT / QUIT ---
 function applyWorkShift(state: GameState): GameState {
   const { player } = state;
-  const track = player.careerTrack!;
+  if (!player.careerTrack) return state;
+  const track = player.careerTrack;
   const careerDef = CAREER_JOBS[track];
   const tier = careerDef.tiers[player.jobRank - 1];
 

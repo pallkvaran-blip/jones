@@ -49,14 +49,14 @@ export function applyWeeklyEconomy(state: GameState): GameState {
 
   // --- Eviction: renters above studio with unmanageable debt ---
   if (!s.player.isOwner && s.player.housingId !== 'studio' && s.player.debt > 10000) {
-    s = { ...s, player: { ...s.player, housingId: 'studio' } }
+    s = { ...s, player: { ...s.player, housingId: 'studio' }, pendingLifeEventId: s.pendingLifeEventId ?? 'evicted' }
     entries.push('EVICTED! Moved to studio — debt too high.')
   }
 
   // --- Foreclosure: owners who let debt spiral ---
   if (s.player.isOwner && s.player.debt > 80000) {
     const proceeds = Math.floor(s.player.propertyValue * 0.3)
-    s = { ...s, player: { ...s.player, housingId: 'studio', isOwner: false, money: s.player.money + proceeds, propertyValue: 0 } }
+    s = { ...s, player: { ...s.player, housingId: 'studio', isOwner: false, money: s.player.money + proceeds, propertyValue: 0 }, pendingLifeEventId: s.pendingLifeEventId ?? 'foreclosed' }
     entries.push(`FORECLOSED! Distress sale returned $${proceeds}.`)
   }
 
