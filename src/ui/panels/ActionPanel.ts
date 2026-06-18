@@ -18,10 +18,10 @@ export class ActionPanel {
   }
 
   private buildPortraitDataUrl(sprite: { palette: string[], pixels: number[][] }): string {
-    const SCALE = 4;
+    const SCALE = 3;
     const canvas = document.createElement('canvas');
-    canvas.width = 8 * SCALE;
-    canvas.height = 12 * SCALE;
+    canvas.width = 16 * SCALE;  // 48
+    canvas.height = 20 * SCALE; // 60
     const ctx = canvas.getContext('2d')!;
     for (let r = 0; r < sprite.pixels.length; r++) {
       for (let c = 0; c < sprite.pixels[r].length; c++) {
@@ -53,7 +53,7 @@ export class ActionPanel {
         petRows += `
           <div class="pet-row">
             <div class="char-header">
-              <img class="char-portrait" src="${petUrl}" width="32" height="48" alt="${pet.name}">
+              <img class="char-portrait" src="${petUrl}" width="48" height="60" alt="${pet.name}">
               <span class="char-name">${pet.name}</span>
             </div>
             <div class="char-speech pet-speech">${petLine}</div>
@@ -65,7 +65,7 @@ export class ActionPanel {
     return `
       <div class="char-section">
         <div class="char-header">
-          <img class="char-portrait" src="${dataUrl}" width="32" height="48" alt="${displayName}">
+          <img class="char-portrait" src="${dataUrl}" width="48" height="60" alt="${displayName}">
           <span class="char-name">${displayName}</span>
         </div>
         <div class="char-speech">${line}</div>
