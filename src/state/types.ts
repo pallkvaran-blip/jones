@@ -28,6 +28,7 @@ export interface Player {
   hasTransport: boolean;
   jobRank: number;
   pets: string[];
+  jobWarningWeeks: number;
 }
 
 export interface Calendar {

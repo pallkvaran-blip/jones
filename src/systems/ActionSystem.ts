@@ -143,6 +143,8 @@ function applyWorkShift(state: GameState): GameState {
     }
   }
 
+  const perfGain = player.energy >= 40 ? 10 : 4;
+
   let newState: GameState = {
     ...state,
     player: {
@@ -151,6 +153,8 @@ function applyWorkShift(state: GameState): GameState {
       money: player.money + tier.dailyPay,
       jobTenure: newRank > player.jobRank ? 0 : newTenure,
       jobRank: newRank,
+      jobPerformance: Math.min(100, player.jobPerformance + perfGain),
+      jobWarningWeeks: 0,
     },
   };
 
@@ -167,6 +171,36 @@ function makeWorkShiftAction(pay: number): ActionDef {
     available: (s) => s.player.energy >= 20,
     unavailableReason: (s) => `Not enough energy (${Math.round(s.player.energy)}) — go home and sleep!`,
     apply: applyWorkShift,
+  };
+}
+
+function makeCoastShiftAction(pay: number): ActionDef {
+  return {
+    id: 'coast_shift',
+    label: 'Coast through shift',
+    detail: `Energy-10, +$${pay}, Perf-8 | 25t`,
+    timeCost: 25,
+    available: (s) => s.player.jobId !== null && s.player.energy >= 10,
+    unavailableReason: (s) => `Not enough energy (${Math.round(s.player.energy)})`,
+    apply(state) {
+      const { player } = state;
+      const track = player.careerTrack!;
+      const careerDef = CAREER_JOBS[track];
+      const tierIdx = player.jobRank - 1;
+      const tier = careerDef.tiers[tierIdx];
+      const newTenure = player.jobTenure + 1;
+      return {
+        ...state,
+        player: {
+          ...state.player,
+          energy: cap(player.energy - 10),
+          money: player.money + tier.dailyPay,
+          jobTenure: newTenure,
+          jobPerformance: Math.max(0, player.jobPerformance - 8),
+          jobWarningWeeks: 0,
+        },
+      };
+    },
   };
 }
 
@@ -777,7 +811,7 @@ function getJobActions(locationId: LocationId, state: GameState): ActionDef[] {
     const careerDef = CAREER_JOBS[locJob.track];
     const tier = careerDef.tiers[player.jobRank - 1];
     const pay = tier?.dailyPay ?? 60;
-    return [makeWorkShiftAction(pay), quitJobAction];
+    return [makeWorkShiftAction(pay), makeCoastShiftAction(pay), quitJobAction];
   }
 
   if (player.jobId !== null) {
