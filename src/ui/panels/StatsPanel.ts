@@ -55,6 +55,21 @@ export class StatsPanel {
       </div>
 
       <div class="stat-row">
+        <span class="stat-label">Bank</span>
+        <span class="stat-value" id="sp-bank">$0.00</span>
+      </div>
+
+      <div class="stat-row" id="sp-portfolio-row" style="display:none">
+        <span class="stat-label">Stocks</span>
+        <span class="stat-value" id="sp-portfolio" style="color:#4a90d9">$0.00</span>
+      </div>
+
+      <div class="stat-row" id="sp-debt-row" style="display:none">
+        <span class="stat-label">Debt</span>
+        <span class="stat-value" id="sp-debt" style="color:#e74c3c">$0.00</span>
+      </div>
+
+      <div class="stat-row">
         <span class="stat-label">Location</span>
         <span class="stat-value location-name" id="sp-location">Your Apartment</span>
       </div>
@@ -136,6 +151,22 @@ export class StatsPanel {
 
     const moneyEl = this.el.querySelector('#sp-money');
     if (moneyEl) moneyEl.textContent = formatMoney(player.money);
+
+    const bankEl = this.el.querySelector('#sp-bank');
+    if (bankEl) bankEl.textContent = formatMoney(player.bankBalance);
+
+    const portfolioValue = Object.entries(player.portfolio).reduce(
+      (sum, [stock, shares]) => sum + shares * (state.economy.stockPrices[stock] ?? 0), 0
+    );
+    const portfolioRow = this.el.querySelector<HTMLElement>('#sp-portfolio-row');
+    const portfolioEl = this.el.querySelector('#sp-portfolio');
+    if (portfolioRow) portfolioRow.style.display = portfolioValue > 0 ? '' : 'none';
+    if (portfolioEl) portfolioEl.textContent = formatMoney(portfolioValue);
+
+    const debtRow = this.el.querySelector<HTMLElement>('#sp-debt-row');
+    const debtEl = this.el.querySelector('#sp-debt');
+    if (debtRow) debtRow.style.display = player.debt > 0 ? '' : 'none';
+    if (debtEl) debtEl.textContent = formatMoney(player.debt);
 
     const locationEl = this.el.querySelector('#sp-location');
     if (locationEl) locationEl.textContent = currentLocationId.replace(/_/g, ' ');

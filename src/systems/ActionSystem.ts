@@ -1,6 +1,7 @@
 import type { GameState, LocationId } from '../state/types'
 import { consumeTime } from './TimeSystem'
 import { CAREER_JOBS, LOCATION_JOBS } from '../data/jobs'
+import { STOCKS, STOCK_NAMES, type StockId } from '../data/stocks'
 
 function cap(n: number): number {
   return Math.min(100, Math.max(0, n));
@@ -196,6 +197,41 @@ const studyAction: ActionDef = {
 };
 
 // --- BANK actions ---
+function makeRepayAction(amount: number | 'all'): ActionDef {
+  const isAll = amount === 'all'
+  return {
+    id: isAll ? 'repay_all' : `repay_${amount}`,
+    label: isAll ? 'Repay All Debt' : `Repay $${amount}`,
+    detail: isAll ? 'Clear all debt | 5t' : `Debt -$${amount} | 5t`,
+    timeCost: 5,
+    available(state) {
+      const { money, debt } = state.player
+      if (debt <= 0) return false
+      return isAll ? money >= debt : money >= (amount as number) && debt >= (amount as number)
+    },
+    unavailableReason(state) {
+      if (state.player.debt <= 0) return 'No debt'
+      if (isAll) return `Need $${state.player.debt.toFixed(0)}`
+      return `Need $${amount}`
+    },
+    apply(state) {
+      const repay = isAll ? state.player.debt : Math.min(amount as number, state.player.debt)
+      return addLog({
+        ...state,
+        player: {
+          ...state.player,
+          money: state.player.money - repay,
+          debt: state.player.debt - repay,
+          creditScore: Math.min(850, state.player.creditScore + 10),
+        },
+      }, `Repaid $${repay.toFixed(0)} of debt.`)
+    },
+  }
+}
+
+const repay200Action = makeRepayAction(200)
+const repayAllAction  = makeRepayAction('all')
+
 const depositAllAction: ActionDef = {
   id: 'deposit_all',
   label: 'Deposit All Cash',
@@ -541,23 +577,63 @@ const buyMedicineAction: ActionDef = {
 };
 
 // --- STOCK EXCHANGE actions ---
-const checkPricesAction: ActionDef = {
-  id: 'check_prices',
-  label: 'Check Prices',
-  detail: 'Morale+2 | 5t',
-  timeCost: 5,
-  available: () => true,
-  unavailableReason: () => '',
-  apply(state) {
-    return {
-      ...state,
-      player: {
-        ...state.player,
-        morale: cap(state.player.morale + 2),
+function makeStockActions(state: GameState): ActionDef[] {
+  const actions: ActionDef[] = []
+
+  for (const stock of STOCKS) {
+    const price = state.economy.stockPrices[stock] ?? 0
+    const history = state.economy.stockHistory[stock] ?? []
+    const prevPrice = history.length > 0 ? history[history.length - 1] : price
+    const changePct = prevPrice > 0 ? ((price - prevPrice) / prevPrice * 100) : 0
+    const changeStr = changePct >= 0 ? `+${changePct.toFixed(0)}%` : `${changePct.toFixed(0)}%`
+    const name = STOCK_NAMES[stock as StockId]
+    const shares = state.player.portfolio[stock] ?? 0
+
+    actions.push({
+      id: `buy_${stock}`,
+      label: `Buy ${stock}`,
+      detail: `${name} $${price.toFixed(0)} ${changeStr} | 5t`,
+      timeCost: 5,
+      available: (s) => s.player.money >= (s.economy.stockPrices[stock] ?? 0),
+      unavailableReason: () => `Need $${price.toFixed(0)}`,
+      apply(s) {
+        const p = s.economy.stockPrices[stock] ?? 0
+        return addLog({
+          ...s,
+          player: {
+            ...s.player,
+            money: s.player.money - p,
+            portfolio: { ...s.player.portfolio, [stock]: (s.player.portfolio[stock] ?? 0) + 1 },
+          },
+        }, `Bought 1 share of ${stock} @ $${p.toFixed(0)}`)
       },
-    };
-  },
-};
+    })
+
+    actions.push({
+      id: `sell_${stock}`,
+      label: `Sell ${stock}`,
+      detail: shares > 0
+        ? `${shares} shares → $${(shares * price).toFixed(0)} | 5t`
+        : 'No shares owned',
+      timeCost: 5,
+      available: (s) => (s.player.portfolio[stock] ?? 0) > 0,
+      unavailableReason: () => 'No shares owned',
+      apply(s) {
+        const n = s.player.portfolio[stock] ?? 0
+        const p = s.economy.stockPrices[stock] ?? 0
+        const proceeds = n * p
+        const newPortfolio = { ...s.player.portfolio }
+        delete newPortfolio[stock]
+        return addLog({
+          ...s,
+          player: { ...s.player, money: s.player.money + proceeds, portfolio: newPortfolio },
+        }, `Sold ${n} shares of ${stock} for $${proceeds.toFixed(0)}`)
+      },
+    })
+  }
+
+  return actions
+}
 
 // --- SEAFOOD GRILL actions (employment location) ---
 const seafoodDinnerAction: ActionDef = {
@@ -660,7 +736,7 @@ export function getActionsForLocation(locationId: LocationId, state: GameState):
       return [takeClassAction, studyAction, ...getJobActions(locationId, state)];
 
     case 'bank':
-      return [depositAllAction, withdraw200Action, takeLoanAction, ...getJobActions(locationId, state)];
+      return [depositAllAction, withdraw200Action, takeLoanAction, repay200Action, repayAllAction, ...getJobActions(locationId, state)];
 
     case 'grocery':
       return [buyGroceriesAction, quickSnackAction, ...getJobActions(locationId, state)];
@@ -684,7 +760,7 @@ export function getActionsForLocation(locationId: LocationId, state: GameState):
       return [medicalCheckupAction, buyMedicineAction, ...getJobActions(locationId, state)];
 
     case 'stockexchange':
-      return [checkPricesAction, ...getJobActions(locationId, state)];
+      return [...makeStockActions(state), ...getJobActions(locationId, state)];
 
     default:
       return [];
@@ -694,8 +770,13 @@ export function getActionsForLocation(locationId: LocationId, state: GameState):
 export function checkGoals(state: GameState): GameState {
   const { player, goals } = state;
 
+  const portfolioValue = Object.entries(player.portfolio).reduce(
+    (sum, [stock, shares]) => sum + shares * (state.economy.stockPrices[stock] ?? 0), 0
+  )
+  const totalWealth = player.money + player.bankBalance + portfolioValue - player.debt
+
   const newlyMet = {
-    targetWealth: (player.money + player.bankBalance) >= goals.targetWealth,
+    targetWealth: totalWealth >= goals.targetWealth,
     targetEducation: player.education >= goals.targetEducation,
     targetCareerRank: player.jobRank >= goals.targetCareerRank,
     targetHappiness: player.hunger >= 70 && player.energy >= 70 && player.health >= 70 && player.morale >= 70,

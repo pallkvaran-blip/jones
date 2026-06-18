@@ -1,4 +1,5 @@
 import type { GameState, Difficulty, CareerTrack } from './types'
+import { STOCK_INITIAL_PRICES, STOCKS } from '../data/stocks'
 
 export function createInitialState(name: string, difficulty: Difficulty): GameState {
   const difficultySettings = {
@@ -52,8 +53,8 @@ export function createInitialState(name: string, difficulty: Difficulty): GameSt
       inflationAccum: 0,
       taxRate: 0.25,
       marketPrices: {},
-      stockPrices: {},
-      stockHistory: {},
+      stockPrices: Object.fromEntries(STOCKS.map(s => [s, STOCK_INITIAL_PRICES[s]])),
+      stockHistory: Object.fromEntries(STOCKS.map(s => [s, []])),
     },
     goals: settings.goals,
     goalsMet: {

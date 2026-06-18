@@ -1,4 +1,5 @@
 import type { GameState } from '../state/types'
+import { applyWeeklyEconomy } from './EconomySystem'
 
 export function consumeTime(state: GameState, units: number): GameState {
   const newUnits = state.calendar.timeUnits - units;
@@ -70,14 +71,10 @@ export function advanceWeek(state: GameState): GameState {
   const seasonIndex = Math.floor((newWeek - 1) / 13) % 4;
   season = seasons[seasonIndex];
 
-  return {
+  const weekState: GameState = {
     ...state,
-    calendar: {
-      ...state.calendar,
-      week: newWeek,
-      day: 1,
-      timeUnits: 100,
-      season,
-    },
+    calendar: { ...state.calendar, week: newWeek, day: 1, timeUnits: 100, season },
   };
+
+  return applyWeeklyEconomy(weekState);
 }
