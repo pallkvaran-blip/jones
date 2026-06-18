@@ -184,6 +184,32 @@ export class CityScene extends Phaser.Scene {
     const store = getStore()
     const state = store.getState()
     store.setState((_s) => executeAction(actionId, state.currentLocationId, state))
+
+    // Starvation bleed: if starving, energy spent also costs health (30% rate)
+    if (state.player.isStarving) {
+      const afterState = store.getState()
+      const energySpent = Math.max(0, state.player.energy - afterState.player.energy)
+      if (energySpent > 0) {
+        const healthCost = Math.ceil(energySpent * 0.3)
+        store.setState(prev => ({
+          ...prev,
+          player: {
+            ...prev.player,
+            health: Math.max(0, prev.player.health - healthCost),
+          },
+        }))
+        // Check for death after bleed
+        const afterBleed = store.getState()
+        if (afterBleed.player.health <= 0 && !afterBleed.isGameOver) {
+          store.setState(prev => ({
+            ...prev,
+            isGameOver: true,
+            winCondition: 'lost' as const,
+            lossReason: 'You starved to death.',
+          }))
+        }
+      }
+    }
   }
 
   /** Drive a semi-transparent tint by time of day: morning clear → dusk → night. */

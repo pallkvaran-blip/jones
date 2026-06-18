@@ -29,6 +29,8 @@ export interface Player {
   hasTransport: boolean;
   jobRank: number;
   pets: string[];
+  isStarving: boolean;
+  lowHealthWarned: boolean;
 }
 
 export interface Calendar {

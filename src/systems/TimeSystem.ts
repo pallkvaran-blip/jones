@@ -52,11 +52,65 @@ export function advanceDay(state: GameState): GameState {
     },
   };
 
-  if (newDay > 7) {
-    return advanceWeek(nextState);
+  // Starvation logic
+  let finalState = nextState
+
+  if (finalState.player.hunger <= 0) {
+    if (!finalState.player.isStarving) {
+      // First day of starvation — show warning
+      finalState = {
+        ...finalState,
+        player: { ...finalState.player, isStarving: true },
+        pendingLifeEventId: finalState.pendingLifeEventId ?? 'starving_warning',
+      }
+    } else {
+      // Already starving — bleed health each day
+      const newHealth = Math.max(0, finalState.player.health - 15)
+      finalState = {
+        ...finalState,
+        player: { ...finalState.player, health: newHealth },
+      }
+    }
+  } else if (finalState.player.isStarving) {
+    // Eating again — clear starvation flag
+    finalState = {
+      ...finalState,
+      player: { ...finalState.player, isStarving: false },
+    }
   }
 
-  return nextState;
+  // Low health warning (fires once when health first drops to/below 20)
+  if (finalState.player.health <= 20 && finalState.player.health > 0 && !finalState.player.lowHealthWarned) {
+    finalState = {
+      ...finalState,
+      player: { ...finalState.player, lowHealthWarned: true },
+      pendingLifeEventId: finalState.pendingLifeEventId ?? 'low_health_warning',
+    }
+  }
+
+  // Reset lowHealthWarned if health recovers above 30
+  if (finalState.player.health > 30 && finalState.player.lowHealthWarned) {
+    finalState = {
+      ...finalState,
+      player: { ...finalState.player, lowHealthWarned: false },
+    }
+  }
+
+  // Death check — health hit 0
+  if (finalState.player.health <= 0 && !finalState.isGameOver) {
+    finalState = {
+      ...finalState,
+      isGameOver: true,
+      winCondition: 'lost',
+      lossReason: finalState.player.isStarving ? 'You starved to death.' : 'Your health failed.',
+    }
+  }
+
+  if (newDay > 7) {
+    return advanceWeek(finalState);
+  }
+
+  return finalState;
 }
 
 export function advanceWeek(state: GameState): GameState {

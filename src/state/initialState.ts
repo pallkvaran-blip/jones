@@ -43,6 +43,8 @@ export function createInitialState(name: string, difficulty: Difficulty): GameSt
       hasComputer: false,
       hasTransport: false,
       pets: [],
+      isStarving: false,
+      lowHealthWarned: false,
     },
     calendar: {
       week: 1,
