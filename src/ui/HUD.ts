@@ -10,6 +10,8 @@ export class HUD {
   private actionPanel: ActionPanel;
   private mounted = false;
   private currentLocationId: LocationId | null = null;
+  private currentActionIds: string = '';
+  private onActionCallback: ((id: string) => void) | null = null;
 
   constructor() {
     const root = document.getElementById('ui-root');
@@ -31,15 +33,20 @@ export class HUD {
     if (!this.mounted) return;
     this.statsPanel.update(state);
 
-    // Update location name from location definitions
     const locDef = locations.find(l => l.id === state.currentLocationId);
-    if (locDef) {
-      this.statsPanel.updateLocationName(locDef.name);
-    }
+    if (locDef) this.statsPanel.updateLocationName(locDef.name);
 
-    // Update action panel if we have a current location
-    if (this.currentLocationId) {
-      this.actionPanel.update(getActionsForLocation(this.currentLocationId, state), state);
+    if (this.currentLocationId && this.onActionCallback) {
+      const newActions = getActionsForLocation(this.currentLocationId, state);
+      const newIds = newActions.map(a => a.id).join(',');
+      if (newIds !== this.currentActionIds) {
+        // Action set changed (e.g. applied for job, upgraded housing) — full re-render
+        this.currentActionIds = newIds;
+        const name = locations.find(l => l.id === this.currentLocationId)?.name ?? this.currentLocationId!;
+        this.actionPanel.show(name, newActions, state, this.onActionCallback);
+      } else {
+        this.actionPanel.update(newActions, state);
+      }
     }
   }
 
@@ -49,14 +56,18 @@ export class HUD {
     onAction: (id: string) => void,
   ): void {
     this.currentLocationId = locationId;
+    this.onActionCallback = onAction;
     const locDef = locations.find(l => l.id === locationId);
     const locationName = locDef ? locDef.name : locationId;
     const actions = getActionsForLocation(locationId, state);
+    this.currentActionIds = actions.map(a => a.id).join(',');
     this.actionPanel.show(locationName, actions, state, onAction);
   }
 
   hideActions(): void {
     this.currentLocationId = null;
+    this.currentActionIds = '';
+    this.onActionCallback = null;
     this.actionPanel.hide();
   }
 

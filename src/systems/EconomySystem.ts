@@ -1,13 +1,9 @@
 import type { GameState } from '../state/types'
 import { STOCKS, STOCK_VOLATILITY, type StockId } from '../data/stocks'
+import { getHousingTier } from '../data/housing'
 
-const HOUSING_RENT: Record<string, number> = {
-  apartment_basic: 150,
-  apartment_nice:  300,
-}
-
-const BANK_INTEREST_RATE = 0.02   // 2% weekly on savings
-const DEBT_INTEREST_RATE = 0.05   // 5% weekly on debt
+const BANK_INTEREST_RATE = 0.02
+const DEBT_INTEREST_RATE = 0.05
 
 function log(state: GameState, msg: string): GameState {
   const eventLog = [...state.eventLog, msg].slice(-20)
@@ -19,7 +15,8 @@ export function applyWeeklyEconomy(state: GameState): GameState {
   const entries: string[] = []
 
   // --- Rent ---
-  const rent = HOUSING_RENT[s.player.housingId] ?? 0
+  const housing = getHousingTier(s.player.housingId)
+  const rent = housing?.weeklyRent ?? 0
   if (rent > 0) {
     if (s.player.money >= rent) {
       s = { ...s, player: { ...s.player, money: s.player.money - rent } }
@@ -29,13 +26,18 @@ export function applyWeeklyEconomy(state: GameState): GameState {
       if (s.player.bankBalance >= bankNeeded) {
         s = { ...s, player: { ...s.player, money: 0, bankBalance: s.player.bankBalance - bankNeeded } }
       } else {
-        // Can't cover rent — add shortfall to debt, drain all cash/bank
         const shortfall = rent - cashAvail - s.player.bankBalance
         s = { ...s, player: { ...s.player, money: 0, bankBalance: 0, debt: s.player.debt + shortfall } }
         entries.push(`Missed rent! Debt +$${shortfall.toFixed(0)}`)
       }
     }
     entries.push(`Rent -$${rent}`)
+  }
+
+  // --- Housing morale bonus ---
+  const moraleBonus = housing?.moraleBonus ?? 0
+  if (moraleBonus > 0) {
+    s = { ...s, player: { ...s.player, morale: Math.min(100, s.player.morale + moraleBonus) } }
   }
 
   // --- Bank interest on savings ---

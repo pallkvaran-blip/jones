@@ -2,6 +2,7 @@ import type { GameState, LocationId } from '../state/types'
 import { consumeTime } from './TimeSystem'
 import { CAREER_JOBS, LOCATION_JOBS } from '../data/jobs'
 import { STOCKS, STOCK_NAMES, type StockId } from '../data/stocks'
+import { getHousingTier, getNextHousingTier } from '../data/housing'
 
 function cap(n: number): number {
   return Math.min(100, Math.max(0, n));
@@ -515,28 +516,30 @@ const browsePawnAction: ActionDef = {
 };
 
 // --- REALTY actions ---
-const upgradeAptAction: ActionDef = {
-  id: 'upgrade_apt',
-  label: 'Upgrade Apartment',
-  detail: 'Better apt, Morale+20, -$500 | 10t',
-  timeCost: 10,
-  available: (state) => state.player.housingId === 'apartment_basic' && state.player.money >= 500,
-  unavailableReason: (state) => {
-    if (state.player.housingId !== 'apartment_basic') return 'Already upgraded';
-    return 'Need $500';
-  },
-  apply(state) {
-    return {
-      ...state,
-      player: {
-        ...state.player,
-        housingId: 'apartment_nice',
-        morale: cap(state.player.morale + 20),
-        money: state.player.money - 500,
-      },
-    };
-  },
-};
+function makeHousingUpgradeAction(state: GameState): ActionDef | null {
+  const next = getNextHousingTier(state.player.housingId);
+  if (!next) return null;
+  const currentName = getHousingTier(state.player.housingId)?.name ?? 'Current';
+  return {
+    id: `upgrade_to_${next.id}`,
+    label: `Move to ${next.name}`,
+    detail: `${currentName} → ${next.name}, -$${next.upgradeCost} | 10t`,
+    timeCost: 10,
+    available: (s) => s.player.money >= next.upgradeCost,
+    unavailableReason: () => `Need $${next.upgradeCost}`,
+    apply(s) {
+      return addLog({
+        ...s,
+        player: {
+          ...s.player,
+          housingId: next.id,
+          morale: cap(s.player.morale + 10),
+          money: s.player.money - next.upgradeCost,
+        },
+      }, `Moved to ${next.name}!`);
+    },
+  };
+}
 
 const browseListingsAction: ActionDef = {
   id: 'browse_listings',
@@ -772,8 +775,12 @@ export function getActionsForLocation(locationId: LocationId, state: GameState):
     case 'pawn':
       return [pawnComputerAction, browsePawnAction, ...getJobActions(locationId, state)];
 
-    case 'realty':
-      return [upgradeAptAction, browseListingsAction, ...getJobActions(locationId, state)];
+    case 'realty': {
+      const upgradeAction = makeHousingUpgradeAction(state);
+      const realtyActions: ActionDef[] = [browseListingsAction, ...getJobActions(locationId, state)];
+      if (upgradeAction) realtyActions.unshift(upgradeAction);
+      return realtyActions;
+    }
 
     case 'hospital':
       return [medicalCheckupAction, buyMedicineAction, ...getJobActions(locationId, state)];

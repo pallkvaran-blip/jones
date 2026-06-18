@@ -1,6 +1,7 @@
 import type { GameState } from '../../state/types'
 import { formatMoney, formatTime, dayName } from '../../utils/format'
 import { CAREER_JOBS, LOCATION_JOBS } from '../../data/jobs'
+import { getHousingTier } from '../../data/housing'
 
 function getBarClass(value: number): string {
   if (value >= 60) return 'high';
@@ -77,6 +78,11 @@ export class StatsPanel {
       <div class="stat-row">
         <span class="stat-label">Job</span>
         <span class="stat-value" id="sp-job">Unemployed</span>
+      </div>
+
+      <div class="stat-row">
+        <span class="stat-label">Home</span>
+        <span class="stat-value" id="sp-housing" style="color:#9ab4d6">Basic Apartment</span>
       </div>
 
       <div class="stat-row">
@@ -212,6 +218,13 @@ export class StatsPanel {
       } else {
         jobEl.textContent = 'Unemployed';
       }
+    }
+
+    // Housing
+    const housingEl = this.el.querySelector('#sp-housing');
+    if (housingEl) {
+      const tier = getHousingTier(player.housingId);
+      housingEl.textContent = tier?.name ?? player.housingId.replace(/_/g, ' ');
     }
 
     // Goals indicators
