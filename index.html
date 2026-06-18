@@ -2,21 +2,31 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Fusi — Life in the Fast Lane</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    html, body { width: 100%; height: 100%; background: #0d0d1a; overflow: hidden; font-family: 'Segoe UI', system-ui, sans-serif; }
-    #game-container { width: 100%; height: 100%; }
-    #ui-root { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
-    #ui-root * { pointer-events: auto; }
+    html, body {
+      width: 100%; height: 100%;
+      background: #0d0d1a; overflow: hidden;
+      display: flex; flex-direction: row;
+    }
+    /* Three-column layout: action panel | game board | stats panel */
+    #left-slot        { width: 152px; flex-shrink: 0; height: 100%; position: relative; }
+    #canvas-container { flex: 1;      height: 100%; position: relative; overflow: hidden; }
+    #right-slot       { width: 240px; flex-shrink: 0; height: 100%; position: relative; }
+    /* Full-screen overlay root for modals, menus, game-over, turn-handoff */
+    #ui-root { position: fixed; inset: 0; pointer-events: none; z-index: 200; }
+    #ui-root > * { pointer-events: auto; }
   </style>
 </head>
 <body>
-  <div id="game-container"></div>
+  <div id="left-slot"></div>
+  <div id="canvas-container"></div>
+  <div id="right-slot"></div>
   <div id="ui-root"></div>
   <script type="module" src="/src/main.ts"></script>
 </body>

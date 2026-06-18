@@ -41,13 +41,12 @@ export interface LocationDef {
 // 4 columns × 3 rows grid of large tiles. Each building footprint 150w × 140h.
 // Streets (~20-28px) run between tiles inside the frame.
 export const BOARD_W = 720
-export const BUILDING_W = 120
+export const BUILDING_W = 150
 export const BUILDING_H = 140
 export const FRAME = 12
 
-// Column left-edges start at 155 (just past the 152px action panel).
-// 4 cols × 120px + 3 gaps × 28px = 480+84 = 564, fits in 720−155 = 565px.
-const COL = [155, 303, 451, 599] as const
+// Column left-edges and row top-edges (centered in the 720-wide board interior).
+const COL = [12, 194, 376, 558] as const // 32px horizontal streets between columns
 const ROW = [20, 192, 364] as const       // 32px vertical streets between rows
 const W = BUILDING_W
 const H = BUILDING_H

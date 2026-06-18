@@ -15,18 +15,18 @@ export class HUD {
   private onUnavailableCallback: ((msg: string) => void) | null = null;
 
   constructor() {
-    const root = document.getElementById('ui-root');
-    if (!root) throw new Error('#ui-root element not found');
-    this.root = root;
+    this.root = document.getElementById('ui-root') ?? document.body;
     this.statsPanel = new StatsPanel();
     this.actionPanel = new ActionPanel();
   }
 
   mount(): void {
     if (this.mounted) return;
-    this.root.appendChild(this.statsPanel.getElement());
-    // Action panel is a separate fixed overlay on the canvas (left) side
-    this.root.appendChild(this.actionPanel.getElement());
+    // Panels live in their dedicated layout slots — not inside the canvas overlay.
+    const leftSlot  = document.getElementById('left-slot')  ?? this.root;
+    const rightSlot = document.getElementById('right-slot') ?? this.root;
+    leftSlot.appendChild(this.actionPanel.getElement());
+    rightSlot.appendChild(this.statsPanel.getElement());
     this.mounted = true;
   }
 

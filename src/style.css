@@ -29,11 +29,8 @@ body {
 }
 
 #stats-panel {
-  position: fixed;
-  top: 0;
-  right: calc(100vw - var(--cv-left, 0px) - var(--cv-width, 100vw));
-  width: var(--cv-panel-stats, 240px);
-  height: 100%;
+  position: absolute;
+  inset: 0;
   background: var(--color-panel-bg);
   border-left: 3px solid var(--color-panel-edge-light);
   box-shadow: inset 4px 0 0 var(--color-panel-edge-dark), inset -3px 0 0 var(--color-panel-edge-dark);
@@ -211,21 +208,11 @@ body {
 /* Goals indicator */
 #sp-goals { letter-spacing: 4px; font-size: 10px; }
 
-/*
- * Action panel — left-side vertical sidebar over the canvas.
- * pointer-events: none on the container lets map clicks pass through to
- * Phaser zones below; only the buttons themselves capture pointer events.
- * Hidden by default; show() adds .is-open, hide() removes it.
- */
+/* Action panel — fills the #left-slot column beside the canvas. */
 #action-panel {
   display: none;
-  position: fixed;
-  left: var(--cv-left, 0px);
-  top: 0;
-  width: var(--cv-panel-action, 152px);
-  height: 100%;
-  z-index: 150;
-  pointer-events: none;
+  position: absolute;
+  inset: 0;
   font-family: var(--font-pixel);
   background: rgba(13, 13, 23, 0.94);
   border-right: 2px solid #4a4a66;
@@ -282,7 +269,7 @@ body {
   display: flex;
   flex-direction: column;
   gap: 3px;
-  pointer-events: auto;   /* ← buttons DO capture clicks */
+  pointer-events: auto;
 }
 
 .action-btn:hover:not(.disabled) {

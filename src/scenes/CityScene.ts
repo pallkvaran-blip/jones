@@ -14,9 +14,7 @@ import { EventModal } from '../ui/EventModal'
 import { getWorkEvent } from '../data/workEvents'
 import { TurnHandoffOverlay } from '../ui/TurnHandoffOverlay'
 
-const GAME_W = 960
-const GAME_H = 540
-const BOARD_H = GAME_H
+const BOARD_H = 540
 
 export class CityScene extends Phaser.Scene {
   private avatar!: Avatar
@@ -45,10 +43,6 @@ export class CityScene extends Phaser.Scene {
 
     // --- Base background ---
     this.add.rectangle(BOARD_W / 2, BOARD_H / 2, BOARD_W, BOARD_H, 0x232733).setDepth(0)
-    // HUD backing strip behind the DOM panel.
-    this.add
-      .rectangle(BOARD_W + (GAME_W - BOARD_W) / 2, BOARD_H / 2, GAME_W - BOARD_W, BOARD_H, 0x0d0d17)
-      .setDepth(0)
 
     // --- Streets / sidewalks (the board surface) ---
     this.streetGraphics = this.add.graphics().setDepth(1)
@@ -343,11 +337,11 @@ export class CityScene extends Phaser.Scene {
     g.fillStyle(ASPHALT, 1)
     g.fillRect(FRAME, FRAME, BOARD_W - FRAME * 2, BOARD_H - FRAME * 2)
 
-    // Road centerlines — COL=[155,303,451,599], BUILDING_W=120 → right edges at 275,423,571,719
-    // Street centers: (275+303)/2=289, (423+451)/2=437, (571+599)/2=585
+    // Road centerlines — COL=[12,194,376,558], BUILDING_W=150 → right edges at 162,344,526,708
+    // Street centers: (162+194)/2=178, (344+376)/2=360, (526+558)/2=542
     // ROW=[20,192,364], BUILDING_H=140 → bottom edges at 160,332,504
     // Street centers: (160+192)/2=176, (332+364)/2=348, 504+16=520
-    const colCenters = [289, 437, 585]
+    const colCenters = [178, 360, 542]
     const rowCenters = [176, 348, 520]
 
     const roadW = 20

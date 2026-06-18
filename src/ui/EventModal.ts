@@ -20,10 +20,7 @@ export class EventModal {
     backdrop.id = 'event-modal-backdrop'
     backdrop.style.cssText = `
       position: fixed;
-      left: var(--cv-left, 0px);
-      top: var(--cv-top, 0px);
-      width: var(--cv-width, 100%);
-      height: var(--cv-height, 100%);
+      inset: 0;
       background: rgba(0,0,0,0.72);
       z-index: 300;
       display: flex;
