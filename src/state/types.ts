@@ -73,4 +73,5 @@ export interface GameState {
   isGameOver: boolean;
   winCondition: 'won' | 'lost' | null;
   lossReason: string | null;
+  pendingLifeEventId: string | null;
 }

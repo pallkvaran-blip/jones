@@ -71,5 +71,6 @@ export function createInitialState(name: string, difficulty: Difficulty): GameSt
     isGameOver: false,
     winCondition: null,
     lossReason: null,
+    pendingLifeEventId: null,
   };
 }

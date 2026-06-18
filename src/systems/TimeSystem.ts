@@ -1,6 +1,7 @@
 import type { GameState } from '../state/types'
 import { applyWeeklyEconomy } from './EconomySystem'
 import { getHousingTier } from '../data/housing'
+import { rollLifeEvent } from './EventSystem'
 
 export function consumeTime(state: GameState, units: number): GameState {
   const newUnits = state.calendar.timeUnits - units;
@@ -78,5 +79,12 @@ export function advanceWeek(state: GameState): GameState {
     calendar: { ...state.calendar, week: newWeek, day: 1, timeUnits: 100, season },
   };
 
-  return applyWeeklyEconomy(weekState);
+  let weeklyState = applyWeeklyEconomy(weekState);
+
+  const event = rollLifeEvent(weeklyState)
+  if (event) {
+    weeklyState = { ...weeklyState, pendingLifeEventId: event.id }
+  }
+
+  return weeklyState;
 }

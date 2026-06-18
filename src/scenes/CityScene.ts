@@ -8,6 +8,9 @@ import { Avatar } from '../entities/Avatar'
 import { LocationSprite } from '../entities/LocationSprite'
 import { HUD } from '../ui/HUD'
 import type { LocationId } from '../state/types'
+import { ALL_LIFE_EVENTS } from '../data/lifeEvents'
+import { applyImmediateEvent, resolveEventChoice } from '../systems/EventSystem'
+import { EventModal } from '../ui/EventModal'
 
 const GAME_W = 960
 const GAME_H = 540
@@ -23,6 +26,8 @@ export class CityScene extends Phaser.Scene {
   private overlayText: Phaser.GameObjects.Text | null = null
   private unsubscribeStore: (() => void) | null = null
   private muteButton: HTMLButtonElement | null = null
+  private eventModal: EventModal = new EventModal()
+  private lastPendingEventId: string | null = null
 
   constructor() {
     super({ key: 'CityScene' })
@@ -95,6 +100,29 @@ export class CityScene extends Phaser.Scene {
         this.time.delayedCall(500, () => {
           this.scene.start('GameOverScene')
         })
+      }
+
+      if (newState.pendingLifeEventId && newState.pendingLifeEventId !== this.lastPendingEventId) {
+        this.lastPendingEventId = newState.pendingLifeEventId
+        const event = ALL_LIFE_EVENTS.find(e => e.id === newState.pendingLifeEventId)
+        if (event) {
+          if (event.type === 'immediate') {
+            // Apply delta first, then show dismissible modal
+            const resolved = applyImmediateEvent(event, newState)
+            store.setState(() => resolved)
+            this.eventModal.show(event, () => {})
+          } else {
+            // Show choice modal — apply delta when user picks
+            this.eventModal.show(event, (choiceIdx) => {
+              const current = store.getState()
+              store.setState(() => resolveEventChoice(event, choiceIdx, current))
+            })
+          }
+        }
+      }
+
+      if (!newState.pendingLifeEventId) {
+        this.lastPendingEventId = null
       }
     })
   }
