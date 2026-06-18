@@ -1292,4 +1292,15 @@ export const ALL_LIFE_EVENTS: LifeEvent[] = [
     immediateDelta: { morale: -35, creditScore: -10 },
     immediateLog: 'Fired due to sustained poor performance.',
   },
+  {
+    id: 'slept_on_street',
+    title: 'Rough Night',
+    description: "You ran out of time and couldn't make it home. You woke up on a bench outside, stiff, hungry, and deeply regretting your life choices. A pigeon judged you.",
+    weight: 0,
+    cooldownWeeks: 0,
+    canFire: () => false,
+    type: 'immediate',
+    immediateDelta: { health: -15, morale: -25, hunger: -30 },
+    immediateLog: 'Slept rough — health, morale, and hunger took a hit.',
+  },
 ]

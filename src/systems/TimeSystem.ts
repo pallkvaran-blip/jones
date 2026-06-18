@@ -1,4 +1,4 @@
-import type { GameState } from '../state/types'
+import type { GameState, LocationId } from '../state/types'
 import { applyWeeklyEconomy } from './EconomySystem'
 import { getHousingTier } from '../data/housing'
 import { rollLifeEvent } from './EventSystem'
@@ -21,6 +21,15 @@ export function consumeTime(state: GameState, units: number): GameState {
 }
 
 export function advanceDay(state: GameState): GameState {
+  // If player ended the day away from home, they slept rough
+  if (state.currentLocationId !== 'home' && !state.pendingLifeEventId) {
+    state = {
+      ...state,
+      currentLocationId: 'home' as LocationId,
+      pendingLifeEventId: 'slept_on_street',
+    }
+  }
+
   let newDay = state.calendar.day + 1;
   const newTimeUnits = 100;
 
