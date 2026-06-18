@@ -220,35 +220,59 @@ export class CityScene extends Phaser.Scene {
 
     const targetCenter = targetSprite.getCenter()
 
+    // Distance-proportional time cost and tween duration.
+    const startPos = this.avatar.getPosition()
+    const dist = Math.sqrt(
+      (targetCenter.x - startPos.x) ** 2 + (targetCenter.y - startPos.y) ** 2,
+    )
+    const timeCost = Math.max(3, Math.min(12, Math.round(dist / 50)))
+    const moveDuration = Math.max(400, Math.min(1400, Math.round(dist * 2.2)))
+    const startTimeUnits = state.calendar.timeUnits
+
     audioSystem.playSFX('move')
 
-    this.avatar.moveTo(targetCenter.x, targetCenter.y, () => {
-      audioSystem.playSFX('arrive')
+    this.avatar.moveTo(
+      targetCenter.x,
+      targetCenter.y,
+      () => {
+        // Finalize: rebase on startTimeUnits so consumeTime handles day/week correctly.
+        audioSystem.playSFX('arrive')
+        store.setState((s) => {
+          const rebased = { ...s, calendar: { ...s.calendar, timeUnits: startTimeUnits } }
+          const afterMove = consumeTime(rebased, timeCost)
+          const withLocation = { ...afterMove, currentLocationId: id }
 
-      store.setState((s) => {
-        const afterMove = consumeTime(s, 10)
-        const withLocation = { ...afterMove, currentLocationId: id }
+          const dayAdvanced =
+            withLocation.calendar.day !== s.calendar.day ||
+            withLocation.calendar.week !== s.calendar.week
+          const weekAdvanced = withLocation.calendar.week !== s.calendar.week
 
-        const dayAdvanced =
-          withLocation.calendar.day !== s.calendar.day ||
-          withLocation.calendar.week !== s.calendar.week
-        const weekAdvanced = withLocation.calendar.week !== s.calendar.week
+          if (weekAdvanced) {
+            audioSystem.playSFX('weekEnd')
+            this.showDayBanner(`Week ${withLocation.calendar.week}`)
+          } else if (dayAdvanced) {
+            audioSystem.playSFX('dayEnd')
+            this.showDayBanner(
+              `Day ${withLocation.calendar.day} — ${this.getDayName(withLocation.calendar.day)}`,
+            )
+          }
 
-        if (weekAdvanced) {
-          audioSystem.playSFX('weekEnd')
-          this.showDayBanner(`Week ${withLocation.calendar.week}`)
-        } else if (dayAdvanced) {
-          audioSystem.playSFX('dayEnd')
-          this.showDayBanner(
-            `Day ${withLocation.calendar.day} — ${this.getDayName(withLocation.calendar.day)}`,
-          )
-        }
-
-        return withLocation
-      })
-
-      targetSprite.setLocationActive(true)
-    })
+          return withLocation
+        })
+        targetSprite.setLocationActive(true)
+      },
+      (progress) => {
+        // Smoothly interpolate timeUnits as the avatar walks.
+        store.setState((s) => ({
+          ...s,
+          calendar: {
+            ...s.calendar,
+            timeUnits: Math.max(0, startTimeUnits - progress * timeCost),
+          },
+        }))
+      },
+      moveDuration,
+    )
   }
 
   private getDayName(day: number): string {

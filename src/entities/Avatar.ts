@@ -54,7 +54,13 @@ export class Avatar {
     this.sprite.setTexture('avatar-0')
   }
 
-  moveTo(x: number, y: number, onComplete: () => void): void {
+  moveTo(
+    x: number,
+    y: number,
+    onComplete: () => void,
+    onUpdate?: (progress: number) => void,
+    duration = 700,
+  ): void {
     if (this.isMoving) return
     this.isMoving = true
 
@@ -69,8 +75,11 @@ export class Avatar {
       targets: this.container,
       x,
       y,
-      duration: 700,
+      duration,
       ease: 'Sine.InOut',
+      onUpdate: (tween) => {
+        if (onUpdate) onUpdate(tween.progress)
+      },
       onComplete: () => {
         this.stopWalk()
         this.isMoving = false

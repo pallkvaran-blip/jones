@@ -12,6 +12,7 @@ export class LocationSprite extends Phaser.GameObjects.Container {
   private nameText: Phaser.GameObjects.Text
   private glow: Phaser.GameObjects.Rectangle
   private pin: Phaser.GameObjects.Container
+  private hitZone: Phaser.GameObjects.Zone
   private isActive = false
 
   constructor(scene: Phaser.Scene, def: LocationDef) {
@@ -61,17 +62,16 @@ export class LocationSprite extends Phaser.GameObjects.Container {
     this.pin.setVisible(false)
     this.add(this.pin)
 
-    // Interactive region covers the building footprint.
-    this.setSize(w, h)
-    this.setInteractive({
-      hitArea: new Phaser.Geom.Rectangle(0, 0, w, h),
-      hitAreaCallback: Phaser.Geom.Rectangle.Contains,
-      cursor: 'pointer',
-    })
-
-    this.on('pointerover', this.onPointerOver, this)
-    this.on('pointerout', this.onPointerOut, this)
-    this.on('pointerdown', this.onPointerDown, this)
+    // Dedicated zone at world coords for reliable hit detection.
+    // Zones are processed by Phaser's input system independently of the Container
+    // transform chain, giving 100% reliable pointer events.
+    this.hitZone = scene.add.zone(def.x, def.y, w, h)
+    this.hitZone.setOrigin(0, 0)
+    this.hitZone.setDepth(9)
+    this.hitZone.setInteractive({ cursor: 'pointer' })
+    this.hitZone.on('pointerover', () => this.onPointerOver())
+    this.hitZone.on('pointerout', () => this.onPointerOut())
+    this.hitZone.on('pointerdown', () => this.onPointerDown())
 
     scene.add.existing(this as unknown as Phaser.GameObjects.GameObject)
   }
