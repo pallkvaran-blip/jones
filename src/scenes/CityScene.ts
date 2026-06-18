@@ -467,6 +467,12 @@ export class CityScene extends Phaser.Scene {
 
     if (this.avatar.isCurrentlyMoving()) return
 
+    // Block movement when out of energy
+    if (state.player.energy <= 0) {
+      this.showToast('Too tired to move — rest first!')
+      return
+    }
+
     const targetSprite = this.locationSprites.get(id)
     if (!targetSprite) return
 
@@ -484,6 +490,7 @@ export class CityScene extends Phaser.Scene {
       (targetCenter.x - startPos.x) ** 2 + (targetCenter.y - startPos.y) ** 2,
     )
     const timeCost = Math.max(3, Math.min(12, Math.round(dist / 50)))
+    const energyCost = Math.max(2, Math.ceil(timeCost * 0.4))
     const moveDuration = Math.max(400, Math.min(1400, Math.round(dist * 2.2)))
     const startTimeUnits = state.calendar.timeUnits
 
@@ -498,7 +505,8 @@ export class CityScene extends Phaser.Scene {
         store.setState((s) => {
           const rebased = { ...s, calendar: { ...s.calendar, timeUnits: startTimeUnits } }
           const afterMove = consumeTime(rebased, timeCost)
-          const withLocation = { ...afterMove, currentLocationId: id }
+          const withEnergy = { ...afterMove, player: { ...afterMove.player, energy: Math.max(0, afterMove.player.energy - energyCost) } }
+          const withLocation = { ...withEnergy, currentLocationId: id }
 
           const dayAdvanced =
             withLocation.calendar.day !== s.calendar.day ||

@@ -764,19 +764,7 @@ function getJobActions(locationId: LocationId, state: GameState): ActionDef[] {
     const careerDef = CAREER_JOBS[locJob.track];
     const tier = careerDef.tiers[player.jobRank - 1];
     const pay = tier?.dailyPay ?? 60;
-    return [makeWorkShiftAction(pay), quitJobAction];
-  }
-
-  if (player.jobId !== null) {
-    return [{
-      id: 'employed_elsewhere',
-      label: 'Apply for Job',
-      detail: 'Quit current job first',
-      timeCost: 0,
-      available: () => false,
-      unavailableReason: () => 'Already employed',
-      apply: (s) => s,
-    }];
+    return [makeWorkShiftAction(pay)];
   }
 
   const firstTier = CAREER_JOBS[locJob.track].tiers[0];
@@ -795,6 +783,7 @@ function getJobActions(locationId: LocationId, state: GameState): ActionDef[] {
         const hasAny = required.some(c => completed.includes(c))
         return { ...s, pendingLifeEventId: hasAny ? 'job_rejected_experience' : 'job_rejected_education' }
       }
+      const wasEmployed = s.player.jobId !== null
       return addLog({
         ...s,
         player: {
@@ -804,7 +793,7 @@ function getJobActions(locationId: LocationId, state: GameState): ActionDef[] {
           jobTenure: 0,
           jobRank: 1,
         },
-      }, `Hired as ${locJob.titles[0]}!`);
+      }, wasEmployed ? `Left old job — hired as ${locJob.titles[0]}!` : `Hired as ${locJob.titles[0]}!`);
     },
   }];
 }
