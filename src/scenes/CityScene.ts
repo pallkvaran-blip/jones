@@ -343,12 +343,11 @@ export class CityScene extends Phaser.Scene {
     g.fillStyle(ASPHALT, 1)
     g.fillRect(FRAME, FRAME, BOARD_W - FRAME * 2, BOARD_H - FRAME * 2)
 
-    // Road centerlines — computed from the new COL/ROW layout:
-    // COL=[12,194,376,558], BUILDING_W=150 → right edges at 162,344,526,708
-    // Street centers: left-edge=(162+194)/2=178, mid=(344+376)/2=360, right=(526+558)/2=542
+    // Road centerlines — COL=[155,303,451,599], BUILDING_W=120 → right edges at 275,423,571,719
+    // Street centers: (275+303)/2=289, (423+451)/2=437, (571+599)/2=585
     // ROW=[20,192,364], BUILDING_H=140 → bottom edges at 160,332,504
-    // Street centers: top=(160+192)/2=176, mid=(332+364)/2=348, bottom=504+16=520
-    const colCenters = [178, 360, 542]
+    // Street centers: (160+192)/2=176, (332+364)/2=348, 504+16=520
+    const colCenters = [289, 437, 585]
     const rowCenters = [176, 348, 520]
 
     const roadW = 20
