@@ -3,9 +3,22 @@ import { consumeTime } from './TimeSystem'
 import { CAREER_JOBS, LOCATION_JOBS } from '../data/jobs'
 import { STOCKS, STOCK_NAMES, type StockId } from '../data/stocks'
 import { RENTAL_TIERS, OWN_TIERS, getHousingTier } from '../data/housing'
+import { PETS } from '../data/pets'
 
 function cap(n: number): number {
   return Math.min(100, Math.max(0, n));
+}
+
+function petMoraleBonus(pets: string[]): number {
+  return PETS.filter(p => pets.includes(p.id)).reduce((sum, p) => sum + p.homeMoraleBonus, 0);
+}
+
+function petSleepEnergyBonus(pets: string[]): number {
+  return PETS.filter(p => pets.includes(p.id)).reduce((sum, p) => sum + p.homeSleepEnergyBonus, 0);
+}
+
+function petStudyEduBonus(pets: string[]): number {
+  return PETS.filter(p => pets.includes(p.id)).reduce((sum, p) => sum + p.homeStudyEduBonus, 0);
 }
 
 export interface ActionDef {
@@ -33,12 +46,14 @@ const studyAtHomeAction: ActionDef = {
   available: (state) => state.player.energy >= 8,
   unavailableReason: (s) => `Too tired to study (${Math.round(s.player.energy)}) — rest first!`,
   apply(state) {
+    const pets = state.player.pets ?? [];
     return {
       ...state,
       player: {
         ...state.player,
-        education: state.player.education + 0.3,
+        education: state.player.education + 0.3 + petStudyEduBonus(pets),
         energy: cap(state.player.energy - 8),
+        morale: cap(state.player.morale + petMoraleBonus(pets)),
       },
     };
   },
@@ -52,12 +67,13 @@ const sleepAction: ActionDef = {
   available: () => true,
   unavailableReason: () => '',
   apply(state) {
+    const pets = state.player.pets ?? [];
     return {
       ...state,
       player: {
         ...state.player,
-        energy: cap(state.player.energy + 40),
-        morale: cap(state.player.morale + 5),
+        energy: cap(state.player.energy + 40 + petSleepEnergyBonus(pets)),
+        morale: cap(state.player.morale + 5 + petMoraleBonus(pets)),
       },
     };
   },
@@ -71,12 +87,13 @@ const restAction: ActionDef = {
   available: () => true,
   unavailableReason: () => '',
   apply(state) {
+    const pets = state.player.pets ?? [];
     return {
       ...state,
       player: {
         ...state.player,
-        energy: cap(state.player.energy + 15),
-        morale: cap(state.player.morale + 10),
+        energy: cap(state.player.energy + 15 + petSleepEnergyBonus(pets)),
+        morale: cap(state.player.morale + 10 + petMoraleBonus(pets)),
       },
     };
   },
@@ -90,12 +107,14 @@ const cookMealAction: ActionDef = {
   available: (state) => state.player.money >= 15,
   unavailableReason: () => 'Need $15',
   apply(state) {
+    const pets = state.player.pets ?? [];
     return {
       ...state,
       player: {
         ...state.player,
         hunger: cap(state.player.hunger + 40),
         money: state.player.money - 15,
+        morale: cap(state.player.morale + petMoraleBonus(pets)),
       },
     };
   },
@@ -721,46 +740,29 @@ function makeStockActions(state: GameState): ActionDef[] {
   return actions
 }
 
-// --- SEAFOOD GRILL actions (employment location) ---
-const seafoodDinnerAction: ActionDef = {
-  id: 'seafood_dinner',
-  label: 'Seafood Dinner',
-  detail: 'Hunger+55, Morale+20, -$35 | 8t',
-  timeCost: 8,
-  available: (state) => state.player.money >= 35,
-  unavailableReason: () => 'Need $35',
-  apply(state) {
-    return {
-      ...state,
-      player: {
-        ...state.player,
-        hunger: cap(state.player.hunger + 55),
-        morale: cap(state.player.morale + 20),
-        money: state.player.money - 35,
-      },
-    };
+// --- PET SHOP actions (employment location) ---
+const PET_SHOP_ACTIONS: ActionDef[] = PETS.map((pet) => ({
+  id: `buy_pet_${pet.id}`,
+  label: `Adopt ${pet.name}`,
+  detail: `${pet.species} — $${pet.price} | 10t`,
+  timeCost: 10,
+  available: (s: GameState) => !s.player.pets.includes(pet.id) && s.player.money >= pet.price,
+  unavailableReason: (s: GameState) => {
+    if (s.player.pets.includes(pet.id)) return `Already have ${pet.name}!`;
+    return `Need $${pet.price}`;
   },
-};
-
-const clamChowderAction: ActionDef = {
-  id: 'clam_chowder',
-  label: 'Clam Chowder',
-  detail: 'Hunger+30, Morale+10, -$18 | 5t',
-  timeCost: 5,
-  available: (state) => state.player.money >= 18,
-  unavailableReason: () => 'Need $18',
-  apply(state) {
-    return {
-      ...state,
+  apply(s: GameState) {
+    return addLog({
+      ...s,
       player: {
-        ...state.player,
-        hunger: cap(state.player.hunger + 30),
-        morale: cap(state.player.morale + 10),
-        money: state.player.money - 18,
+        ...s.player,
+        pets: [...s.player.pets, pet.id],
+        money: s.player.money - pet.price,
+        morale: cap(s.player.morale + 15),
       },
-    };
+    }, `Adopted ${pet.name} the ${pet.species}!`);
   },
-};
+}));
 
 // --- JOB APPLICATION helper ---
 // Returns [Apply] if unemployed, [Work, Quit] if employed here, or a disabled
@@ -819,7 +821,7 @@ export function getActionsForLocation(locationId: LocationId, state: GameState):
       return [sleepAction, restAction, cookMealAction, studyAtHomeAction];
 
     case 'employment':
-      return [seafoodDinnerAction, clamChowderAction, ...getJobActions(locationId, state)];
+      return [...PET_SHOP_ACTIONS, ...getJobActions(locationId, state)];
 
     case 'university':
       return [takeClassAction, studyAction, ...getJobActions(locationId, state)];

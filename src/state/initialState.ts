@@ -41,6 +41,7 @@ export function createInitialState(name: string, difficulty: Difficulty): GameSt
       wardrobe: 1,
       hasComputer: false,
       hasTransport: false,
+      pets: [],
     },
     calendar: {
       week: 1,

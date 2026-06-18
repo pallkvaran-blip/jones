@@ -39,9 +39,10 @@ export class HUD {
 
     if (this.currentLocationId && this.onActionCallback) {
       const newActions = getActionsForLocation(this.currentLocationId, state);
-      const newIds = newActions.map(a => a.id).join(',');
+      // Include pets in fingerprint so new adoptions re-render the home panel
+      const newIds = newActions.map(a => a.id).join(',') + '|' + (state.player.pets ?? []).join(',');
       if (newIds !== this.currentActionIds) {
-        // Action set changed (e.g. applied for job, upgraded housing) — full re-render
+        // Action set changed (e.g. applied for job, upgraded housing, new pet) — full re-render
         this.currentActionIds = newIds;
         const name = locations.find(l => l.id === this.currentLocationId)?.name ?? this.currentLocationId!;
         this.actionPanel.show(this.currentLocationId!, name, newActions, state, this.onActionCallback, this.onUnavailableCallback ?? undefined);
@@ -63,7 +64,7 @@ export class HUD {
     const locDef = locations.find(l => l.id === locationId);
     const locationName = locDef ? locDef.name : locationId;
     const actions = getActionsForLocation(locationId, state);
-    this.currentActionIds = actions.map(a => a.id).join(',');
+    this.currentActionIds = actions.map(a => a.id).join(',') + '|' + (state.player.pets ?? []).join(',');
     this.actionPanel.show(locationId, locationName, actions, state, onAction, onUnavailable);
   }
 

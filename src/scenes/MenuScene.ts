@@ -132,6 +132,14 @@ export class MenuScene extends Phaser.Scene {
               font-family:${pf};
             "
           />
+          <div id="name-error" style="
+            display: none;
+            color: #E74C3C;
+            font-size: 7px;
+            margin-top: 5px;
+            font-family:${pf};
+            letter-spacing: 1px;
+          ">⚠ PLEASE ENTER YOUR NAME</div>
         </div>
 
         <div>
@@ -190,10 +198,15 @@ export class MenuScene extends Phaser.Scene {
       });
     }
 
-    // Enter key starts game
+    // Enter key starts game; clear error when typing
     if (this.nameInput) {
       this.nameInput.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') this.startGame();
+      });
+      this.nameInput.addEventListener('input', () => {
+        const errorEl = document.getElementById('name-error') as HTMLElement | null;
+        if (errorEl) errorEl.style.display = 'none';
+        if (this.nameInput) this.nameInput.style.borderColor = '#3a3a52';
       });
     }
   }
@@ -217,7 +230,17 @@ export class MenuScene extends Phaser.Scene {
   }
 
   private startGame(): void {
-    const playerName = this.nameInput?.value.trim() || 'Player';
+    const playerName = this.nameInput?.value.trim() ?? '';
+
+    if (!playerName) {
+      const nameInput = document.getElementById('player-name-input') as HTMLInputElement | null;
+      const errorEl = document.getElementById('name-error') as HTMLElement | null;
+      if (nameInput) nameInput.style.borderColor = '#E74C3C';
+      if (errorEl) errorEl.style.display = 'block';
+      if (nameInput) nameInput.focus();
+      return;
+    }
+
     const initialState = createInitialState(playerName, this.selectedDifficulty);
     initStore(initialState);
 

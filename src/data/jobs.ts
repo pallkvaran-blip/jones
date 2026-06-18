@@ -22,7 +22,7 @@ export interface LocationJobDef {
 
 /** Maps each location to the career track and titles available there. */
 export const LOCATION_JOBS: Partial<Record<LocationId, LocationJobDef>> = {
-  employment:    { track: 'creative',   titles: ['Line Cook', 'Sous Chef', 'Head Chef', 'Exec. Chef'],     eduRequired: 0 },
+  employment:    { track: 'creative',   titles: ['Pet Clerk', 'Pet Handler', 'Dept. Lead', 'Store Mgr'],    eduRequired: 0 },
   grocery:       { track: 'trades',     titles: ['Stock Clerk', 'Cashier', 'Dept. Mgr', 'Store Mgr'],      eduRequired: 0 },
   restaurant:    { track: 'creative',   titles: ['Busboy', 'Server', "Maitre'd", 'Rest. Mgr'],             eduRequired: 0 },
   pawn:          { track: 'finance',    titles: ['Sales Clerk', 'Buyer', 'Store Mgr', 'Owner'],            eduRequired: 0 },

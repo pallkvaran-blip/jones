@@ -1,6 +1,7 @@
 import type { ActionDef } from '../../systems/ActionSystem'
 import type { GameState } from '../../state/types'
-import { getCharacter, type CharacterDef } from '../../data/characters'
+import { getCharacter } from '../../data/characters'
+import { getPet } from '../../data/pets'
 
 export class ActionPanel {
   private el: HTMLElement;
@@ -16,35 +17,59 @@ export class ActionPanel {
     return this.el;
   }
 
-  private buildPortraitDataUrl(char: CharacterDef): string {
+  private buildPortraitDataUrl(sprite: { palette: string[], pixels: number[][] }): string {
     const SCALE = 4;
     const canvas = document.createElement('canvas');
     canvas.width = 8 * SCALE;
     canvas.height = 12 * SCALE;
     const ctx = canvas.getContext('2d')!;
-    for (let r = 0; r < char.pixels.length; r++) {
-      for (let c = 0; c < char.pixels[r].length; c++) {
-        const idx = char.pixels[r][c];
+    for (let r = 0; r < sprite.pixels.length; r++) {
+      for (let c = 0; c < sprite.pixels[r].length; c++) {
+        const idx = sprite.pixels[r][c];
         if (idx === 0) continue;
-        ctx.fillStyle = char.palette[idx];
+        ctx.fillStyle = sprite.palette[idx];
         ctx.fillRect(c * SCALE, r * SCALE, SCALE, SCALE);
       }
     }
     return canvas.toDataURL();
   }
 
-  private buildCharSection(locationId: string): string {
+  private buildCharSection(locationId: string, state: GameState): string {
     const char = getCharacter(locationId);
     if (!char) return '';
+
     const dataUrl = this.buildPortraitDataUrl(char);
     const line = char.lines[Math.floor(Math.random() * char.lines.length)];
+    const displayName = locationId === 'home' ? state.player.name : char.name;
+
+    let petRows = '';
+    if (locationId === 'home') {
+      const playerPets = state.player.pets ?? [];
+      for (const petId of playerPets) {
+        const pet = getPet(petId);
+        if (!pet) continue;
+        const petUrl = this.buildPortraitDataUrl(pet);
+        const petLine = pet.sounds[Math.floor(Math.random() * pet.sounds.length)];
+        petRows += `
+          <div class="pet-row">
+            <div class="char-header">
+              <img class="char-portrait" src="${petUrl}" width="32" height="48" alt="${pet.name}">
+              <span class="char-name">${pet.name}</span>
+            </div>
+            <div class="char-speech pet-speech">${petLine}</div>
+          </div>
+        `;
+      }
+    }
+
     return `
       <div class="char-section">
         <div class="char-header">
-          <img class="char-portrait" src="${dataUrl}" width="32" height="48" alt="${char.name}">
-          <span class="char-name">${char.name}</span>
+          <img class="char-portrait" src="${dataUrl}" width="32" height="48" alt="${displayName}">
+          <span class="char-name">${displayName}</span>
         </div>
         <div class="char-speech">${line}</div>
+        ${petRows}
       </div>
     `;
   }
@@ -73,7 +98,7 @@ export class ActionPanel {
       `;
     }).join('');
 
-    const charSection = this.buildCharSection(locationId);
+    const charSection = this.buildCharSection(locationId, state);
 
     this.el.innerHTML = `
       <div class="action-header">

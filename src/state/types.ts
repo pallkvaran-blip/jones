@@ -27,6 +27,7 @@ export interface Player {
   hasComputer: boolean;
   hasTransport: boolean;
   jobRank: number;
+  pets: string[];
 }
 
 export interface Calendar {

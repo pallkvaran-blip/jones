@@ -373,6 +373,21 @@ body {
   border-top: none;
 }
 
+/* Pet rows inside home char-section */
+.pet-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 5px;
+  padding-top: 5px;
+  border-top: 1px dashed var(--color-border);
+}
+
+.pet-speech {
+  font-size: 6px;
+  color: var(--color-text-dim);
+}
+
 /* Compress on short landscape phones */
 @media (max-height: 520px) {
   #stats-panel {
