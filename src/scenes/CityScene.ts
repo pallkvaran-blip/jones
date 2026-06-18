@@ -12,6 +12,7 @@ import { ALL_LIFE_EVENTS } from '../data/lifeEvents'
 import { applyImmediateEvent, resolveEventChoice } from '../systems/EventSystem'
 import { EventModal } from '../ui/EventModal'
 import { getWorkEvent } from '../data/workEvents'
+import { TurnHandoffOverlay } from '../ui/TurnHandoffOverlay'
 
 const GAME_W = 960
 const GAME_H = 540
@@ -30,6 +31,8 @@ export class CityScene extends Phaser.Scene {
   private eventModal: EventModal = new EventModal()
   private lastPendingEventId: string | null = null
   private lastWorkEventId: string | null = null
+  private turnHandoffOverlay = new TurnHandoffOverlay()
+  private lastHandoffState = false
 
   constructor() {
     super({ key: 'CityScene' })
@@ -99,10 +102,72 @@ export class CityScene extends Phaser.Scene {
       this.updateAmbient(newState.calendar.timeUnits)
 
       if (newState.isGameOver) {
+        // In 2-player mode, check if the other player is still alive
+        if (newState.numPlayers === 2) {
+          const bothStates = store.getBothStates()
+          const activeIdx = newState.activePlayer - 1
+          const otherIdx = activeIdx === 0 ? 1 : 0
+          const otherState = bothStates[otherIdx]
+
+          if (otherState && !otherState.isGameOver) {
+            // Other player is still alive — hand off to them
+            const currentPlayerName = newState.player.name
+            const nextPlayerName = otherState.player.name
+            const week = newState.calendar.week
+            const nextPlayer = (newState.activePlayer === 1 ? 2 : 1) as 1 | 2
+
+            this.turnHandoffOverlay.show(
+              `${currentPlayerName} — GAME OVER`,
+              nextPlayerName,
+              week,
+              () => {
+                this.lastHandoffState = false
+                store.setState(s => ({ ...s, pendingTurnHandoff: false }))
+                store.swapToPlayer(nextPlayer)
+              }
+            )
+            return
+          }
+        }
+
         this.time.delayedCall(500, () => {
           this.scene.start('GameOverScene')
         })
+        return
       }
+
+      // 2-player turn handoff
+      if (newState.pendingTurnHandoff && !this.lastHandoffState) {
+        this.lastHandoffState = true
+        const bothStates = store.getBothStates()
+        const activeIdx = newState.activePlayer - 1
+        const otherIdx = activeIdx === 0 ? 1 : 0
+        const otherState = bothStates[otherIdx]
+
+        if (otherState && newState.numPlayers === 2) {
+          const currentPlayerName = newState.player.name
+          const nextPlayerName = otherState.player.name
+          const week = newState.calendar.week
+
+          this.turnHandoffOverlay.show(
+            currentPlayerName,
+            nextPlayerName,
+            week,
+            () => {
+              this.lastHandoffState = false
+              // Clear handoff on current player's state, then swap
+              store.setState(s => ({ ...s, pendingTurnHandoff: false }))
+              const nextPlayer = (newState.activePlayer === 1 ? 2 : 1) as 1 | 2
+              store.swapToPlayer(nextPlayer)
+            }
+          )
+        } else {
+          // 1-player or no other state — just clear the flag
+          store.setState(s => ({ ...s, pendingTurnHandoff: false }))
+          this.lastHandoffState = false
+        }
+      }
+      if (!newState.pendingTurnHandoff) this.lastHandoffState = false
 
       // Life event modal
       if (newState.pendingLifeEventId && newState.pendingLifeEventId !== this.lastPendingEventId) {
@@ -512,6 +577,7 @@ export class CityScene extends Phaser.Scene {
       this.unsubscribeStore = null
     }
     this.hud.unmount()
+    this.turnHandoffOverlay.hide()
     audioSystem.stopBGM()
 
     if (this.muteButton?.parentNode) {

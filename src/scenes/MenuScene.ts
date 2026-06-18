@@ -1,11 +1,13 @@
 import Phaser from 'phaser'
-import { initStore } from '../state/store'
+import { initStore, getStore } from '../state/store'
 import { createInitialState } from '../state/initialState'
 import { audioSystem } from '../systems/AudioSystem'
 import type { Difficulty } from '../state/types'
 
 export class MenuScene extends Phaser.Scene {
   private selectedDifficulty: Difficulty = 'normal';
+  private numPlayers: 1 | 2 = 1;
+  private player2Name: string = '';
   private nameInput: HTMLInputElement | null = null;
   private menuContainer: HTMLElement | null = null;
 
@@ -77,11 +79,35 @@ export class MenuScene extends Phaser.Scene {
       gap: 16px;
       pointer-events: auto;
       z-index: 200;
+      overflow-y: auto;
     `;
 
     const pf = `'Press Start 2P', 'Courier New', monospace`;
     this.menuContainer.innerHTML = `
-      <div style="text-align:center; margin-bottom: 12px; font-family:${pf};">
+      <div style="
+        font-family:${pf};
+        font-size:6px;
+        color:#8a8aa6;
+        max-width:300px;
+        width:90%;
+        line-height:1.8;
+        letter-spacing:0.5px;
+        text-align:left;
+        margin-bottom:4px;
+      ">
+        <div style="color:#6a6a82; margin-bottom:4px; letter-spacing:1px;">GOALS</div>
+        <div>Earn $50k+ | Education 80+ | Reach Career Rank 4 | Happiness 80+</div>
+        <div style="color:#6a6a82; margin-top:6px; margin-bottom:4px; letter-spacing:1px;">GAME LENGTH</div>
+        <div>20-30 weeks depending on difficulty.</div>
+        <div>Each week is one full day of actions.</div>
+        <div>Miss a night at home and sleep rough.</div>
+        <div>Run out of health and it's game over.</div>
+        <div style="color:#6a6a82; margin-top:6px; margin-bottom:4px; letter-spacing:1px;">TIPS</div>
+        <div>Keep hunger up. Work hard but rest harder.</div>
+        <div>Invest early. Buy property when you can.</div>
+      </div>
+
+      <div style="text-align:center; margin-bottom: 4px; font-family:${pf};">
         <h1 style="
           font-family:${pf};
           font-size: clamp(40px, 9vw, 72px);
@@ -130,6 +156,7 @@ export class MenuScene extends Phaser.Scene {
               font-size: 10px;
               outline: none;
               font-family:${pf};
+              box-sizing: border-box;
             "
           />
           <div id="name-error" style="
@@ -139,7 +166,43 @@ export class MenuScene extends Phaser.Scene {
             margin-top: 5px;
             font-family:${pf};
             letter-spacing: 1px;
-          ">⚠ PLEASE ENTER YOUR NAME</div>
+          ">&#9888; PLEASE ENTER YOUR NAME</div>
+        </div>
+
+        <div>
+          <label style="display:block; color:#8a8aa6; font-size:8px; letter-spacing:1px; text-transform:uppercase; margin-bottom:8px; font-family:${pf};">Players</label>
+          <div style="display:flex; gap:8px; margin-bottom: 8px;">
+            <button class="players-btn selected" data-players="1" style="flex:1; padding:10px 2px; background:#3a2a0a; border:2px solid #F5A623; color:#F5A623; font-size:8px; cursor:pointer; font-family:${pf}; box-shadow: 0 0 8px #F5A623;">1P</button>
+            <button class="players-btn" data-players="2" style="flex:1; padding:10px 2px; background:#1a1a2e; border:2px solid #4a4a66; color:#8a8aa6; font-size:8px; cursor:pointer; font-family:${pf};">2P</button>
+          </div>
+          <div id="player2-name-container" style="display:none;">
+            <label style="display:block; color:#8a8aa6; font-size:8px; letter-spacing:1px; text-transform:uppercase; margin-bottom:8px; font-family:${pf};">Player 2 Name</label>
+            <input
+              id="player2-name-input"
+              type="text"
+              placeholder="ENTER NAME"
+              maxlength="20"
+              style="
+                width: 100%;
+                padding: 10px 10px;
+                background: #06060c;
+                border: 2px solid #3a3a52;
+                color: #e8e8f0;
+                font-size: 10px;
+                outline: none;
+                font-family:${pf};
+                box-sizing: border-box;
+              "
+            />
+            <div id="player2-name-error" style="
+              display: none;
+              color: #E74C3C;
+              font-size: 7px;
+              margin-top: 5px;
+              font-family:${pf};
+              letter-spacing: 1px;
+            ">&#9888; PLEASE ENTER PLAYER 2 NAME</div>
+          </div>
         </div>
 
         <div>
@@ -173,6 +236,20 @@ export class MenuScene extends Phaser.Scene {
     if (this.nameInput) {
       this.nameInput.focus();
     }
+
+    // Players toggle buttons
+    const playersBtns = this.menuContainer.querySelectorAll<HTMLButtonElement>('.players-btn');
+    playersBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        this.numPlayers = (parseInt(btn.dataset['players'] ?? '1', 10) as 1 | 2);
+        this.updatePlayersButtons(playersBtns);
+        const p2Container = document.getElementById('player2-name-container') as HTMLElement | null;
+        if (p2Container) {
+          p2Container.style.display = this.numPlayers === 2 ? 'block' : 'none';
+        }
+        audioSystem.playSFX('click');
+      });
+    });
 
     // Difficulty button listeners
     const diffBtns = this.menuContainer.querySelectorAll<HTMLButtonElement>('.diff-btn');
@@ -209,6 +286,36 @@ export class MenuScene extends Phaser.Scene {
         if (this.nameInput) this.nameInput.style.borderColor = '#3a3a52';
       });
     }
+
+    const p2Input = document.getElementById('player2-name-input') as HTMLInputElement | null;
+    if (p2Input) {
+      p2Input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') this.startGame();
+      });
+      p2Input.addEventListener('input', () => {
+        const errorEl = document.getElementById('player2-name-error') as HTMLElement | null;
+        if (errorEl) errorEl.style.display = 'none';
+        p2Input.style.borderColor = '#3a3a52';
+      });
+    }
+  }
+
+  private updatePlayersButtons(buttons: NodeListOf<HTMLButtonElement>): void {
+    buttons.forEach(btn => {
+      const num = parseInt(btn.dataset['players'] ?? '1', 10);
+      const selected = num === this.numPlayers;
+      if (selected) {
+        btn.style.background = '#3a2a0a';
+        btn.style.border = '2px solid #F5A623';
+        btn.style.color = '#F5A623';
+        btn.style.boxShadow = '0 0 8px #F5A623';
+      } else {
+        btn.style.background = '#1a1a2e';
+        btn.style.border = '2px solid #4a4a66';
+        btn.style.color = '#8a8aa6';
+        btn.style.boxShadow = 'none';
+      }
+    });
   }
 
   private updateDifficultyButtons(buttons: NodeListOf<HTMLButtonElement>): void {
@@ -230,9 +337,9 @@ export class MenuScene extends Phaser.Scene {
   }
 
   private startGame(): void {
-    const playerName = this.nameInput?.value.trim() ?? '';
+    const p1Name = this.nameInput?.value.trim() ?? '';
 
-    if (!playerName) {
+    if (!p1Name) {
       const nameInput = document.getElementById('player-name-input') as HTMLInputElement | null;
       const errorEl = document.getElementById('name-error') as HTMLElement | null;
       if (nameInput) nameInput.style.borderColor = '#E74C3C';
@@ -241,8 +348,31 @@ export class MenuScene extends Phaser.Scene {
       return;
     }
 
-    const initialState = createInitialState(playerName, this.selectedDifficulty);
-    initStore(initialState);
+    const p2Name = this.numPlayers === 2
+      ? (document.getElementById('player2-name-input') as HTMLInputElement)?.value.trim() ?? ''
+      : '';
+
+    if (this.numPlayers === 2 && !p2Name) {
+      const p2Input = document.getElementById('player2-name-input') as HTMLInputElement | null;
+      const errorEl = document.getElementById('player2-name-error') as HTMLElement | null;
+      if (p2Input) p2Input.style.borderColor = '#E74C3C';
+      if (errorEl) errorEl.style.display = 'block';
+      if (p2Input) p2Input.focus();
+      return;
+    }
+
+    const state1 = createInitialState(p1Name, this.selectedDifficulty);
+    state1.numPlayers = this.numPlayers;
+    state1.activePlayer = 1;
+
+    initStore(state1);
+
+    if (this.numPlayers === 2) {
+      const state2 = createInitialState(p2Name, this.selectedDifficulty);
+      state2.numPlayers = 2;
+      state2.activePlayer = 1;
+      getStore().initTwoPlayer(state1, state2);
+    }
 
     // Start audio (must be on user gesture)
     audioSystem.playBGM();

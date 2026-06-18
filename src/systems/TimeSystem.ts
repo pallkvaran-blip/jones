@@ -202,5 +202,10 @@ export function advanceWeek(state: GameState): GameState {
     }
   }
 
+  // 2-player: trigger turn handoff when a week completes
+  if (weekState.numPlayers === 2 && !weekState.isGameOver && !weekState.pendingTurnHandoff) {
+    weekState = { ...weekState, pendingTurnHandoff: true };
+  }
+
   return weekState;
 }
