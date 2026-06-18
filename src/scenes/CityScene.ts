@@ -7,12 +7,49 @@ import { audioSystem } from '../systems/AudioSystem'
 import { Avatar } from '../entities/Avatar'
 import { LocationSprite } from '../entities/LocationSprite'
 import { HUD } from '../ui/HUD'
-import type { LocationId } from '../state/types'
+import type { LocationId, GameState } from '../state/types'
 import { ALL_LIFE_EVENTS } from '../data/lifeEvents'
 import { applyImmediateEvent, resolveEventChoice } from '../systems/EventSystem'
-import { EventModal } from '../ui/EventModal'
+import { EventModal, type EffectChip } from '../ui/EventModal'
 import { getWorkEvent } from '../data/workEvents'
 import { TurnHandoffOverlay } from '../ui/TurnHandoffOverlay'
+
+function stateToChips(before: GameState, after: GameState): EffectChip[] {
+  const chips: EffectChip[] = []
+  const p1 = before.player
+  const p2 = after.player
+
+  if (p1.jobId !== null && p2.jobId === null) chips.push({ text: 'FIRED', good: false })
+
+  const moneyDiff = Math.round(p2.money - p1.money)
+  if (Math.abs(moneyDiff) >= 1) {
+    chips.push({ text: moneyDiff >= 0 ? `+$${moneyDiff}` : `-$${Math.abs(moneyDiff)}`, good: moneyDiff > 0 })
+  }
+
+  const bankDiff = Math.round(p2.bankBalance - p1.bankBalance)
+  if (Math.abs(bankDiff) >= 1) {
+    chips.push({ text: bankDiff >= 0 ? `Bank +$${bankDiff}` : `Bank -$${Math.abs(bankDiff)}`, good: bankDiff > 0 })
+  }
+
+  const moraleDiff = Math.round(p2.morale - p1.morale)
+  if (Math.abs(moraleDiff) >= 2) {
+    chips.push({ text: `Morale ${moraleDiff >= 0 ? '+' : ''}${moraleDiff}`, good: moraleDiff > 0 })
+  }
+
+  const energyDiff = Math.round(p2.energy - p1.energy)
+  if (Math.abs(energyDiff) >= 2) {
+    chips.push({ text: `Energy ${energyDiff >= 0 ? '+' : ''}${energyDiff}`, good: energyDiff > 0 })
+  }
+
+  const healthDiff = Math.round(p2.health - p1.health)
+  if (Math.abs(healthDiff) >= 2) {
+    chips.push({ text: `Health ${healthDiff >= 0 ? '+' : ''}${healthDiff}`, good: healthDiff > 0 })
+  }
+
+  if (p2.pets.length > p1.pets.length) chips.push({ text: 'New pet!', good: true })
+
+  return chips
+}
 
 const BOARD_H = 540
 
@@ -189,15 +226,20 @@ export class CityScene extends Phaser.Scene {
           }
 
           if (event.type === 'immediate') {
-            // Apply delta first, then show dismissible modal
+            // Apply delta first, then show dismissible modal with effect chips
             const resolved = applyImmediateEvent(event, newState)
             store.setState(() => resolved)
-            this.eventModal.show(event, () => {})
+            const chips = stateToChips(newState, resolved)
+            this.eventModal.show(event, () => {}, { chips })
           } else {
-            // Show choice modal — apply delta when user picks
+            // Show choice modal — apply delta when user picks, then show result screen
             this.eventModal.show(event, (choiceIdx) => {
               const current = store.getState()
-              store.setState(() => resolveEventChoice(event, choiceIdx, current))
+              const next = resolveEventChoice(event, choiceIdx, current)
+              store.setState(() => next)
+              const logMsg = next.eventLog[0] ?? ''
+              const chips = stateToChips(current, next)
+              this.eventModal.showResult(event.title, logMsg, chips, () => {})
             })
           }
         }
@@ -228,11 +270,12 @@ export class CityScene extends Phaser.Scene {
               },
               (choiceIdx) => {
                 const choice = workEvent.choices[choiceIdx]
+                const d = choice.delta
+                const fired = d.fired === true
+                const beforeState = store.getState()
                 store.setState(prev => {
                   const p = prev.player
                   const cap = (v: number) => Math.min(100, Math.max(0, v))
-                  const d = choice.delta
-                  const fired = d.fired === true
                   return {
                     ...prev,
                     player: {
@@ -244,18 +287,24 @@ export class CityScene extends Phaser.Scene {
                       education: d.education != null ? p.education + d.education : p.education,
                       creditScore: d.creditScore != null ? cap(p.creditScore + d.creditScore) : p.creditScore,
                       pets: d.petId && !p.pets.includes(d.petId) ? [...p.pets, d.petId] : p.pets,
-                      // If fired, clear job
                       jobId: fired ? null : p.jobId,
                       careerTrack: fired ? null : p.careerTrack,
                       jobRank: fired ? 0 : p.jobRank,
                       jobTenure: fired ? 0 : p.jobTenure,
                     },
-                    pendingLifeEventId: fired ? (prev.pendingLifeEventId ?? 'job_fired') : prev.pendingLifeEventId,
+                    // Don't set pendingLifeEventId here — defer until result dismissed
                     eventLog: [choice.logMsg, ...prev.eventLog].slice(0, 30),
                   }
                 })
-                if (choice.delta.fired) audioSystem.playSFX('demotion')
-              }
+                const chips = stateToChips(beforeState, store.getState())
+                if (fired) audioSystem.playSFX('demotion')
+                else if ((d.money ?? 0) > 0 || (d.morale ?? 0) > 10) audioSystem.playSFX('eventGood')
+                this.eventModal.showResult(workEvent.title, choice.logMsg, chips, () => {
+                  // After result dismissed, trigger job_fired life event if applicable
+                  if (fired) store.setState(prev => ({ ...prev, pendingLifeEventId: 'job_fired' }))
+                })
+              },
+              { label: 'WORK EVENT' },
             )
           }
         }
