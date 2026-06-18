@@ -19,7 +19,11 @@ export class EventModal {
     const backdrop = document.createElement('div')
     backdrop.id = 'event-modal-backdrop'
     backdrop.style.cssText = `
-      position: fixed; inset: 0;
+      position: fixed;
+      left: var(--cv-left, 0px);
+      top: var(--cv-top, 0px);
+      width: var(--cv-width, 100%);
+      height: var(--cv-height, 100%);
       background: rgba(0,0,0,0.72);
       z-index: 300;
       display: flex;
@@ -91,7 +95,8 @@ export class EventModal {
         btn.style.borderColor = '#3a3a52'
         btn.style.background = '#0e1020'
       })
-      btn.addEventListener('click', () => {
+      btn.addEventListener('pointerdown', (e) => {
+        e.stopPropagation()
         const idx = parseInt(btn.dataset.idx ?? '0', 10)
         this.hide()
         onChoice(idx)

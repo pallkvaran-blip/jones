@@ -30,10 +30,10 @@ body {
 
 #stats-panel {
   position: fixed;
-  top: 0;
-  right: 0;
-  width: 240px;
-  height: 100%;
+  top: var(--cv-top, 0px);
+  right: calc(100vw - var(--cv-left, 0px) - var(--cv-width, 100vw));
+  width: var(--cv-panel-stats, 240px);
+  height: var(--cv-height, 100%);
   background: var(--color-panel-bg);
   border-left: 3px solid var(--color-panel-edge-light);
   box-shadow: inset 4px 0 0 var(--color-panel-edge-dark), inset -3px 0 0 var(--color-panel-edge-dark);
@@ -220,10 +220,10 @@ body {
 #action-panel {
   display: none;
   position: fixed;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 152px;
+  left: var(--cv-left, 0px);
+  top: var(--cv-top, 0px);
+  width: var(--cv-panel-action, 152px);
+  height: var(--cv-height, 100%);
   z-index: 150;
   pointer-events: none;
   font-family: var(--font-pixel);
@@ -314,6 +314,13 @@ body {
   color: var(--color-text-dim);
 }
 
+.action-btn, .event-choice-btn, #handoff-ready-btn, #start-game-btn, .diff-btn, .players-btn {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  cursor: pointer;
+  user-select: none;
+}
+
 /* Character portrait + speech bubble */
 .char-section {
   display: flex;
@@ -386,6 +393,15 @@ body {
 .pet-speech {
   font-size: 6px;
   color: var(--color-text-dim);
+}
+
+/* Scale down fonts/padding on narrow tablets */
+@media (max-width: 768px) {
+  .action-btn { padding: 5px 4px; }
+  .action-label { font-size: 7px; }
+  .action-detail { font-size: 5px; }
+  .stat-value.money { font-size: 10px; }
+  #stats-panel .panel-title { font-size: 14px; }
 }
 
 /* Compress on short landscape phones */

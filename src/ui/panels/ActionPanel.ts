@@ -111,9 +111,10 @@ export class ActionPanel {
       </div>
     `;
 
-    // Wire click listeners
+    // Wire pointerdown listeners (avoids 300ms touch delay)
     this.el.querySelectorAll<HTMLButtonElement>('.action-btn').forEach((btn) => {
-      btn.addEventListener('click', () => {
+      btn.addEventListener('pointerdown', (e) => {
+        e.stopPropagation();
         if (btn.classList.contains('disabled')) {
           const reason = btn.querySelector('.action-detail')?.textContent ?? '';
           if (reason && this.onUnavailable) this.onUnavailable(reason);
