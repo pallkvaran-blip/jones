@@ -18,6 +18,8 @@ class AudioSystem {
   private bgmPlaying = false;
   private masterGain: GainNode | null = null;
   private currentMood: 'normal' | 'danger' = 'normal';
+  private normalTrackIndex = 0;
+  private dangerTrackIndex = 0;
 
   // Note frequencies
   private readonly NOTES: Record<string, number> = {
@@ -94,74 +96,155 @@ class AudioSystem {
 
     const N = this.NOTES;
 
-    let melody: NoteEvent[];
-    if (this.currentMood === 'danger') {
-      // Minor-key tense melody
-      melody = [
-        { freq: N.C4,  time: 0,    duration: 0.22 },
-        { freq: N.Eb4, time: 0.25, duration: 0.22 },
-        { freq: N.G4,  time: 0.50, duration: 0.22 },
-        { freq: N.Bb4, time: 0.75, duration: 0.22 },
-        { freq: N.G4,  time: 1.00, duration: 0.22 },
-        { freq: N.Eb4, time: 1.25, duration: 0.22 },
-        { freq: N.C4,  time: 1.50, duration: 0.22 },
-        { freq: N.Eb4, time: 1.75, duration: 0.22 },
-        { freq: N.G4,  time: 2.00, duration: 0.22 },
-        { freq: N.Bb4, time: 2.25, duration: 0.22 },
-        { freq: N.Ab4, time: 2.50, duration: 0.22 },
-        { freq: N.G4,  time: 2.75, duration: 0.22 },
-        { freq: N.F4,  time: 3.00, duration: 0.22 },
-        { freq: N.Eb4, time: 3.25, duration: 0.22 },
-        { freq: N.D4,  time: 3.50, duration: 0.22 },
-        { freq: N.C4,  time: 3.75, duration: 0.44 },
-      ];
-    } else {
-      // Bouncy 16-note major melody at ~120bpm (each note = 0.25s)
-      melody = [
-        { freq: N.C4, time: 0,    duration: 0.22 },
-        { freq: N.E4, time: 0.25, duration: 0.22 },
-        { freq: N.G4, time: 0.50, duration: 0.22 },
-        { freq: N.E4, time: 0.75, duration: 0.22 },
-        { freq: N.C4, time: 1.00, duration: 0.22 },
-        { freq: N.D4, time: 1.25, duration: 0.22 },
-        { freq: N.F4, time: 1.50, duration: 0.22 },
-        { freq: N.A4, time: 1.75, duration: 0.22 },
-        { freq: N.G4, time: 2.00, duration: 0.22 },
-        { freq: N.E4, time: 2.25, duration: 0.22 },
-        { freq: N.C4, time: 2.50, duration: 0.22 },
-        { freq: N.G3, time: 2.75, duration: 0.22 },
-        { freq: N.A3, time: 3.00, duration: 0.22 },
-        { freq: N.C4, time: 3.25, duration: 0.22 },
-        { freq: N.E4, time: 3.50, duration: 0.22 },
-        { freq: N.G4, time: 3.75, duration: 0.44 },
-      ];
-    }
+    type Track = { melody: NoteEvent[]; bass: NoteEvent[]; oscType: OscillatorType; gain: number };
 
-    // Bass line (lower octave, triangle wave)
-    const bass: NoteEvent[] = [
-      { freq: N.C4 / 2, time: 0,    duration: 0.48 },
-      { freq: N.G3,     time: 0.50, duration: 0.48 },
-      { freq: N.A3,     time: 1.00, duration: 0.48 },
-      { freq: N.G3,     time: 1.50, duration: 0.48 },
-      { freq: N.C4 / 2, time: 2.00, duration: 0.48 },
-      { freq: N.G3,     time: 2.50, duration: 0.48 },
-      { freq: N.A3,     time: 3.00, duration: 0.48 },
-      { freq: N.G3,     time: 3.50, duration: 0.48 },
+    const normalTracks: Track[] = [
+      // 0 — original bouncy C major arpeggio
+      {
+        oscType: 'square', gain: 0.12,
+        melody: [
+          { freq: N.C4, time: 0,    duration: 0.22 }, { freq: N.E4, time: 0.25, duration: 0.22 },
+          { freq: N.G4, time: 0.50, duration: 0.22 }, { freq: N.E4, time: 0.75, duration: 0.22 },
+          { freq: N.C4, time: 1.00, duration: 0.22 }, { freq: N.D4, time: 1.25, duration: 0.22 },
+          { freq: N.F4, time: 1.50, duration: 0.22 }, { freq: N.A4, time: 1.75, duration: 0.22 },
+          { freq: N.G4, time: 2.00, duration: 0.22 }, { freq: N.E4, time: 2.25, duration: 0.22 },
+          { freq: N.C4, time: 2.50, duration: 0.22 }, { freq: N.G3, time: 2.75, duration: 0.22 },
+          { freq: N.A3, time: 3.00, duration: 0.22 }, { freq: N.C4, time: 3.25, duration: 0.22 },
+          { freq: N.E4, time: 3.50, duration: 0.22 }, { freq: N.G4, time: 3.75, duration: 0.44 },
+        ],
+        bass: [
+          { freq: N.C4 / 2, time: 0,    duration: 0.48 }, { freq: N.G3,     time: 0.50, duration: 0.48 },
+          { freq: N.A3,     time: 1.00, duration: 0.48 }, { freq: N.G3,     time: 1.50, duration: 0.48 },
+          { freq: N.C4 / 2, time: 2.00, duration: 0.48 }, { freq: N.G3,     time: 2.50, duration: 0.48 },
+          { freq: N.A3,     time: 3.00, duration: 0.48 }, { freq: N.G3,     time: 3.50, duration: 0.48 },
+        ],
+      },
+      // 1 — G major stepwise, triangle wave (softer, lyrical)
+      {
+        oscType: 'triangle', gain: 0.14,
+        melody: [
+          { freq: N.G3, time: 0,    duration: 0.22 }, { freq: N.B3, time: 0.25, duration: 0.22 },
+          { freq: N.D4, time: 0.50, duration: 0.22 }, { freq: N.G4, time: 0.75, duration: 0.22 },
+          { freq: N.E4, time: 1.00, duration: 0.22 }, { freq: N.D4, time: 1.25, duration: 0.22 },
+          { freq: N.B3, time: 1.50, duration: 0.22 }, { freq: N.G3, time: 1.75, duration: 0.22 },
+          { freq: N.A3, time: 2.00, duration: 0.22 }, { freq: N.C4, time: 2.25, duration: 0.22 },
+          { freq: N.E4, time: 2.50, duration: 0.22 }, { freq: N.A4, time: 2.75, duration: 0.22 },
+          { freq: N.G4, time: 3.00, duration: 0.22 }, { freq: N.E4, time: 3.25, duration: 0.22 },
+          { freq: N.D4, time: 3.50, duration: 0.22 }, { freq: N.B3, time: 3.75, duration: 0.44 },
+        ],
+        bass: [
+          { freq: N.G3 / 2, time: 0,    duration: 0.48 }, { freq: N.D4,     time: 0.50, duration: 0.48 },
+          { freq: N.G3 / 2, time: 1.00, duration: 0.48 }, { freq: N.D4,     time: 1.50, duration: 0.48 },
+          { freq: N.A3 / 2, time: 2.00, duration: 0.48 }, { freq: N.E4,     time: 2.50, duration: 0.48 },
+          { freq: N.A3 / 2, time: 3.00, duration: 0.48 }, { freq: N.D4,     time: 3.50, duration: 0.48 },
+        ],
+      },
+      // 2 — C major ascending scale motif, square wave, building feel
+      {
+        oscType: 'square', gain: 0.11,
+        melody: [
+          { freq: N.E4, time: 0,    duration: 0.22 }, { freq: N.F4, time: 0.25, duration: 0.22 },
+          { freq: N.G4, time: 0.50, duration: 0.22 }, { freq: N.A4, time: 0.75, duration: 0.22 },
+          { freq: N.G4, time: 1.00, duration: 0.22 }, { freq: N.F4, time: 1.25, duration: 0.22 },
+          { freq: N.E4, time: 1.50, duration: 0.22 }, { freq: N.D4, time: 1.75, duration: 0.22 },
+          { freq: N.C4, time: 2.00, duration: 0.22 }, { freq: N.D4, time: 2.25, duration: 0.22 },
+          { freq: N.E4, time: 2.50, duration: 0.22 }, { freq: N.F4, time: 2.75, duration: 0.22 },
+          { freq: N.G4, time: 3.00, duration: 0.22 }, { freq: N.A4, time: 3.25, duration: 0.22 },
+          { freq: N.B4, time: 3.50, duration: 0.22 }, { freq: N.C5, time: 3.75, duration: 0.44 },
+        ],
+        bass: [
+          { freq: N.C4 / 2, time: 0,    duration: 0.48 }, { freq: N.G3,     time: 0.50, duration: 0.48 },
+          { freq: N.F3,     time: 1.00, duration: 0.48 }, { freq: N.G3,     time: 1.50, duration: 0.48 },
+          { freq: N.C4 / 2, time: 2.00, duration: 0.48 }, { freq: N.G3,     time: 2.50, duration: 0.48 },
+          { freq: N.F3,     time: 3.00, duration: 0.48 }, { freq: N.G3,     time: 3.50, duration: 0.48 },
+        ],
+      },
+      // 3 — F major arpeggio, sine wave (warmest, most mellow)
+      {
+        oscType: 'sine', gain: 0.16,
+        melody: [
+          { freq: N.F4,  time: 0,    duration: 0.22 }, { freq: N.A4,  time: 0.25, duration: 0.22 },
+          { freq: N.C5,  time: 0.50, duration: 0.22 }, { freq: N.A4,  time: 0.75, duration: 0.22 },
+          { freq: N.F4,  time: 1.00, duration: 0.22 }, { freq: N.G4,  time: 1.25, duration: 0.22 },
+          { freq: N.Bb4, time: 1.50, duration: 0.22 }, { freq: N.D5,  time: 1.75, duration: 0.22 },
+          { freq: N.C5,  time: 2.00, duration: 0.22 }, { freq: N.A4,  time: 2.25, duration: 0.22 },
+          { freq: N.G4,  time: 2.50, duration: 0.22 }, { freq: N.E4,  time: 2.75, duration: 0.22 },
+          { freq: N.F4,  time: 3.00, duration: 0.22 }, { freq: N.C4,  time: 3.25, duration: 0.22 },
+          { freq: N.D4,  time: 3.50, duration: 0.22 }, { freq: N.F4,  time: 3.75, duration: 0.44 },
+        ],
+        bass: [
+          { freq: N.F2,      time: 0,    duration: 0.48 }, { freq: N.C4,      time: 0.50, duration: 0.48 },
+          { freq: N.F2,      time: 1.00, duration: 0.48 }, { freq: N.Bb4 / 2, time: 1.50, duration: 0.48 },
+          { freq: N.F2,      time: 2.00, duration: 0.48 }, { freq: N.C4,      time: 2.50, duration: 0.48 },
+          { freq: N.F2,      time: 3.00, duration: 0.48 }, { freq: N.C4,      time: 3.50, duration: 0.48 },
+        ],
+      },
     ];
 
-    const loopDuration = 4.25; // seconds
+    const dangerTracks: Track[] = [
+      // 0 — original tense Cm arpeggio
+      {
+        oscType: 'square', gain: 0.12,
+        melody: [
+          { freq: N.C4,  time: 0,    duration: 0.22 }, { freq: N.Eb4, time: 0.25, duration: 0.22 },
+          { freq: N.G4,  time: 0.50, duration: 0.22 }, { freq: N.Bb4, time: 0.75, duration: 0.22 },
+          { freq: N.G4,  time: 1.00, duration: 0.22 }, { freq: N.Eb4, time: 1.25, duration: 0.22 },
+          { freq: N.C4,  time: 1.50, duration: 0.22 }, { freq: N.Eb4, time: 1.75, duration: 0.22 },
+          { freq: N.G4,  time: 2.00, duration: 0.22 }, { freq: N.Bb4, time: 2.25, duration: 0.22 },
+          { freq: N.Ab4, time: 2.50, duration: 0.22 }, { freq: N.G4,  time: 2.75, duration: 0.22 },
+          { freq: N.F4,  time: 3.00, duration: 0.22 }, { freq: N.Eb4, time: 3.25, duration: 0.22 },
+          { freq: N.D4,  time: 3.50, duration: 0.22 }, { freq: N.C4,  time: 3.75, duration: 0.44 },
+        ],
+        bass: [
+          { freq: N.C4 / 2, time: 0,    duration: 0.48 }, { freq: N.G3,     time: 0.50, duration: 0.48 },
+          { freq: N.A3,     time: 1.00, duration: 0.48 }, { freq: N.G3,     time: 1.50, duration: 0.48 },
+          { freq: N.C4 / 2, time: 2.00, duration: 0.48 }, { freq: N.G3,     time: 2.50, duration: 0.48 },
+          { freq: N.A3,     time: 3.00, duration: 0.48 }, { freq: N.G3,     time: 3.50, duration: 0.48 },
+        ],
+      },
+      // 1 — Am descend-then-surge, more frantic feel
+      {
+        oscType: 'square', gain: 0.12,
+        melody: [
+          { freq: N.A4,  time: 0,    duration: 0.22 }, { freq: N.G4,  time: 0.25, duration: 0.22 },
+          { freq: N.F4,  time: 0.50, duration: 0.22 }, { freq: N.Eb4, time: 0.75, duration: 0.22 },
+          { freq: N.D4,  time: 1.00, duration: 0.22 }, { freq: N.Eb4, time: 1.25, duration: 0.22 },
+          { freq: N.F4,  time: 1.50, duration: 0.22 }, { freq: N.G4,  time: 1.75, duration: 0.22 },
+          { freq: N.A4,  time: 2.00, duration: 0.22 }, { freq: N.Bb4, time: 2.25, duration: 0.22 },
+          { freq: N.Ab4, time: 2.50, duration: 0.22 }, { freq: N.G4,  time: 2.75, duration: 0.22 },
+          { freq: N.F4,  time: 3.00, duration: 0.22 }, { freq: N.Eb4, time: 3.25, duration: 0.22 },
+          { freq: N.D4,  time: 3.50, duration: 0.22 }, { freq: N.A3,  time: 3.75, duration: 0.44 },
+        ],
+        bass: [
+          { freq: N.A3 / 2, time: 0,    duration: 0.48 }, { freq: N.E4,      time: 0.50, duration: 0.48 },
+          { freq: N.D4 / 2, time: 1.00, duration: 0.48 }, { freq: N.E4,      time: 1.50, duration: 0.48 },
+          { freq: N.A3 / 2, time: 2.00, duration: 0.48 }, { freq: N.Bb4 / 2, time: 2.50, duration: 0.48 },
+          { freq: N.A3 / 2, time: 3.00, duration: 0.48 }, { freq: N.E4,      time: 3.50, duration: 0.48 },
+        ],
+      },
+    ];
 
-    for (const note of melody) {
-      this.playNote(ctx, note.freq, startTime + note.time, note.duration, 'square', 0.12);
+    const isDanger = this.currentMood === 'danger';
+    const tracks = isDanger ? dangerTracks : normalTracks;
+    const track = tracks[isDanger ? this.dangerTrackIndex : this.normalTrackIndex];
+    const loopDuration = 4.25;
+
+    for (const note of track.melody) {
+      this.playNote(ctx, note.freq, startTime + note.time, note.duration, track.oscType, track.gain);
     }
-    for (const note of bass) {
+    for (const note of track.bass) {
       this.playNote(ctx, note.freq, startTime + note.time, note.duration, 'triangle', 0.08);
     }
 
-    // Schedule next loop
+    // Advance to next track after this loop completes
     const msUntilLoop = (startTime + loopDuration - ctx.currentTime) * 1000 - 50;
     this.bgmScheduleId = setTimeout(() => {
       if (this.bgmPlaying) {
+        if (this.currentMood === 'normal') {
+          this.normalTrackIndex = (this.normalTrackIndex + 1) % normalTracks.length;
+        } else {
+          this.dangerTrackIndex = (this.dangerTrackIndex + 1) % dangerTracks.length;
+        }
         this.scheduleBGMLoop(startTime + loopDuration);
       }
     }, Math.max(0, msUntilLoop));
