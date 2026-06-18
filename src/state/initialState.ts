@@ -35,7 +35,7 @@ export function createInitialState(name: string, difficulty: Difficulty): GameSt
       debt: 0,
       creditScore: 650,
       portfolio: {},
-      housingId: 'apartment_basic',
+      housingId: 'studio',
       isOwner: false,
       propertyValue: 0,
       wardrobe: 1,

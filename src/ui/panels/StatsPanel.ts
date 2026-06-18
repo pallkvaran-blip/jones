@@ -221,10 +221,12 @@ export class StatsPanel {
     }
 
     // Housing
-    const housingEl = this.el.querySelector('#sp-housing');
+    const housingEl = this.el.querySelector<HTMLElement>('#sp-housing');
     if (housingEl) {
       const tier = getHousingTier(player.housingId);
-      housingEl.textContent = tier?.name ?? player.housingId.replace(/_/g, ' ');
+      const name = tier?.name ?? player.housingId.replace(/_/g, ' ');
+      housingEl.textContent = player.isOwner ? `${name} *` : name;
+      housingEl.style.color = player.isOwner ? '#f2c94c' : '#9ab4d6';
     }
 
     // Goals indicators

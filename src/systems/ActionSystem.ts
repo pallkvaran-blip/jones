@@ -2,7 +2,7 @@ import type { GameState, LocationId } from '../state/types'
 import { consumeTime } from './TimeSystem'
 import { CAREER_JOBS, LOCATION_JOBS } from '../data/jobs'
 import { STOCKS, STOCK_NAMES, type StockId } from '../data/stocks'
-import { getHousingTier, getNextHousingTier } from '../data/housing'
+import { RENTAL_TIERS, OWN_TIERS, getHousingTier } from '../data/housing'
 
 function cap(n: number): number {
   return Math.min(100, Math.max(0, n));
@@ -292,14 +292,13 @@ const withdraw200Action: ActionDef = {
 
 const takeLoanAction: ActionDef = {
   id: 'take_loan',
-  label: 'Take a Loan',
+  label: 'Personal Loan $1k',
   detail: '+$1000, Debt+1000, CreditScore-20 | 10t',
   timeCost: 10,
-  available: (state) => state.player.creditScore >= 550 && state.player.debt < 5000,
+  available: (state) => state.player.creditScore >= 550 && state.player.debt < 8000,
   unavailableReason: (state) => {
     if (state.player.creditScore < 550) return 'Need CreditScore≥550';
-    if (state.player.debt >= 5000) return 'Max debt reached';
-    return '';
+    return 'Too much existing debt';
   },
   apply(state) {
     return {
@@ -313,6 +312,31 @@ const takeLoanAction: ActionDef = {
     };
   },
 };
+
+function makePropertyLoanAction(amount: number, minScore: number, scoreDrop: number): ActionDef {
+  const label = `Property Loan $${(amount / 1000).toFixed(0)}k`;
+  return {
+    id: `property_loan_${amount}`,
+    label,
+    detail: `+$${amount.toLocaleString()}, Debt+${amount.toLocaleString()}, 5%/wk | 15t`,
+    timeCost: 15,
+    available: (s) => s.player.creditScore >= minScore && s.player.debt + amount <= 120000,
+    unavailableReason: (s) => {
+      if (s.player.creditScore < minScore) return `CreditScore≥${minScore}`;
+      return 'Max debt $120k';
+    },
+    apply(s) {
+      return addLog({
+        ...s,
+        player: { ...s.player, money: s.player.money + amount, debt: s.player.debt + amount, creditScore: s.player.creditScore - scoreDrop },
+      }, `${label}: +$${amount.toLocaleString()}`);
+    },
+  };
+}
+
+const propertyLoan10k = makePropertyLoanAction(10000, 600, 30);
+const propertyLoan25k = makePropertyLoanAction(25000, 650, 40);
+const propertyLoan50k = makePropertyLoanAction(50000, 700, 60);
 
 // --- GROCERY actions ---
 const buyGroceriesAction: ActionDef = {
@@ -516,30 +540,70 @@ const browsePawnAction: ActionDef = {
 };
 
 // --- REALTY actions ---
-function makeHousingUpgradeAction(state: GameState): ActionDef | null {
-  const next = getNextHousingTier(state.player.housingId);
-  if (!next) return null;
-  const currentName = getHousingTier(state.player.housingId)?.name ?? 'Current';
-  return {
-    id: `upgrade_to_${next.id}`,
-    label: `Move to ${next.name}`,
-    detail: `${currentName} → ${next.name}, -$${next.upgradeCost} | 10t`,
-    timeCost: 10,
-    available: (s) => s.player.money >= next.upgradeCost,
-    unavailableReason: () => `Need $${next.upgradeCost}`,
-    apply(s) {
-      return addLog({
-        ...s,
-        player: {
-          ...s.player,
-          housingId: next.id,
-          morale: cap(s.player.morale + 10),
-          money: s.player.money - next.upgradeCost,
-        },
-      }, `Moved to ${next.name}!`);
-    },
-  };
-}
+
+// Pre-built rental move actions — fixed IDs so partial updates work
+const RENT_ACTIONS: ActionDef[] = RENTAL_TIERS.map((tier) => ({
+  id: `rent_${tier.id}`,
+  label: `Rent: ${tier.name}`,
+  detail: `$${tier.weeklyRent}/wk | E+${tier.dayEnergyBonus}/day | 10t`,
+  timeCost: 10,
+  available: (s: GameState) =>
+    !s.player.isOwner && s.player.housingId !== tier.id && s.player.money >= tier.weeklyRent,
+  unavailableReason: (s: GameState) => {
+    if (s.player.isOwner) return 'Sell property first';
+    if (s.player.housingId === tier.id) return 'Current home';
+    return `Need $${tier.weeklyRent}`;
+  },
+  apply(s: GameState) {
+    return addLog({ ...s, player: { ...s.player, housingId: tier.id } }, `Rented ${tier.name}!`);
+  },
+}));
+
+// Pre-built buy actions — fixed IDs
+const BUY_ACTIONS: ActionDef[] = OWN_TIERS.map((tier) => ({
+  id: `buy_property_${tier.id}`,
+  label: `Buy: ${tier.name}`,
+  detail: `$${tier.purchaseCost.toLocaleString()} | E+${tier.dayEnergyBonus}/day | 15t`,
+  timeCost: 15,
+  available: (s: GameState) =>
+    !s.player.isOwner && s.player.money + s.player.bankBalance >= tier.purchaseCost,
+  unavailableReason: (s: GameState) => {
+    if (s.player.isOwner && s.player.housingId === tier.id) return 'Already owned';
+    if (s.player.isOwner) return 'Sell property first';
+    return `Need $${tier.purchaseCost.toLocaleString()}`;
+  },
+  apply(s: GameState) {
+    const cost = tier.purchaseCost;
+    let cash = s.player.money;
+    let bank = s.player.bankBalance;
+    if (cash >= cost) {
+      cash -= cost;
+    } else {
+      bank -= (cost - cash);
+      cash = 0;
+    }
+    return addLog({
+      ...s,
+      player: { ...s.player, housingId: tier.id, isOwner: true, money: cash, bankBalance: Math.max(0, bank), propertyValue: cost },
+    }, `Bought ${tier.name}!`);
+  },
+}));
+
+const sellPropertyAction: ActionDef = {
+  id: 'sell_property',
+  label: 'Sell Property',
+  detail: 'Get 70% back, move to studio | 15t',
+  timeCost: 15,
+  available: (s) => s.player.isOwner,
+  unavailableReason: () => 'No property owned',
+  apply(s) {
+    const proceeds = Math.floor(s.player.propertyValue * 0.7);
+    return addLog({
+      ...s,
+      player: { ...s.player, housingId: 'studio', isOwner: false, money: s.player.money + proceeds, propertyValue: 0 },
+    }, `Sold property for $${proceeds}!`);
+  },
+};
 
 const browseListingsAction: ActionDef = {
   id: 'browse_listings',
@@ -758,7 +822,7 @@ export function getActionsForLocation(locationId: LocationId, state: GameState):
       return [takeClassAction, studyAction, ...getJobActions(locationId, state)];
 
     case 'bank':
-      return [depositAllAction, withdraw200Action, takeLoanAction, repay200Action, repayAllAction, ...getJobActions(locationId, state)];
+      return [depositAllAction, withdraw200Action, takeLoanAction, propertyLoan10k, propertyLoan25k, propertyLoan50k, repay200Action, repayAllAction, ...getJobActions(locationId, state)];
 
     case 'grocery':
       return [buyGroceriesAction, quickSnackAction, ...getJobActions(locationId, state)];
@@ -775,12 +839,8 @@ export function getActionsForLocation(locationId: LocationId, state: GameState):
     case 'pawn':
       return [pawnComputerAction, browsePawnAction, ...getJobActions(locationId, state)];
 
-    case 'realty': {
-      const upgradeAction = makeHousingUpgradeAction(state);
-      const realtyActions: ActionDef[] = [browseListingsAction, ...getJobActions(locationId, state)];
-      if (upgradeAction) realtyActions.unshift(upgradeAction);
-      return realtyActions;
-    }
+    case 'realty':
+      return [...RENT_ACTIONS, ...BUY_ACTIONS, sellPropertyAction, browseListingsAction, ...getJobActions(locationId, state)];
 
     case 'hospital':
       return [medicalCheckupAction, buyMedicineAction, ...getJobActions(locationId, state)];

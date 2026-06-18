@@ -35,9 +35,22 @@ export function applyWeeklyEconomy(state: GameState): GameState {
   }
 
   // --- Housing morale bonus ---
-  const moraleBonus = housing?.moraleBonus ?? 0
+  const moraleBonus = housing?.weeklyMoraleBonus ?? 0
   if (moraleBonus > 0) {
     s = { ...s, player: { ...s.player, morale: Math.min(100, s.player.morale + moraleBonus) } }
+  }
+
+  // --- Eviction: renters above studio with unmanageable debt ---
+  if (!s.player.isOwner && s.player.housingId !== 'studio' && s.player.debt > 10000) {
+    s = { ...s, player: { ...s.player, housingId: 'studio' } }
+    entries.push('EVICTED! Moved to studio — debt too high.')
+  }
+
+  // --- Foreclosure: owners who let debt spiral ---
+  if (s.player.isOwner && s.player.debt > 80000) {
+    const proceeds = Math.floor(s.player.propertyValue * 0.3)
+    s = { ...s, player: { ...s.player, housingId: 'studio', isOwner: false, money: s.player.money + proceeds, propertyValue: 0 } }
+    entries.push(`FORECLOSED! Distress sale returned $${proceeds}.`)
   }
 
   // --- Bank interest on savings ---

@@ -1,5 +1,6 @@
 import type { GameState } from '../state/types'
 import { applyWeeklyEconomy } from './EconomySystem'
+import { getHousingTier } from '../data/housing'
 
 export function consumeTime(state: GameState, units: number): GameState {
   const newUnits = state.calendar.timeUnits - units;
@@ -22,12 +23,13 @@ export function advanceDay(state: GameState): GameState {
   let newDay = state.calendar.day + 1;
   const newTimeUnits = 100;
 
-  // Apply needs decay each day
+  const energyBonus = getHousingTier(state.player.housingId)?.dayEnergyBonus ?? 0;
+
   const updatedPlayer = {
     ...state.player,
-    morale:  Math.max(0, state.player.morale  - 5),
-    hunger:  Math.max(0, state.player.hunger  - 5),
-    energy:  Math.max(0, state.player.energy  - 5),
+    morale: Math.max(0, state.player.morale - 5),
+    hunger: Math.max(0, state.player.hunger - 5),
+    energy: Math.min(100, Math.max(0, state.player.energy - 5 + energyBonus)),
   };
 
   const nextState: GameState = {
