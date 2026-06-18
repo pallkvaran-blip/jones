@@ -203,20 +203,38 @@ body {
 /* Goals indicator */
 #sp-goals { letter-spacing: 4px; font-size: 10px; }
 
-/* Action panel — lives inside #stats-panel */
-#action-panel { margin-top: 4px; }
+/*
+ * Action panel — fixed overlay on the CANVAS (left) side of the screen.
+ * pointer-events: none on the container means clicks pass through the dark
+ * background straight to the Phaser canvas below; only the buttons themselves
+ * capture pointer events.
+ */
+#action-panel {
+  position: fixed;
+  left: 0;
+  right: 240px;   /* flush against the stats sidebar */
+  bottom: 0;
+  z-index: 150;
+  pointer-events: none;
+  font-family: var(--font-pixel);
+  background: rgba(13, 13, 23, 0.93);
+  border-top: 2px solid #4a4a66;
+  padding: 5px 8px 7px;
+  max-height: 45vh;
+  overflow-y: auto;
+}
 
 .action-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 6px 0 6px;
-  border-top: 2px solid var(--color-border);
-  margin-bottom: 6px;
+  padding-bottom: 4px;
+  margin-bottom: 5px;
+  border-bottom: 1px solid var(--color-border);
 }
 
 .action-location {
-  font-size: 6px;
+  font-size: 7px;
   color: var(--color-accent);
   letter-spacing: 1px;
 }
@@ -227,14 +245,18 @@ body {
   letter-spacing: 1px;
 }
 
+/* Buttons laid out in a horizontal wrapping grid — 2 per row on phones */
 .action-list {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  flex-wrap: wrap;
   gap: 4px;
 }
 
 .action-btn {
-  width: 100%;
+  /* ~half width so two fit per row; grows if only one on a row */
+  flex: 1 1 calc(50% - 4px);
+  min-width: 120px;
   padding: 7px 8px;
   background: #0e1020;
   border: 2px solid #3a3a52;
@@ -246,7 +268,7 @@ body {
   display: flex;
   flex-direction: column;
   gap: 3px;
-  transition: border-color 0.1s;
+  pointer-events: auto;   /* ← buttons DO capture clicks */
 }
 
 .action-btn:hover:not(.disabled) {
@@ -259,7 +281,7 @@ body {
 }
 
 .action-btn.disabled {
-  opacity: 0.42;
+  opacity: 0.4;
   cursor: not-allowed;
 }
 

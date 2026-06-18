@@ -22,8 +22,8 @@ export class HUD {
   mount(): void {
     if (this.mounted) return;
     this.root.appendChild(this.statsPanel.getElement());
-    // Append action panel inside the stats panel element
-    this.statsPanel.getElement().appendChild(this.actionPanel.getElement());
+    // Action panel is a separate fixed overlay on the canvas (left) side
+    this.root.appendChild(this.actionPanel.getElement());
     this.mounted = true;
   }
 
