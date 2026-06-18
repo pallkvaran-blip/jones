@@ -5,8 +5,17 @@ function isOnCooldown(id: string, state: GameState): boolean {
   return state.activeEvents.some(e => e.id === id && e.expiresWeek > state.calendar.week)
 }
 
+function shuffle<T>(arr: T[]): T[] {
+  const a = [...arr]
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]]
+  }
+  return a
+}
+
 export function rollLifeEvent(state: GameState): LifeEvent | null {
-  const eligible = ALL_LIFE_EVENTS.filter(e => e.canFire(state) && !isOnCooldown(e.id, state))
+  const eligible = shuffle(ALL_LIFE_EVENTS.filter(e => e.canFire(state) && !isOnCooldown(e.id, state)))
   if (eligible.length === 0) return null
 
   // ~40% chance of no event this week
