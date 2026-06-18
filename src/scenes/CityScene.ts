@@ -33,6 +33,7 @@ export class CityScene extends Phaser.Scene {
   private lastWorkEventId: string | null = null
   private turnHandoffOverlay = new TurnHandoffOverlay()
   private lastHandoffState = false
+  private lastJobRank = 0
 
   constructor() {
     super({ key: 'CityScene' })
@@ -97,9 +98,20 @@ export class CityScene extends Phaser.Scene {
     this.createMuteButton()
 
     // --- Store subscription ---
+    this.lastJobRank = state.player.jobRank
     this.unsubscribeStore = store.subscribe((newState) => {
       this.hud.update(newState)
       this.updateAmbient(newState.calendar.timeUnits)
+
+      // Switch to danger BGM if health or hunger critically low
+      const isDanger = newState.player.health <= 20 || newState.player.hunger <= 15
+      audioSystem.setDangerMode(isDanger)
+
+      // Detect job rank promotion
+      if (newState.player.jobRank > this.lastJobRank) {
+        audioSystem.playSFX('levelUp')
+      }
+      this.lastJobRank = newState.player.jobRank
 
       if (newState.isGameOver) {
         // In 2-player mode, check if the other player is still alive
@@ -174,6 +186,22 @@ export class CityScene extends Phaser.Scene {
         this.lastPendingEventId = newState.pendingLifeEventId
         const event = ALL_LIFE_EVENTS.find(e => e.id === newState.pendingLifeEventId)
         if (event) {
+          // Play appropriate SFX for this event
+          if (event.id === 'job_demotion' || event.id === 'job_fired') {
+            audioSystem.playSFX('demotion')
+          } else if (event.type === 'immediate' && event.immediateDelta) {
+            const d = event.immediateDelta
+            if ((d.money != null && d.money > 0) || (d.morale != null && d.morale > 10)) {
+              audioSystem.playSFX('eventGood')
+            } else if (
+              (d.money != null && d.money < 0) ||
+              (d.morale != null && d.morale < -10) ||
+              (d.health != null && d.health < 0)
+            ) {
+              audioSystem.playSFX('eventBad')
+            }
+          }
+
           if (event.type === 'immediate') {
             // Apply delta first, then show dismissible modal
             const resolved = applyImmediateEvent(event, newState)

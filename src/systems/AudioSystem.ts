@@ -1,6 +1,8 @@
 // Web Audio API chiptune engine — no audio files required
 
-type SFXName = 'click' | 'move' | 'dayEnd' | 'weekEnd' | 'arrive';
+type SFXName = 'click' | 'move' | 'dayEnd' | 'weekEnd' | 'arrive'
+  | 'eventGood' | 'eventBad' | 'levelUp' | 'demotion' | 'danger'
+  | 'gameWin' | 'gameLose';
 
 interface NoteEvent {
   freq: number;
@@ -15,18 +17,27 @@ class AudioSystem {
   private muted = false;
   private bgmPlaying = false;
   private masterGain: GainNode | null = null;
+  private currentMood: 'normal' | 'danger' = 'normal';
 
   // Note frequencies
   private readonly NOTES: Record<string, number> = {
+    E2: 82.41,
+    F2: 87.31,
+    C3: 130.81,
+    E3: 164.81,
+    F3: 174.61,
     G3: 196.00,
     A3: 220.00,
     B3: 246.94,
     C4: 261.63,
     D4: 293.66,
+    Eb4: 311.13,
     E4: 329.63,
     F4: 349.23,
     G4: 392.00,
+    Ab4: 415.30,
     A4: 440.00,
+    Bb4: 466.16,
     B4: 493.88,
     C5: 523.25,
     D5: 587.33,
@@ -82,25 +93,49 @@ class AudioSystem {
     if (!this.bgmPlaying) return;
 
     const N = this.NOTES;
-    // Bouncy 16-note major melody at ~120bpm (each note = 0.25s)
-    const melody: NoteEvent[] = [
-      { freq: N.C4, time: 0,    duration: 0.22 },
-      { freq: N.E4, time: 0.25, duration: 0.22 },
-      { freq: N.G4, time: 0.50, duration: 0.22 },
-      { freq: N.E4, time: 0.75, duration: 0.22 },
-      { freq: N.C4, time: 1.00, duration: 0.22 },
-      { freq: N.D4, time: 1.25, duration: 0.22 },
-      { freq: N.F4, time: 1.50, duration: 0.22 },
-      { freq: N.A4, time: 1.75, duration: 0.22 },
-      { freq: N.G4, time: 2.00, duration: 0.22 },
-      { freq: N.E4, time: 2.25, duration: 0.22 },
-      { freq: N.C4, time: 2.50, duration: 0.22 },
-      { freq: N.G3, time: 2.75, duration: 0.22 },
-      { freq: N.A3, time: 3.00, duration: 0.22 },
-      { freq: N.C4, time: 3.25, duration: 0.22 },
-      { freq: N.E4, time: 3.50, duration: 0.22 },
-      { freq: N.G4, time: 3.75, duration: 0.44 },
-    ];
+
+    let melody: NoteEvent[];
+    if (this.currentMood === 'danger') {
+      // Minor-key tense melody
+      melody = [
+        { freq: N.C4,  time: 0,    duration: 0.22 },
+        { freq: N.Eb4, time: 0.25, duration: 0.22 },
+        { freq: N.G4,  time: 0.50, duration: 0.22 },
+        { freq: N.Bb4, time: 0.75, duration: 0.22 },
+        { freq: N.G4,  time: 1.00, duration: 0.22 },
+        { freq: N.Eb4, time: 1.25, duration: 0.22 },
+        { freq: N.C4,  time: 1.50, duration: 0.22 },
+        { freq: N.Eb4, time: 1.75, duration: 0.22 },
+        { freq: N.G4,  time: 2.00, duration: 0.22 },
+        { freq: N.Bb4, time: 2.25, duration: 0.22 },
+        { freq: N.Ab4, time: 2.50, duration: 0.22 },
+        { freq: N.G4,  time: 2.75, duration: 0.22 },
+        { freq: N.F4,  time: 3.00, duration: 0.22 },
+        { freq: N.Eb4, time: 3.25, duration: 0.22 },
+        { freq: N.D4,  time: 3.50, duration: 0.22 },
+        { freq: N.C4,  time: 3.75, duration: 0.44 },
+      ];
+    } else {
+      // Bouncy 16-note major melody at ~120bpm (each note = 0.25s)
+      melody = [
+        { freq: N.C4, time: 0,    duration: 0.22 },
+        { freq: N.E4, time: 0.25, duration: 0.22 },
+        { freq: N.G4, time: 0.50, duration: 0.22 },
+        { freq: N.E4, time: 0.75, duration: 0.22 },
+        { freq: N.C4, time: 1.00, duration: 0.22 },
+        { freq: N.D4, time: 1.25, duration: 0.22 },
+        { freq: N.F4, time: 1.50, duration: 0.22 },
+        { freq: N.A4, time: 1.75, duration: 0.22 },
+        { freq: N.G4, time: 2.00, duration: 0.22 },
+        { freq: N.E4, time: 2.25, duration: 0.22 },
+        { freq: N.C4, time: 2.50, duration: 0.22 },
+        { freq: N.G3, time: 2.75, duration: 0.22 },
+        { freq: N.A3, time: 3.00, duration: 0.22 },
+        { freq: N.C4, time: 3.25, duration: 0.22 },
+        { freq: N.E4, time: 3.50, duration: 0.22 },
+        { freq: N.G4, time: 3.75, duration: 0.44 },
+      ];
+    }
 
     // Bass line (lower octave, triangle wave)
     const bass: NoteEvent[] = [
@@ -132,8 +167,11 @@ class AudioSystem {
     }, Math.max(0, msUntilLoop));
   }
 
-  playBGM(): void {
-    if (this.bgmPlaying) return;
+  playBGM(mood: 'normal' | 'danger' = 'normal'): void {
+    if (this.bgmPlaying && this.currentMood === mood) return;
+    // Stop current BGM if playing with a different mood
+    this.stopBGM();
+    this.currentMood = mood;
     const ctx = this.ensureContext();
     this.bgmPlaying = true;
     this.scheduleBGMLoop(ctx.currentTime + 0.1);
@@ -145,6 +183,10 @@ class AudioSystem {
       clearTimeout(this.bgmScheduleId);
       this.bgmScheduleId = null;
     }
+  }
+
+  setDangerMode(danger: boolean): void {
+    this.playBGM(danger ? 'danger' : 'normal');
   }
 
   playSFX(name: SFXName): void {
@@ -190,6 +232,90 @@ class AudioSystem {
         this.playNote(ctx, 784.00, now + 0.32, 0.15, 'triangle', 0.2);
         this.playNote(ctx, 1046.5, now + 0.48, 0.3,  'triangle', 0.2);
         break;
+
+      case 'eventGood':
+        // Bright ascending 3-note chime: C5 → E5 → G5, sine wave
+        this.playNote(ctx, this.NOTES.C5, now,        0.08, 'sine', 0.18);
+        this.playNote(ctx, this.NOTES.E5, now + 0.09, 0.08, 'sine', 0.18);
+        this.playNote(ctx, this.NOTES.G5, now + 0.18, 0.12, 'sine', 0.18);
+        break;
+
+      case 'eventBad':
+        // Low descending thud: G3 → E3 → C3, triangle wave
+        this.playNote(ctx, this.NOTES.G3, now,        0.06, 'triangle', 0.2);
+        this.playNote(ctx, this.NOTES.E3, now + 0.07, 0.06, 'triangle', 0.2);
+        this.playNote(ctx, this.NOTES.C3, now + 0.14, 0.12, 'triangle', 0.2);
+        break;
+
+      case 'levelUp':
+        // Ascending arpeggio: C4→E4→G4→C5, small gap between notes
+        this.playNote(ctx, this.NOTES.C4, now,        0.1, 'square', 0.15);
+        this.playNote(ctx, this.NOTES.E4, now + 0.12, 0.1, 'square', 0.15);
+        this.playNote(ctx, this.NOTES.G4, now + 0.24, 0.1, 'square', 0.15);
+        this.playNote(ctx, this.NOTES.C5, now + 0.36, 0.1, 'square', 0.15);
+        break;
+
+      case 'demotion':
+        // Descending sad tones: C4→A3→F3, triangle wave
+        this.playNote(ctx, this.NOTES.C4, now,        0.12, 'triangle', 0.18);
+        this.playNote(ctx, this.NOTES.A3, now + 0.13, 0.12, 'triangle', 0.18);
+        this.playNote(ctx, this.NOTES.F3, now + 0.26, 0.12, 'triangle', 0.18);
+        break;
+
+      case 'danger':
+        // Short tense pulse: rapid low notes E2→F2→E2, square wave
+        this.playNote(ctx, this.NOTES.E2, now,        0.05, 'square', 0.12);
+        this.playNote(ctx, this.NOTES.F2, now + 0.06, 0.05, 'square', 0.12);
+        this.playNote(ctx, this.NOTES.E2, now + 0.12, 0.05, 'square', 0.12);
+        break;
+
+      case 'gameWin':
+        // Triumphant 5-note fanfare: C4→E4→G4→C5→E5, square wave
+        this.playNote(ctx, this.NOTES.C4, now,        0.15, 'square', 0.2);
+        this.playNote(ctx, this.NOTES.E4, now + 0.16, 0.15, 'square', 0.2);
+        this.playNote(ctx, this.NOTES.G4, now + 0.32, 0.15, 'square', 0.2);
+        this.playNote(ctx, this.NOTES.C5, now + 0.48, 0.15, 'square', 0.2);
+        this.playNote(ctx, this.NOTES.E5, now + 0.64, 0.15, 'square', 0.2);
+        break;
+
+      case 'gameLose': {
+        // 4 slow descending notes with a slight delay/reverb effect
+        const dest = this.masterGain ?? ctx.destination;
+
+        // Create a tiny delay node for reverb effect
+        const delayNode = ctx.createDelay(1.0);
+        delayNode.delayTime.value = 0.08;
+
+        const feedbackGain = ctx.createGain();
+        feedbackGain.gain.value = 0.3;
+
+        // Delay feedback loop
+        delayNode.connect(feedbackGain);
+        feedbackGain.connect(delayNode);
+        delayNode.connect(dest);
+
+        const playDelayedNote = (freq: number, startTime: number, duration: number) => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(freq, startTime);
+          gain.gain.setValueAtTime(0, startTime);
+          gain.gain.linearRampToValueAtTime(0.18, startTime + 0.01);
+          gain.gain.linearRampToValueAtTime(0.18 * 0.7, startTime + duration * 0.5);
+          gain.gain.linearRampToValueAtTime(0, startTime + duration);
+          osc.connect(gain);
+          gain.connect(dest);
+          gain.connect(delayNode);
+          osc.start(startTime);
+          osc.stop(startTime + duration + 0.05);
+        };
+
+        playDelayedNote(this.NOTES.G4, now,        0.25);
+        playDelayedNote(this.NOTES.E4, now + 0.27, 0.25);
+        playDelayedNote(this.NOTES.C4, now + 0.54, 0.25);
+        playDelayedNote(this.NOTES.A3, now + 0.81, 0.25);
+        break;
+      }
 
       default:
         break;
