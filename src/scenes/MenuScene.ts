@@ -90,7 +90,7 @@ export class MenuScene extends Phaser.Scene {
           text-shadow: 4px 4px 0 #000, 0 0 24px rgba(245,166,35,0.4);
           margin: 0;
           line-height: 1;
-        ">JONES</h1>
+        ">FUSI</h1>
         <p style="
           color: #8a8aa6;
           font-size: 8px;

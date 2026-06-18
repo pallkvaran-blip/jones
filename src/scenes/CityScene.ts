@@ -143,12 +143,15 @@ export class CityScene extends Phaser.Scene {
     g.fillStyle(ASPHALT, 1)
     g.fillRect(FRAME, FRAME, BOARD_W - FRAME * 2, BOARD_H - FRAME * 2)
 
-    // Road centerlines run down the streets between columns and across rows.
-    // Column gaps centers (between the 4 building columns + edges).
-    const colCenters = [24, 196, 366, 536, 702]
-    const rowCenters = [26, 186, 346, BOARD_H - 26]
+    // Road centerlines — computed from the new COL/ROW layout:
+    // COL=[12,194,376,558], BUILDING_W=150 → right edges at 162,344,526,708
+    // Street centers: left-edge=(162+194)/2=178, mid=(344+376)/2=360, right=(526+558)/2=542
+    // ROW=[20,192,364], BUILDING_H=140 → bottom edges at 160,332,504
+    // Street centers: top=(160+192)/2=176, mid=(332+364)/2=348, bottom=504+16=520
+    const colCenters = [178, 360, 542]
+    const rowCenters = [176, 348, 520]
 
-    const roadW = 18
+    const roadW = 20
 
     // Vertical roads
     for (const cx of colCenters) {
@@ -174,9 +177,9 @@ export class CityScene extends Phaser.Scene {
     for (const loc of locations) {
       const pad = 6
       g.fillStyle(SIDEWALK, 1)
-      g.fillRect(loc.x - pad, loc.y - pad, loc.width + pad * 2, loc.height + pad * 2 + 26)
+      g.fillRect(loc.x - pad, loc.y - pad, loc.width + pad * 2, loc.height + pad * 2 + 8)
       g.fillStyle(SIDEWALK_DARK, 1)
-      g.fillRect(loc.x - pad, loc.y + loc.height + pad + 24, loc.width + pad * 2, 2)
+      g.fillRect(loc.x - pad, loc.y + loc.height + pad + 6, loc.width + pad * 2, 2)
     }
 
     // Crosswalk stripes at intersections (where roads cross).

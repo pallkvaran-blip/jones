@@ -24,6 +24,25 @@ function addLog(state: GameState, msg: string): GameState {
 }
 
 // --- HOME actions ---
+const studyAtHomeAction: ActionDef = {
+  id: 'study_home',
+  label: 'Study at Home',
+  detail: 'Education+0.3, Energy-8 | 12t',
+  timeCost: 12,
+  available: (state) => state.player.energy >= 8,
+  unavailableReason: () => 'Need Energy≥8',
+  apply(state) {
+    return {
+      ...state,
+      player: {
+        ...state.player,
+        education: state.player.education + 0.3,
+        energy: cap(state.player.energy - 8),
+      },
+    };
+  },
+};
+
 const sleepAction: ActionDef = {
   id: 'sleep',
   label: 'Sleep',
@@ -707,8 +726,8 @@ function getJobActions(locationId: LocationId, state: GameState): ActionDef[] {
     label: 'Apply for Job',
     detail: `${locJob.titles[0]} – $${firstTier.dailyPay}/shift | 15t`,
     timeCost: 15,
-    available: () => true,
-    unavailableReason: () => '',
+    available: (s) => s.player.education >= locJob.eduRequired,
+    unavailableReason: () => `Need Education ${locJob.eduRequired}`,
     apply(s) {
       return addLog({
         ...s,
@@ -727,7 +746,7 @@ function getJobActions(locationId: LocationId, state: GameState): ActionDef[] {
 export function getActionsForLocation(locationId: LocationId, state: GameState): ActionDef[] {
   switch (locationId) {
     case 'home':
-      return [sleepAction, restAction, cookMealAction];
+      return [sleepAction, restAction, cookMealAction, studyAtHomeAction];
 
     case 'employment':
       return [seafoodDinnerAction, clamChowderAction, ...getJobActions(locationId, state)];

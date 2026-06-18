@@ -3,9 +3,9 @@ import { STOCK_INITIAL_PRICES, STOCKS } from '../data/stocks'
 
 export function createInitialState(name: string, difficulty: Difficulty): GameState {
   const difficultySettings = {
-    easy:   { money: 1500, maxWeeks: 30, goals: { targetWealth: 5000,  targetEducation: 1, targetCareerRank: 1, targetHappiness: 60 } },
-    normal: { money: 750,  maxWeeks: 24, goals: { targetWealth: 10000, targetEducation: 2, targetCareerRank: 2, targetHappiness: 70 } },
-    hard:   { money: 250,  maxWeeks: 20, goals: { targetWealth: 25000, targetEducation: 3, targetCareerRank: 3, targetHappiness: 80 } },
+    easy:   { money: 0, maxWeeks: 30, goals: { targetWealth: 5000,  targetEducation: 1, targetCareerRank: 1, targetHappiness: 60 } },
+    normal: { money: 0, maxWeeks: 24, goals: { targetWealth: 10000, targetEducation: 2, targetCareerRank: 2, targetHappiness: 70 } },
+    hard:   { money: 0, maxWeeks: 20, goals: { targetWealth: 25000, targetEducation: 3, targetCareerRank: 3, targetHappiness: 80 } },
   };
 
   const settings = difficultySettings[difficulty];

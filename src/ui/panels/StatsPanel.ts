@@ -20,7 +20,7 @@ export class StatsPanel {
   private buildHTML(): string {
     return `
       <div class="panel-title">
-        JONES
+        FUSI
         <small>LIFE IN THE FAST LANE</small>
       </div>
 

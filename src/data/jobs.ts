@@ -17,21 +17,22 @@ export interface CareerDef {
 export interface LocationJobDef {
   track: CareerTrack;
   titles: [string, string, string, string];
+  eduRequired: number;
 }
 
 /** Maps each location to the career track and titles available there. */
 export const LOCATION_JOBS: Partial<Record<LocationId, LocationJobDef>> = {
-  employment:    { track: 'creative',   titles: ['Line Cook', 'Sous Chef', 'Head Chef', 'Exec. Chef'] },
-  university:    { track: 'healthcare', titles: ['Tutor', 'Lecturer', 'Professor', 'Dept. Chair'] },
-  bank:          { track: 'finance',    titles: ['Teller', 'Loan Officer', 'Asst. Mgr', 'Branch Mgr'] },
-  grocery:       { track: 'trades',     titles: ['Stock Clerk', 'Cashier', 'Dept. Mgr', 'Store Mgr'] },
-  electronics:   { track: 'tech',       titles: ['Support Tech', 'Developer', 'Senior Dev', 'Lead Eng.'] },
-  clothing:      { track: 'creative',   titles: ['Sales Assoc', 'Buyer', 'Designer', 'Creative Dir'] },
-  restaurant:    { track: 'creative',   titles: ['Busboy', 'Server', "Maitre'd", 'Rest. Mgr'] },
-  pawn:          { track: 'finance',    titles: ['Sales Clerk', 'Buyer', 'Store Mgr', 'Owner'] },
-  realty:        { track: 'finance',    titles: ['Agent', 'Sr. Agent', 'Broker', 'Principal'] },
-  hospital:      { track: 'healthcare', titles: ['Orderly', 'Technician', 'Nurse', 'Doctor'] },
-  stockexchange: { track: 'finance',    titles: ['Jr. Trader', 'Trader', 'Portfolio Mgr', 'Partner'] },
+  employment:    { track: 'creative',   titles: ['Line Cook', 'Sous Chef', 'Head Chef', 'Exec. Chef'],     eduRequired: 0 },
+  grocery:       { track: 'trades',     titles: ['Stock Clerk', 'Cashier', 'Dept. Mgr', 'Store Mgr'],      eduRequired: 0 },
+  restaurant:    { track: 'creative',   titles: ['Busboy', 'Server', "Maitre'd", 'Rest. Mgr'],             eduRequired: 0 },
+  pawn:          { track: 'finance',    titles: ['Sales Clerk', 'Buyer', 'Store Mgr', 'Owner'],            eduRequired: 0 },
+  bank:          { track: 'finance',    titles: ['Teller', 'Loan Officer', 'Asst. Mgr', 'Branch Mgr'],     eduRequired: 1 },
+  clothing:      { track: 'creative',   titles: ['Sales Assoc', 'Buyer', 'Designer', 'Creative Dir'],      eduRequired: 1 },
+  hospital:      { track: 'healthcare', titles: ['Orderly', 'Technician', 'Nurse', 'Doctor'],              eduRequired: 1 },
+  university:    { track: 'healthcare', titles: ['Tutor', 'Lecturer', 'Professor', 'Dept. Chair'],         eduRequired: 1 },
+  electronics:   { track: 'tech',       titles: ['Support Tech', 'Developer', 'Senior Dev', 'Lead Eng.'],  eduRequired: 2 },
+  realty:        { track: 'finance',    titles: ['Agent', 'Sr. Agent', 'Broker', 'Principal'],             eduRequired: 2 },
+  stockexchange: { track: 'finance',    titles: ['Jr. Trader', 'Trader', 'Portfolio Mgr', 'Partner'],      eduRequired: 3 },
 };
 
 export const CAREER_JOBS: Record<CareerTrack, CareerDef> = {

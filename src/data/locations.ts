@@ -46,8 +46,8 @@ export const BUILDING_H = 140
 export const FRAME = 12
 
 // Column left-edges and row top-edges (centered in the 720-wide board interior).
-const COL = [36, 206, 376, 546] as const // gaps: 24 edge, 20 inner -> ends at 696
-const ROW = [40, 200, 360] as const // top frame + street, then 20px streets between
+const COL = [12, 194, 376, 558] as const // 32px horizontal streets between columns
+const ROW = [20, 192, 364] as const       // 32px vertical streets between rows
 const W = BUILDING_W
 const H = BUILDING_H
 
