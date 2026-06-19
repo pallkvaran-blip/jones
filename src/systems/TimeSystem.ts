@@ -1,7 +1,6 @@
 import type { GameState, LocationId } from '../state/types'
 import { applyWeeklyEconomy } from './EconomySystem'
 import { getHousingTier } from '../data/housing'
-import { rollLifeEvent } from './EventSystem'
 import { pickRandomWeekendEvent } from '../data/weekendEvents'
 import { pickRoughNightEventId } from '../data/lifeEvents'
 
@@ -157,14 +156,6 @@ export function advanceWeek(state: GameState): GameState {
   };
 
   weekState = applyWeeklyEconomy(weekState);
-
-  // Roll a random life event
-  if (weekState.pendingLifeEventId === null) {
-    const event = rollLifeEvent(weekState);
-    if (event) {
-      weekState = { ...weekState, pendingLifeEventId: event.id };
-    }
-  }
 
   // 2-player: trigger turn handoff when a week completes
   if (weekState.numPlayers === 2 && !weekState.isGameOver && !weekState.pendingTurnHandoff) {

@@ -2,6 +2,8 @@ import Phaser from 'phaser'
 import { initStore, getStore } from '../state/store'
 import { createInitialState } from '../state/initialState'
 import { audioSystem } from '../systems/AudioSystem'
+import { getHighScores } from '../data/highScores'
+import { formatMoney } from '../utils/format'
 import type { Difficulty } from '../state/types'
 
 export class MenuScene extends Phaser.Scene {
@@ -98,7 +100,7 @@ export class MenuScene extends Phaser.Scene {
         <div style="color:#6a6a82; margin-bottom:4px; letter-spacing:1px;">GOALS</div>
         <div>Earn $50k+ | Education 80+ | Reach Career Rank 4 | Happiness 80+</div>
         <div style="color:#6a6a82; margin-top:6px; margin-bottom:4px; letter-spacing:1px;">GAME LENGTH</div>
-        <div>Short: 20 wks | Medium: 24 wks | Long: 30 wks.</div>
+        <div>Short: 5 wks | Medium: 10 wks | Long: 15 wks.</div>
         <div>Each week is one full day of actions.</div>
         <div>Miss a night at home and sleep rough.</div>
         <div>Run out of health and it's game over.</div>
@@ -226,6 +228,18 @@ export class MenuScene extends Phaser.Scene {
           font-family:${pf};
           text-transform: uppercase;
         ">START</button>
+
+        <button id="high-scores-btn" style="
+          padding: 10px 14px;
+          background: #0e0e1c;
+          border: 2px solid #4a4a66;
+          color: #8a8aa6;
+          font-size: 8px;
+          letter-spacing: 2px;
+          cursor: pointer;
+          font-family:${pf};
+          text-transform: uppercase;
+        ">HIGH SCORES</button>
       </div>
     `;
 
@@ -272,6 +286,20 @@ export class MenuScene extends Phaser.Scene {
       startBtn.addEventListener('mouseleave', () => {
         (startBtn as HTMLElement).style.background = '#F5A623';
         (startBtn as HTMLElement).style.transform = 'scale(1)';
+      });
+    }
+
+    // High scores button
+    const hsBtn = document.getElementById('high-scores-btn');
+    if (hsBtn) {
+      hsBtn.addEventListener('click', () => this.showHighScores());
+      hsBtn.addEventListener('mouseenter', () => {
+        (hsBtn as HTMLElement).style.borderColor = '#8a8aa6';
+        (hsBtn as HTMLElement).style.color = '#c8c8e0';
+      });
+      hsBtn.addEventListener('mouseleave', () => {
+        (hsBtn as HTMLElement).style.borderColor = '#4a4a66';
+        (hsBtn as HTMLElement).style.color = '#8a8aa6';
       });
     }
 
@@ -384,6 +412,112 @@ export class MenuScene extends Phaser.Scene {
     this.menuContainer = null;
 
     this.scene.start('CityScene');
+  }
+
+  private showHighScores(): void {
+    const uiRoot = document.getElementById('ui-root');
+    if (!uiRoot) return;
+
+    const pf = `'Press Start 2P', 'Courier New', monospace`;
+    const scores = getHighScores();
+
+    const diffLabels: Record<Difficulty, string> = { short: 'SHORT (5 WKS)', medium: 'MEDIUM (10 WKS)', long: 'LONG (15 WKS)' };
+    const diffColors: Record<Difficulty, string> = { short: '#E74C3C', medium: '#F5A623', long: '#2ECC71' };
+
+    const buildTable = (diff: Difficulty): string => {
+      const entries = scores[diff];
+      const color = diffColors[diff];
+      const rows = entries.length > 0
+        ? entries.map((e, i) => {
+            const medal = i === 0 ? '&#x1F947;' : i === 1 ? '&#x1F948;' : i === 2 ? '&#x1F949;' : `${i + 1}.`;
+            const outcomeColor = e.winCondition === 'won' ? '#2ECC71' : '#E74C3C';
+            const outcomeIcon = e.winCondition === 'won' ? '&#x2713;' : '&#x2717;';
+            return `
+              <div style="display:flex; align-items:center; gap:10px; padding:6px 0; border-bottom:1px solid #1a1a2e; font-size:7px;">
+                <span style="min-width:20px; text-align:center;">${medal}</span>
+                <span style="flex:1; color:#e8e8f0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${e.playerName}</span>
+                <span style="color:#ffd24a; min-width:70px; text-align:right;">${formatMoney(e.money)}</span>
+                <span style="color:${outcomeColor}; min-width:12px; text-align:center;">${outcomeIcon}</span>
+                <span style="color:${color}; min-width:14px; text-align:right;">${e.grade}</span>
+              </div>
+            `;
+          }).join('')
+        : `<div style="color:#4a4a66; font-size:7px; padding:10px 0; text-align:center;">No scores yet.</div>`;
+
+      return `
+        <div style="flex:1; min-width:200px;">
+          <div style="font-size:7px; color:${color}; letter-spacing:1px; margin-bottom:8px; padding-bottom:4px; border-bottom:2px solid ${color};">${diffLabels[diff]}</div>
+          ${rows}
+        </div>
+      `;
+    };
+
+    const overlay = document.createElement('div');
+    overlay.id = 'hs-overlay';
+    overlay.style.cssText = `
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.88);
+      z-index: 500;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: ${pf};
+    `;
+
+    overlay.innerHTML = `
+      <div style="
+        background: #14141f;
+        border: 3px solid #4a4a66;
+        box-shadow: inset -3px -3px 0 #06060c, 8px 8px 0 rgba(0,0,0,0.5);
+        padding: 24px 22px 18px;
+        max-width: 720px;
+        width: 94%;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      ">
+        <div style="display:flex; align-items:center; justify-content:space-between;">
+          <div style="font-size:11px; color:#F5A623; letter-spacing:2px; text-shadow:2px 2px 0 #000;">HIGH SCORES</div>
+          <button id="hs-close-btn" style="
+            padding:6px 12px;
+            background:#1a1a2e;
+            border:2px solid #4a4a66;
+            color:#8a8aa6;
+            font-size:8px;
+            cursor:pointer;
+            font-family:${pf};
+          ">CLOSE</button>
+        </div>
+        <div style="font-size:6px; color:#4a4a66; letter-spacing:1px;">RANKED BY TOTAL CASH &amp; SAVINGS</div>
+        <div style="display:flex; gap:20px; flex-wrap:wrap; align-items:flex-start;">
+          ${buildTable('short')}
+          ${buildTable('medium')}
+          ${buildTable('long')}
+        </div>
+      </div>
+    `;
+
+    uiRoot.appendChild(overlay);
+
+    const closeBtn = document.getElementById('hs-close-btn');
+    if (closeBtn) {
+      closeBtn.addEventListener('click', () => {
+        if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+      });
+      closeBtn.addEventListener('mouseenter', () => {
+        (closeBtn as HTMLElement).style.borderColor = '#8a8aa6';
+        (closeBtn as HTMLElement).style.color = '#e8e8f0';
+      });
+      closeBtn.addEventListener('mouseleave', () => {
+        (closeBtn as HTMLElement).style.borderColor = '#4a4a66';
+        (closeBtn as HTMLElement).style.color = '#8a8aa6';
+      });
+    }
+
+    overlay.addEventListener('pointerdown', (e) => {
+      if (e.target === overlay) overlay.parentNode?.removeChild(overlay);
+    });
   }
 
   shutdown(): void {

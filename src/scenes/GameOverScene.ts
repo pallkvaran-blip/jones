@@ -3,6 +3,7 @@ import { getStore, initStore } from '../state/store'
 import { createInitialState } from '../state/initialState'
 import { audioSystem } from '../systems/AudioSystem'
 import { formatMoney } from '../utils/format'
+import { addHighScore } from '../data/highScores'
 import type { GameState, Player, Calendar } from '../state/types'
 
 // ── Score / Grade helpers ─────────────────────────────────────────────────────
@@ -124,6 +125,20 @@ export class GameOverScene extends Phaser.Scene {
       const bothStates = store.getBothStates();
       const s1 = bothStates[0]!;
       const s2 = bothStates[1]!;
+
+      for (const s of [s1, s2]) {
+        const sScore = calculateScore(s.player, s.calendar, s.goalsMet as Record<string, boolean>);
+        addHighScore({
+          playerName: s.player.name,
+          difficulty: s.difficulty,
+          money: s.player.money + s.player.bankBalance,
+          score: sScore,
+          grade: getGrade(sScore, s.winCondition === 'won', s.lossReason),
+          winCondition: s.winCondition,
+          weeksReached: Math.max(0, s.calendar.week - 1),
+          timestamp: Date.now(),
+        });
+      }
 
       const renderPlayerCard = (s: GameState, highlight: boolean): string => {
         const cardIsWin = s.winCondition === 'won';
@@ -261,6 +276,17 @@ export class GameOverScene extends Phaser.Scene {
       const score = calculateScore(state.player, state.calendar, state.goalsMet as Record<string, boolean>);
       const grade = getGrade(score, isWin, state.lossReason);
       const gColor = gradeColor(grade);
+
+      addHighScore({
+        playerName: state.player.name,
+        difficulty: state.difficulty,
+        money: state.player.money + state.player.bankBalance,
+        score,
+        grade,
+        winCondition: state.winCondition,
+        weeksReached: Math.max(0, state.calendar.week - 1),
+        timestamp: Date.now(),
+      });
       const tagline = gradeTagline(grade);
 
       const titleColor = isWin ? '#2ECC71' : '#E74C3C';
