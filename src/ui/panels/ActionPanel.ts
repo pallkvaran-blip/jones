@@ -111,10 +111,25 @@ export class ActionPanel {
       </div>
     `;
 
-    // Wire pointerdown listeners (avoids 300ms touch delay)
+    // Use pointerdown to capture start position, pointerup to fire — this lets the
+    // browser recognise a vertical scroll gesture before we commit to a tap action.
     this.el.querySelectorAll<HTMLButtonElement>('.action-btn').forEach((btn) => {
+      let startY = 0;
+      let dragged = false;
+
       btn.addEventListener('pointerdown', (e) => {
         e.stopPropagation();
+        startY = e.clientY;
+        dragged = false;
+      });
+
+      btn.addEventListener('pointermove', (e) => {
+        if (Math.abs(e.clientY - startY) > 8) dragged = true;
+      });
+
+      btn.addEventListener('pointerup', (e) => {
+        e.stopPropagation();
+        if (dragged) return;
         if (btn.classList.contains('disabled')) {
           const reason = btn.querySelector('.action-detail')?.textContent ?? '';
           if (reason && this.onUnavailable) this.onUnavailable(reason);

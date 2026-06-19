@@ -101,6 +101,10 @@ export class EventModal {
     document.getElementById('ui-root')?.appendChild(backdrop)
     this.backdrop = backdrop
 
+    // Prevent taps on the dark overlay area from leaking to the canvas / Phaser
+    backdrop.addEventListener('pointerdown', (e) => e.stopPropagation())
+    backdrop.addEventListener('pointerup', (e) => e.stopPropagation())
+
     backdrop.querySelectorAll<HTMLButtonElement>('.event-choice-btn').forEach(btn => {
       btn.addEventListener('mouseenter', () => {
         if (btn.style.background === 'rgb(245, 166, 35)') return

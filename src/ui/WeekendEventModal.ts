@@ -76,6 +76,10 @@ export class WeekendEventModal {
     document.getElementById('ui-root')?.appendChild(backdrop)
     this.backdrop = backdrop
 
+    // Prevent taps on the dark overlay area from leaking to the canvas / Phaser
+    backdrop.addEventListener('pointerdown', (e) => e.stopPropagation())
+    backdrop.addEventListener('pointerup', (e) => e.stopPropagation())
+
     backdrop.querySelectorAll<HTMLButtonElement>('.weekend-opt-btn').forEach(btn => {
       if (btn.disabled) return
       btn.addEventListener('mouseenter', () => {
