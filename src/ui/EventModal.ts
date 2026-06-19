@@ -102,7 +102,7 @@ export class EventModal {
     this.backdrop = backdrop
 
     // Prevent taps on the dark overlay area from leaking to the canvas / Phaser
-    backdrop.addEventListener('pointerdown', (e) => e.stopPropagation())
+    backdrop.addEventListener('pointerdown', (e) => { e.stopPropagation(); e.preventDefault() })
     backdrop.addEventListener('pointerup', (e) => e.stopPropagation())
 
     backdrop.querySelectorAll<HTMLButtonElement>('.event-choice-btn').forEach(btn => {
@@ -116,8 +116,9 @@ export class EventModal {
         btn.style.borderColor = '#3a3a52'
         btn.style.background = '#0e1020'
       })
-      // Stop both pointer phases so the canvas never sees them
-      btn.addEventListener('pointerdown', (e) => e.stopPropagation())
+      // preventDefault on pointerdown stops the browser generating a ghost click
+      // after the modal closes, which would otherwise land on the Phaser canvas.
+      btn.addEventListener('pointerdown', (e) => { e.stopPropagation(); e.preventDefault() })
       btn.addEventListener('pointerup', (e) => {
         e.stopPropagation()
         const idx = parseInt(btn.dataset.idx ?? '0', 10)
@@ -164,7 +165,7 @@ export class EventModal {
     if (okBtn) {
       okBtn.addEventListener('mouseenter', () => { okBtn.style.background = '#ffb830' })
       okBtn.addEventListener('mouseleave', () => { okBtn.style.background = '#f5a623' })
-      okBtn.addEventListener('pointerdown', (e) => e.stopPropagation())
+      okBtn.addEventListener('pointerdown', (e) => { e.stopPropagation(); e.preventDefault() })
       okBtn.addEventListener('pointerup', (e) => {
         e.stopPropagation()
         this.hide()

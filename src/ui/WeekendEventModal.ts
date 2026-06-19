@@ -77,7 +77,7 @@ export class WeekendEventModal {
     this.backdrop = backdrop
 
     // Prevent taps on the dark overlay area from leaking to the canvas / Phaser
-    backdrop.addEventListener('pointerdown', (e) => e.stopPropagation())
+    backdrop.addEventListener('pointerdown', (e) => { e.stopPropagation(); e.preventDefault() })
     backdrop.addEventListener('pointerup', (e) => e.stopPropagation())
 
     backdrop.querySelectorAll<HTMLButtonElement>('.weekend-opt-btn').forEach(btn => {
@@ -90,7 +90,7 @@ export class WeekendEventModal {
         btn.style.borderColor = '#2a6444'
         btn.style.background = '#0e1020'
       })
-      btn.addEventListener('pointerdown', (e) => e.stopPropagation())
+      btn.addEventListener('pointerdown', (e) => { e.stopPropagation(); e.preventDefault() })
       btn.addEventListener('pointerup', (e) => {
         e.stopPropagation()
         const idx = parseInt(btn.dataset.idx ?? '0', 10)
@@ -129,7 +129,7 @@ export class WeekendEventModal {
     if (okBtn) {
       okBtn.addEventListener('mouseenter', () => { okBtn.style.background = '#3a8058' })
       okBtn.addEventListener('mouseleave', () => { okBtn.style.background = '#2a6444' })
-      okBtn.addEventListener('pointerdown', (e) => e.stopPropagation())
+      okBtn.addEventListener('pointerdown', (e) => { e.stopPropagation(); e.preventDefault() })
       okBtn.addEventListener('pointerup', (e) => {
         e.stopPropagation()
         this.hide()

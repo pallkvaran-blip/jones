@@ -31,8 +31,8 @@ export const LOCATION_JOBS: Partial<Record<LocationId, LocationJobDef>> = {
     titles: ['Pet Clerk', 'Pet Handler', 'Dept. Lead', 'Store Mgr'],
     jobTiers: [
       { rank: 1, requiredEducation: 0 },
-      { rank: 2, requiredEducation: 1.0 },
-      { rank: 3, requiredEducation: 2.5 },
+      { rank: 2, requiredEducation: 1.5 },
+      { rank: 3, requiredEducation: 4.0 },
     ],
   },
   grocery: {
@@ -40,8 +40,8 @@ export const LOCATION_JOBS: Partial<Record<LocationId, LocationJobDef>> = {
     titles: ['Stock Clerk', 'Cashier', 'Dept. Mgr', 'Store Mgr'],
     jobTiers: [
       { rank: 1, requiredEducation: 0 },
-      { rank: 2, requiredEducation: 0.5 },
-      { rank: 3, requiredEducation: 1.5 },
+      { rank: 2, requiredEducation: 1.0 },
+      { rank: 3, requiredEducation: 2.5 },
     ],
   },
   restaurant: {
@@ -49,8 +49,8 @@ export const LOCATION_JOBS: Partial<Record<LocationId, LocationJobDef>> = {
     titles: ['Busboy', 'Server', "Maitre'd", 'Rest. Mgr'],
     jobTiers: [
       { rank: 1, requiredEducation: 0 },
-      { rank: 2, requiredEducation: 0.5 },
-      { rank: 3, requiredEducation: 1.5 },
+      { rank: 2, requiredEducation: 1.0 },
+      { rank: 3, requiredEducation: 2.5 },
     ],
   },
   pawn: {
@@ -58,17 +58,17 @@ export const LOCATION_JOBS: Partial<Record<LocationId, LocationJobDef>> = {
     titles: ['Sales Clerk', 'Buyer', 'Store Mgr', 'Owner'],
     jobTiers: [
       { rank: 1, requiredEducation: 0 },
-      { rank: 2, requiredEducation: 1.0 },
-      { rank: 3, requiredEducation: 2.0 },
+      { rank: 2, requiredEducation: 1.5 },
+      { rank: 3, requiredEducation: 3.0 },
     ],
   },
   university: {
     track: 'healthcare',
     titles: ['Tutor', 'Lecturer', 'Professor', 'Dept. Chair'],
     jobTiers: [
-      { rank: 1, requiredEducation: 1.0 },
-      { rank: 2, requiredEducation: 2.0 },
-      { rank: 3, requiredEducation: 3.5 },
+      { rank: 1, requiredEducation: 2.0 },
+      { rank: 2, requiredEducation: 3.5 },
+      { rank: 3, requiredEducation: 5.5 },
     ],
   },
   clothing: {
@@ -76,53 +76,53 @@ export const LOCATION_JOBS: Partial<Record<LocationId, LocationJobDef>> = {
     titles: ['Sales Assoc', 'Buyer', 'Designer', 'Creative Dir'],
     jobTiers: [
       { rank: 1, requiredEducation: 0 },
-      { rank: 2, requiredEducation: 1.0 },
-      { rank: 3, requiredEducation: 2.5 },
+      { rank: 2, requiredEducation: 1.5 },
+      { rank: 3, requiredEducation: 4.0 },
     ],
   },
   hospital: {
     track: 'healthcare',
     titles: ['Orderly', 'Technician', 'Nurse', 'Doctor'],
     jobTiers: [
-      { rank: 1, requiredEducation: 1.5 },
-      { rank: 2, requiredEducation: 3.0 },
-      { rank: 3, requiredEducation: 5.0 },
+      { rank: 1, requiredEducation: 2.5 },
+      { rank: 2, requiredEducation: 4.5 },
+      { rank: 3, requiredEducation: 7.0 },
     ],
   },
   bank: {
     track: 'finance',
     titles: ['Teller', 'Loan Officer', 'Asst. Mgr', 'Branch Mgr'],
     jobTiers: [
-      { rank: 1, requiredEducation: 1.0 },
-      { rank: 2, requiredEducation: 2.5 },
-      { rank: 3, requiredEducation: 4.0 },
+      { rank: 1, requiredEducation: 2.0 },
+      { rank: 2, requiredEducation: 4.0 },
+      { rank: 3, requiredEducation: 6.0 },
     ],
   },
   electronics: {
     track: 'tech',
     titles: ['Support Tech', 'Developer', 'Senior Dev', 'Lead Eng.'],
     jobTiers: [
-      { rank: 1, requiredEducation: 1.0 },
-      { rank: 2, requiredEducation: 2.5 },
-      { rank: 3, requiredEducation: 4.0 },
+      { rank: 1, requiredEducation: 2.0 },
+      { rank: 2, requiredEducation: 4.0 },
+      { rank: 3, requiredEducation: 6.0 },
     ],
   },
   realty: {
     track: 'finance',
     titles: ['Agent', 'Sr. Agent', 'Broker', 'Principal'],
     jobTiers: [
-      { rank: 1, requiredEducation: 1.0 },
-      { rank: 2, requiredEducation: 2.5 },
-      { rank: 3, requiredEducation: 4.0 },
+      { rank: 1, requiredEducation: 2.0 },
+      { rank: 2, requiredEducation: 4.0 },
+      { rank: 3, requiredEducation: 6.0 },
     ],
   },
   stockexchange: {
     track: 'finance',
     titles: ['Jr. Trader', 'Trader', 'Portfolio Mgr', 'Partner'],
     jobTiers: [
-      { rank: 1, requiredEducation: 2.0 },
-      { rank: 2, requiredEducation: 3.5 },
-      { rank: 3, requiredEducation: 5.0 },
+      { rank: 1, requiredEducation: 3.5 },
+      { rank: 2, requiredEducation: 5.5 },
+      { rank: 3, requiredEducation: 8.0 },
     ],
   },
 };
