@@ -497,6 +497,12 @@ export class CityScene extends Phaser.Scene {
   }
 
   private handleLocationClick(id: LocationId): void {
+    // Ignore map clicks while a modal is open (prevents action buttons propagating to map)
+    if (
+      document.getElementById('event-modal-backdrop') ||
+      document.getElementById('weekend-modal-backdrop')
+    ) return
+
     audioSystem.playSFX('click')
 
     const store = getStore()
@@ -659,7 +665,7 @@ export class CityScene extends Phaser.Scene {
     this.muteButton.style.cssText = `
       position: fixed;
       top: 8px;
-      right: 250px;
+      right: 290px;
       width: 32px;
       height: 32px;
       background: rgba(13,13,23,0.9);

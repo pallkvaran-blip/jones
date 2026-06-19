@@ -13,25 +13,130 @@ export interface CareerDef {
   tiers: JobTier[];
 }
 
+export interface LocationJobTier {
+  rank: number;
+  requiredCourses: string[];
+}
+
 export interface LocationJobDef {
   track: CareerTrack;
   titles: [string, string, string, string];
   requiredCourses: string[];
+  jobTiers?: LocationJobTier[];
 }
 
 /** Maps each location to the career track and titles available there. */
 export const LOCATION_JOBS: Partial<Record<LocationId, LocationJobDef>> = {
-  employment:    { track: 'creative',   titles: ['Pet Clerk', 'Pet Handler', 'Dept. Lead', 'Store Mgr'],   requiredCourses: [] },
-  grocery:       { track: 'trades',     titles: ['Stock Clerk', 'Cashier', 'Dept. Mgr', 'Store Mgr'],     requiredCourses: [] },
-  restaurant:    { track: 'creative',   titles: ['Busboy', 'Server', "Maitre'd", 'Rest. Mgr'],            requiredCourses: [] },
-  pawn:          { track: 'finance',    titles: ['Sales Clerk', 'Buyer', 'Store Mgr', 'Owner'],           requiredCourses: [] },
-  university:    { track: 'healthcare', titles: ['Tutor', 'Lecturer', 'Professor', 'Dept. Chair'],        requiredCourses: ['job_skills'] },
-  clothing:      { track: 'creative',   titles: ['Sales Assoc', 'Buyer', 'Designer', 'Creative Dir'],     requiredCourses: ['creative_arts'] },
-  hospital:      { track: 'healthcare', titles: ['Orderly', 'Technician', 'Nurse', 'Doctor'],             requiredCourses: ['health_basics'] },
-  bank:          { track: 'finance',    titles: ['Teller', 'Loan Officer', 'Asst. Mgr', 'Branch Mgr'],    requiredCourses: ['business_101'] },
-  electronics:   { track: 'tech',       titles: ['Support Tech', 'Developer', 'Senior Dev', 'Lead Eng.'], requiredCourses: ['intro_tech'] },
-  realty:        { track: 'finance',    titles: ['Agent', 'Sr. Agent', 'Broker', 'Principal'],            requiredCourses: ['accounting'] },
-  stockexchange: { track: 'finance',    titles: ['Jr. Trader', 'Trader', 'Portfolio Mgr', 'Partner'],     requiredCourses: ['finance_adv'] },
+  employment: {
+    track: 'creative',
+    titles: ['Pet Clerk', 'Pet Handler', 'Dept. Lead', 'Store Mgr'],
+    requiredCourses: [],
+    jobTiers: [
+      { rank: 1, requiredCourses: [] },
+      { rank: 2, requiredCourses: ['creative_arts'] },
+      { rank: 3, requiredCourses: ['creative_arts', 'design'] },
+    ],
+  },
+  grocery: {
+    track: 'trades',
+    titles: ['Stock Clerk', 'Cashier', 'Dept. Mgr', 'Store Mgr'],
+    requiredCourses: [],
+    jobTiers: [
+      { rank: 1, requiredCourses: [] },
+      { rank: 2, requiredCourses: ['job_skills'] },
+      { rank: 3, requiredCourses: ['job_skills', 'business_101'] },
+    ],
+  },
+  restaurant: {
+    track: 'creative',
+    titles: ['Busboy', 'Server', "Maitre'd", 'Rest. Mgr'],
+    requiredCourses: [],
+    jobTiers: [
+      { rank: 1, requiredCourses: [] },
+      { rank: 2, requiredCourses: ['job_skills'] },
+      { rank: 3, requiredCourses: ['job_skills', 'business_101'] },
+    ],
+  },
+  pawn: {
+    track: 'finance',
+    titles: ['Sales Clerk', 'Buyer', 'Store Mgr', 'Owner'],
+    requiredCourses: [],
+    jobTiers: [
+      { rank: 1, requiredCourses: [] },
+      { rank: 2, requiredCourses: ['business_101'] },
+      { rank: 3, requiredCourses: ['business_101', 'accounting'] },
+    ],
+  },
+  university: {
+    track: 'healthcare',
+    titles: ['Tutor', 'Lecturer', 'Professor', 'Dept. Chair'],
+    requiredCourses: ['job_skills'],
+    jobTiers: [
+      { rank: 1, requiredCourses: ['job_skills'] },
+      { rank: 2, requiredCourses: ['job_skills', 'health_basics'] },
+      { rank: 3, requiredCourses: ['job_skills', 'health_basics', 'first_aid'] },
+    ],
+  },
+  clothing: {
+    track: 'creative',
+    titles: ['Sales Assoc', 'Buyer', 'Designer', 'Creative Dir'],
+    requiredCourses: [],
+    jobTiers: [
+      { rank: 1, requiredCourses: [] },
+      { rank: 2, requiredCourses: ['creative_arts'] },
+      { rank: 3, requiredCourses: ['creative_arts', 'design'] },
+    ],
+  },
+  hospital: {
+    track: 'healthcare',
+    titles: ['Orderly', 'Technician', 'Nurse', 'Doctor'],
+    requiredCourses: ['health_basics'],
+    jobTiers: [
+      { rank: 1, requiredCourses: ['health_basics'] },
+      { rank: 2, requiredCourses: ['health_basics', 'first_aid'] },
+      { rank: 3, requiredCourses: ['health_basics', 'first_aid', 'med_tech'] },
+    ],
+  },
+  bank: {
+    track: 'finance',
+    titles: ['Teller', 'Loan Officer', 'Asst. Mgr', 'Branch Mgr'],
+    requiredCourses: ['business_101'],
+    jobTiers: [
+      { rank: 1, requiredCourses: ['business_101'] },
+      { rank: 2, requiredCourses: ['business_101', 'accounting'] },
+      { rank: 3, requiredCourses: ['business_101', 'accounting', 'finance_adv'] },
+    ],
+  },
+  electronics: {
+    track: 'tech',
+    titles: ['Support Tech', 'Developer', 'Senior Dev', 'Lead Eng.'],
+    requiredCourses: ['intro_tech'],
+    jobTiers: [
+      { rank: 1, requiredCourses: ['intro_tech'] },
+      { rank: 2, requiredCourses: ['intro_tech', 'web_dev'] },
+      { rank: 3, requiredCourses: ['intro_tech', 'web_dev', 'software_eng'] },
+    ],
+  },
+  realty: {
+    track: 'finance',
+    titles: ['Agent', 'Sr. Agent', 'Broker', 'Principal'],
+    requiredCourses: ['accounting'],
+    jobTiers: [
+      { rank: 1, requiredCourses: ['business_101'] },
+      { rank: 2, requiredCourses: ['business_101', 'accounting'] },
+      { rank: 3, requiredCourses: ['accounting', 'finance_adv'] },
+    ],
+  },
+  stockexchange: {
+    track: 'finance',
+    titles: ['Jr. Trader', 'Trader', 'Portfolio Mgr', 'Partner'],
+    requiredCourses: ['finance_adv'],
+    jobTiers: [
+      { rank: 1, requiredCourses: ['accounting', 'finance_adv'] },
+      { rank: 2, requiredCourses: ['accounting', 'finance_adv', 'data_analysis'] },
+      { rank: 3, requiredCourses: ['accounting', 'finance_adv', 'software_eng'] },
+    ],
+  },
 };
 
 export const CAREER_JOBS: Record<CareerTrack, CareerDef> = {

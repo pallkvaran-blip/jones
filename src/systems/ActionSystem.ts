@@ -23,6 +23,22 @@ function petStudyEduBonus(pets: string[]): number {
   return PETS.filter(p => pets.includes(p.id)).reduce((sum, p) => sum + p.homeStudyEduBonus, 0);
 }
 
+const COURSE_SHORT_NAMES: Record<string, string> = {
+  creative_arts: 'Creative Arts',
+  design: 'Design',
+  job_skills: 'Job Skills',
+  business_101: 'Business 101',
+  accounting: 'Accounting',
+  finance_adv: 'Adv Finance',
+  health_basics: 'Health Basics',
+  first_aid: 'First Aid',
+  med_tech: 'Med Tech',
+  intro_tech: 'Intro Tech',
+  web_dev: 'Web Dev',
+  software_eng: 'Software Eng',
+  data_analysis: 'Data Analysis',
+}
+
 export interface ActionDef {
   id: string;
   label: string;
@@ -43,7 +59,7 @@ function addLog(state: GameState, msg: string): GameState {
 const studyAtHomeAction: ActionDef = {
   id: 'study_home',
   label: 'Study at Home',
-  detail: 'Education+0.3, Energy-8 | 12t',
+  detail: 'Education+0.3, Energy-8 | 12m',
   timeCost: 12,
   available: (state) => state.player.energy >= 8,
   unavailableReason: (s) => `Too tired to study (${Math.round(s.player.energy)}) — rest first!`,
@@ -64,7 +80,7 @@ const studyAtHomeAction: ActionDef = {
 const sleepAction: ActionDef = {
   id: 'sleep',
   label: 'Sleep',
-  detail: 'Energy+40, Morale+5 | 20t',
+  detail: 'Fully restores energy | 20m',
   timeCost: 20,
   available: () => true,
   unavailableReason: () => '',
@@ -74,28 +90,8 @@ const sleepAction: ActionDef = {
       ...state,
       player: {
         ...state.player,
-        energy: cap(state.player.energy + 40 + petSleepEnergyBonus(pets)),
+        energy: cap(100 + petSleepEnergyBonus(pets)),
         morale: cap(state.player.morale + 5 + petMoraleBonus(pets)),
-      },
-    };
-  },
-};
-
-const restAction: ActionDef = {
-  id: 'rest',
-  label: 'Rest',
-  detail: 'Energy+15, Morale+10 | 10t',
-  timeCost: 10,
-  available: () => true,
-  unavailableReason: () => '',
-  apply(state) {
-    const pets = state.player.pets ?? [];
-    return {
-      ...state,
-      player: {
-        ...state.player,
-        energy: cap(state.player.energy + 15 + petSleepEnergyBonus(pets)),
-        morale: cap(state.player.morale + 10 + petMoraleBonus(pets)),
       },
     };
   },
@@ -104,7 +100,7 @@ const restAction: ActionDef = {
 const cookMealAction: ActionDef = {
   id: 'cook_meal',
   label: 'Cook a Meal',
-  detail: 'Hunger+40, -$15 | 8t',
+  detail: 'Hunger+40, -$15 | 8m',
   timeCost: 8,
   available: (state) => state.player.money >= 15,
   unavailableReason: () => 'Need $15',
@@ -142,7 +138,7 @@ function applyWorkShift(state: GameState): GameState {
 
   // 40% chance of a work event modal
   if (Math.random() < 0.4) {
-    const eventId = rollWorkEvent(track);
+    const eventId = rollWorkEvent(track, state.currentLocationId);
     if (eventId) {
       newState = { ...newState, pendingWorkEventId: eventId };
     }
@@ -155,7 +151,7 @@ function makeWorkShiftAction(pay: number): ActionDef {
   return {
     id: 'work_shift',
     label: 'Work a Shift',
-    detail: `Energy-20, +$${pay} | 25t`,
+    detail: `Energy-20, +$${pay} | 25m`,
     timeCost: 25,
     available: (s) => s.player.energy >= 20,
     unavailableReason: (s) => `Not enough energy (${Math.round(s.player.energy)}) — go home and sleep!`,
@@ -166,7 +162,7 @@ function makeWorkShiftAction(pay: number): ActionDef {
 const quitJobAction: ActionDef = {
   id: 'quit_job',
   label: 'Quit Job',
-  detail: 'Leave your current position | 5t',
+  detail: 'Leave your current position | 5m',
   timeCost: 5,
   available: () => true,
   unavailableReason: () => '',
@@ -187,7 +183,7 @@ function getCourseActions(state: GameState): ActionDef[] {
     return [{
       id: 'free_study',
       label: 'Study',
-      detail: 'Education+0.2 | 15t',
+      detail: 'Education+0.2 | 15m',
       timeCost: 15,
       available: () => true,
       unavailableReason: () => '',
@@ -200,7 +196,7 @@ function getCourseActions(state: GameState): ActionDef[] {
   return available.map(c => ({
     id: `course_${c.id}`,
     label: c.title,
-    detail: `Edu+${c.eduPoints} | -$${c.cost} | ${c.timeCost}t`,
+    detail: `Edu+${c.eduPoints} | -$${c.cost} | ${c.timeCost}m`,
     timeCost: c.timeCost,
     available: (s: GameState) => s.player.money >= c.cost && s.player.energy >= 10,
     unavailableReason: (s: GameState) => {
@@ -228,7 +224,7 @@ function makeRepayAction(amount: number | 'all'): ActionDef {
   return {
     id: isAll ? 'repay_all' : `repay_${amount}`,
     label: isAll ? 'Repay All Debt' : `Repay $${amount}`,
-    detail: isAll ? 'Clear all debt | 5t' : `Debt -$${amount} | 5t`,
+    detail: isAll ? 'Clear all debt | 5m' : `Debt -$${amount} | 5m`,
     timeCost: 5,
     available(state) {
       const { money, debt } = state.player
@@ -261,7 +257,7 @@ const repayAllAction  = makeRepayAction('all')
 const depositAllAction: ActionDef = {
   id: 'deposit_all',
   label: 'Deposit All Cash',
-  detail: 'Move cash → bank | 5t',
+  detail: 'Move cash → bank | 5m',
   timeCost: 5,
   available: (state) => state.player.money > 0,
   unavailableReason: () => 'No cash to deposit',
@@ -280,7 +276,7 @@ const depositAllAction: ActionDef = {
 const withdraw200Action: ActionDef = {
   id: 'withdraw_200',
   label: 'Withdraw $200',
-  detail: 'Bank→cash $200 | 5t',
+  detail: 'Bank→cash $200 | 5m',
   timeCost: 5,
   available: (state) => state.player.bankBalance >= 200,
   unavailableReason: () => 'Need $200 in bank',
@@ -299,7 +295,7 @@ const withdraw200Action: ActionDef = {
 const takeLoanAction: ActionDef = {
   id: 'take_loan',
   label: 'Personal Loan $1k',
-  detail: '+$1000, Debt+1000, CreditScore-20 | 10t',
+  detail: '+$1000, Debt+1000, CreditScore-20 | 10m',
   timeCost: 10,
   available: (state) => state.player.creditScore >= 550 && state.player.debt < 8000,
   unavailableReason: (state) => {
@@ -324,7 +320,7 @@ function makePropertyLoanAction(amount: number, minScore: number, scoreDrop: num
   return {
     id: `property_loan_${amount}`,
     label,
-    detail: `+$${amount.toLocaleString()}, Debt+${amount.toLocaleString()}, 5%/wk | 15t`,
+    detail: `+$${amount.toLocaleString()}, Debt+${amount.toLocaleString()}, 5%/wk | 15m`,
     timeCost: 15,
     available: (s) => s.player.creditScore >= minScore && s.player.debt + amount <= 120000,
     unavailableReason: (s) => {
@@ -348,7 +344,7 @@ const propertyLoan50k = makePropertyLoanAction(50000, 700, 60);
 const buyGroceriesAction: ActionDef = {
   id: 'buy_groceries',
   label: 'Buy Groceries',
-  detail: 'Hunger+60, Health+5, -$30 | 6t',
+  detail: 'Hunger+60, Health+5, -$30 | 6m',
   timeCost: 6,
   available: (state) => state.player.money >= 30,
   unavailableReason: () => 'Need $30',
@@ -368,7 +364,7 @@ const buyGroceriesAction: ActionDef = {
 const quickSnackAction: ActionDef = {
   id: 'quick_snack',
   label: 'Quick Snack',
-  detail: 'Hunger+25, -$10 | 3t',
+  detail: 'Hunger+25, -$10 | 3m',
   timeCost: 3,
   available: (state) => state.player.money >= 10,
   unavailableReason: () => 'Need $10',
@@ -388,7 +384,7 @@ const quickSnackAction: ActionDef = {
 const buyComputerAction: ActionDef = {
   id: 'buy_computer',
   label: 'Buy Computer',
-  detail: 'HasComputer, Morale+10, -$800 | 8t',
+  detail: 'HasComputer, Morale+10, -$800 | 8m',
   timeCost: 8,
   available: (state) => !state.player.hasComputer && state.player.money >= 800,
   unavailableReason: (state) => {
@@ -411,7 +407,7 @@ const buyComputerAction: ActionDef = {
 const browseElectronicsAction: ActionDef = {
   id: 'browse_electronics',
   label: 'Browse Electronics',
-  detail: 'Morale+5 | 4t',
+  detail: 'Morale+5 | 4m',
   timeCost: 4,
   available: () => true,
   unavailableReason: () => '',
@@ -430,7 +426,7 @@ const browseElectronicsAction: ActionDef = {
 const buyOutfitAction: ActionDef = {
   id: 'buy_outfit',
   label: 'Buy an Outfit',
-  detail: 'Wardrobe+1, Morale+15, -$60 | 5t',
+  detail: 'Wardrobe+1, Morale+15, -$60 | 5m',
   timeCost: 5,
   available: (state) => state.player.money >= 60,
   unavailableReason: () => 'Need $60',
@@ -450,7 +446,7 @@ const buyOutfitAction: ActionDef = {
 const windowShopAction: ActionDef = {
   id: 'window_shop',
   label: 'Window Shop',
-  detail: 'Morale+5 | 3t',
+  detail: 'Morale+5 | 3m',
   timeCost: 3,
   available: () => true,
   unavailableReason: () => '',
@@ -469,7 +465,7 @@ const windowShopAction: ActionDef = {
 const eatMealAction: ActionDef = {
   id: 'eat_meal',
   label: 'Eat a Meal',
-  detail: 'Hunger+50, Morale+15, Energy+5, -$25 | 6t',
+  detail: 'Hunger+50, Morale+15, Energy+5, -$25 | 6m',
   timeCost: 6,
   available: (state) => state.player.money >= 25,
   unavailableReason: () => 'Need $25',
@@ -490,7 +486,7 @@ const eatMealAction: ActionDef = {
 const fastFoodAction: ActionDef = {
   id: 'fast_food',
   label: 'Fast Food',
-  detail: 'Hunger+25, Morale+5, -$12 | 3t',
+  detail: 'Hunger+25, Morale+5, -$12 | 3m',
   timeCost: 3,
   available: (state) => state.player.money >= 12,
   unavailableReason: () => 'Need $12',
@@ -511,7 +507,7 @@ const fastFoodAction: ActionDef = {
 const pawnComputerAction: ActionDef = {
   id: 'pawn_computer',
   label: 'Pawn Computer',
-  detail: 'Sell computer for $400 | 8t',
+  detail: 'Sell computer for $400 | 8m',
   timeCost: 8,
   available: (state) => state.player.hasComputer,
   unavailableReason: () => 'No computer to pawn',
@@ -530,7 +526,7 @@ const pawnComputerAction: ActionDef = {
 const browsePawnAction: ActionDef = {
   id: 'browse_pawn',
   label: 'Browse Pawn Shop',
-  detail: 'Morale+3 | 4t',
+  detail: 'Morale+3 | 4m',
   timeCost: 4,
   available: () => true,
   unavailableReason: () => '',
@@ -551,7 +547,7 @@ const browsePawnAction: ActionDef = {
 const RENT_ACTIONS: ActionDef[] = RENTAL_TIERS.map((tier) => ({
   id: `rent_${tier.id}`,
   label: `Rent: ${tier.name}`,
-  detail: `$${tier.weeklyRent}/wk | E+${tier.dayEnergyBonus}/day | 10t`,
+  detail: `$${tier.weeklyRent}/wk | E+${tier.dayEnergyBonus}/day | 10m`,
   timeCost: 10,
   available: (s: GameState) =>
     !s.player.isOwner && s.player.housingId !== tier.id && s.player.money >= tier.weeklyRent,
@@ -569,7 +565,7 @@ const RENT_ACTIONS: ActionDef[] = RENTAL_TIERS.map((tier) => ({
 const BUY_ACTIONS: ActionDef[] = OWN_TIERS.map((tier) => ({
   id: `buy_property_${tier.id}`,
   label: `Buy: ${tier.name}`,
-  detail: `$${tier.purchaseCost.toLocaleString()} | E+${tier.dayEnergyBonus}/day | 15t`,
+  detail: `$${tier.purchaseCost.toLocaleString()} | E+${tier.dayEnergyBonus}/day | 15m`,
   timeCost: 15,
   available: (s: GameState) =>
     !s.player.isOwner && s.player.money + s.player.bankBalance >= tier.purchaseCost,
@@ -598,7 +594,7 @@ const BUY_ACTIONS: ActionDef[] = OWN_TIERS.map((tier) => ({
 const sellPropertyAction: ActionDef = {
   id: 'sell_property',
   label: 'Sell Property',
-  detail: 'Get 70% back, move to studio | 15t',
+  detail: 'Get 70% back, move to studio | 15m',
   timeCost: 15,
   available: (s) => s.player.isOwner,
   unavailableReason: () => 'No property owned',
@@ -614,7 +610,7 @@ const sellPropertyAction: ActionDef = {
 const browseListingsAction: ActionDef = {
   id: 'browse_listings',
   label: 'Browse Listings',
-  detail: 'Morale+3 | 5t',
+  detail: 'Morale+3 | 5m',
   timeCost: 5,
   available: () => true,
   unavailableReason: () => '',
@@ -633,7 +629,7 @@ const browseListingsAction: ActionDef = {
 const medicalCheckupAction: ActionDef = {
   id: 'medical_checkup',
   label: 'Medical Checkup',
-  detail: 'Health+30, -$80 | 15t',
+  detail: 'Health+30, -$80 | 15m',
   timeCost: 15,
   available: (state) => state.player.money >= 80,
   unavailableReason: () => 'Need $80',
@@ -652,7 +648,7 @@ const medicalCheckupAction: ActionDef = {
 const buyMedicineAction: ActionDef = {
   id: 'buy_medicine',
   label: 'Buy Medicine',
-  detail: 'Health+15, -$20 | 5t',
+  detail: 'Health+15, -$20 | 5m',
   timeCost: 5,
   available: (state) => state.player.money >= 20,
   unavailableReason: () => 'Need $20',
@@ -684,7 +680,7 @@ function makeStockActions(state: GameState): ActionDef[] {
     actions.push({
       id: `buy_${stock}`,
       label: `Buy ${stock}`,
-      detail: `${name} $${price.toFixed(0)} ${changeStr} | 5t`,
+      detail: `${name} $${price.toFixed(0)} ${changeStr} | 5m`,
       timeCost: 5,
       available: (s) => s.player.money >= (s.economy.stockPrices[stock] ?? 0),
       unavailableReason: () => `Need $${price.toFixed(0)}`,
@@ -705,7 +701,7 @@ function makeStockActions(state: GameState): ActionDef[] {
       id: `sell_${stock}`,
       label: `Sell ${stock}`,
       detail: shares > 0
-        ? `${shares} shares → $${(shares * price).toFixed(0)} | 5t`
+        ? `${shares} shares → $${(shares * price).toFixed(0)} | 5m`
         : 'No shares owned',
       timeCost: 5,
       available: (s) => (s.player.portfolio[stock] ?? 0) > 0,
@@ -731,7 +727,7 @@ function makeStockActions(state: GameState): ActionDef[] {
 const PET_SHOP_ACTIONS: ActionDef[] = PETS.map((pet) => ({
   id: `buy_pet_${pet.id}`,
   label: `Adopt ${pet.name}`,
-  detail: `${pet.species} — $${pet.price} | 10t`,
+  detail: `${pet.species} — $${pet.price} | 10m`,
   timeCost: 10,
   available: (s: GameState) => !s.player.pets.includes(pet.id) && s.player.money >= pet.price,
   unavailableReason: (s: GameState) => {
@@ -752,8 +748,7 @@ const PET_SHOP_ACTIONS: ActionDef[] = PETS.map((pet) => ({
 }));
 
 // --- JOB APPLICATION helper ---
-// Returns [Apply] if unemployed, [Work, Quit] if employed here, or a disabled
-// "Employed Elsewhere" stub if employed somewhere else.
+// Returns tier apply buttons if unemployed, [Work, Quit] if employed here.
 function getJobActions(locationId: LocationId, state: GameState): ActionDef[] {
   const locJob = LOCATION_JOBS[locationId];
   if (!locJob) return [];
@@ -764,44 +759,87 @@ function getJobActions(locationId: LocationId, state: GameState): ActionDef[] {
     const careerDef = CAREER_JOBS[locJob.track];
     const tier = careerDef.tiers[player.jobRank - 1];
     const pay = tier?.dailyPay ?? 60;
-    return [makeWorkShiftAction(pay)];
+    return [makeWorkShiftAction(pay), quitJobAction];
   }
 
-  const firstTier = CAREER_JOBS[locJob.track].tiers[0];
-  const required = locJob.requiredCourses ?? []
-  return [{
-    id: `apply_${locationId}`,
-    label: 'Apply for Job',
-    detail: `${locJob.titles[0]} – $${firstTier.dailyPay}/shift | 5t`,
-    timeCost: 5,
-    available: () => true,
-    unavailableReason: () => '',
-    apply(s) {
-      const completed = s.player.completedCourses ?? []
-      const hasAll = required.every(c => completed.includes(c))
-      if (!hasAll) {
-        const hasAny = required.some(c => completed.includes(c))
-        return { ...s, pendingLifeEventId: hasAny ? 'job_rejected_experience' : 'job_rejected_education' }
-      }
-      const wasEmployed = s.player.jobId !== null
-      return addLog({
-        ...s,
-        player: {
-          ...s.player,
-          jobId: locationId,
-          careerTrack: locJob.track,
-          jobTenure: 0,
-          jobRank: 1,
-        },
-      }, wasEmployed ? `Left old job — hired as ${locJob.titles[0]}!` : `Hired as ${locJob.titles[0]}!`);
-    },
-  }];
+  if (!locJob.jobTiers?.length) {
+    const firstTier = CAREER_JOBS[locJob.track].tiers[0];
+    const required = locJob.requiredCourses ?? []
+    return [{
+      id: `apply_${locationId}`,
+      label: 'Apply for Job',
+      detail: `${locJob.titles[0]} – $${firstTier.dailyPay}/shift | 5m`,
+      timeCost: 5,
+      available: () => true,
+      unavailableReason: () => '',
+      apply(s) {
+        const completed = s.player.completedCourses ?? []
+        const hasAll = required.every(c => completed.includes(c))
+        if (!hasAll) {
+          const hasAny = required.some(c => completed.includes(c))
+          return { ...s, pendingLifeEventId: hasAny ? 'job_rejected_experience' : 'job_rejected_education' }
+        }
+        const wasEmployed = s.player.jobId !== null
+        return addLog({
+          ...s,
+          pendingLifeEventId: 'job_hired',
+          player: {
+            ...s.player,
+            jobId: locationId,
+            careerTrack: locJob.track,
+            jobTenure: 0,
+            jobRank: 1,
+          },
+        }, wasEmployed ? `Left old job — hired as ${locJob.titles[0]}!` : `Hired as ${locJob.titles[0]}!`);
+      },
+    }];
+  }
+
+  return locJob.jobTiers.map(jobTier => {
+    const careerDef = CAREER_JOBS[locJob.track]
+    const careerTier = careerDef.tiers[jobTier.rank - 1]
+    const title = locJob.titles[jobTier.rank - 1]
+    const pay = careerTier?.dailyPay ?? 60
+    const reqCourses = jobTier.requiredCourses
+    const reqStr = reqCourses.length === 0
+      ? 'No requirements'
+      : 'Req: ' + reqCourses.map(c => COURSE_SHORT_NAMES[c] ?? c).join(', ')
+
+    return {
+      id: `apply_${locationId}_rank${jobTier.rank}`,
+      label: `${title} – $${pay}/shift`,
+      detail: `${reqStr} | 5m`,
+      timeCost: 5,
+      available: () => true,
+      unavailableReason: () => '',
+      apply(s: GameState) {
+        const completed = s.player.completedCourses ?? []
+        const hasAll = reqCourses.every(c => completed.includes(c))
+        if (!hasAll) {
+          const hasAny = reqCourses.some(c => completed.includes(c))
+          return { ...s, pendingLifeEventId: hasAny ? 'job_rejected_experience' : 'job_rejected_education' }
+        }
+        const wasEmployed = s.player.jobId !== null
+        return addLog({
+          ...s,
+          pendingLifeEventId: 'job_hired',
+          player: {
+            ...s.player,
+            jobId: locationId,
+            careerTrack: locJob.track,
+            jobTenure: 0,
+            jobRank: jobTier.rank,
+          },
+        }, wasEmployed ? `Left old job — hired as ${title}!` : `Hired as ${title}!`)
+      },
+    }
+  })
 }
 
 export function getActionsForLocation(locationId: LocationId, state: GameState): ActionDef[] {
   switch (locationId) {
     case 'home':
-      return [sleepAction, restAction, cookMealAction, studyAtHomeAction];
+      return [sleepAction, cookMealAction, studyAtHomeAction];
 
     case 'employment':
       return [...PET_SHOP_ACTIONS, ...getJobActions(locationId, state)];

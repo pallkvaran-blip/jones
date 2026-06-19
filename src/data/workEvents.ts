@@ -1,4 +1,4 @@
-import type { CareerTrack } from '../state/types'
+import type { CareerTrack, LocationId } from '../state/types'
 
 export interface WorkEventChoice {
   label: string
@@ -789,12 +789,273 @@ export const WORK_EVENTS: Record<CareerTrack, WorkEvent[]> = {
   ],
 }
 
-export function rollWorkEvent(track: CareerTrack): string | null {
+export const RESTAURANT_WORK_EVENTS: WorkEvent[] = [
+  {
+    id: 'restaurant_vip_table',
+    title: 'The VIP Table',
+    description: "A well-known food critic has just been seated at table seven. The chef noticed and has turned an alarming shade of pale. Everyone is staring at you.",
+    choices: [
+      { label: 'Alert the kitchen and run extra quality checks', delta: { money: 200, morale: 15 }, logMsg: 'You coordinated the kitchen beautifully. The critic gave a meaningful nod at dessert.' },
+      { label: 'Treat them like any other guest — stay calm', delta: { money: 100, morale: 5 }, logMsg: "Professional and unflappable. They seemed to appreciate it." },
+      { label: 'Accidentally give them the wrong order — on purpose', delta: { fired: true, morale: 30 }, logMsg: "You gave them the fish pie. They ordered the steak. You are no longer employed here." },
+    ],
+  },
+  {
+    id: 'restaurant_health_inspector',
+    title: 'Health Inspection Day',
+    description: "An unannounced health inspector is at the door, clipboard in hand, expression unreadable. You have about two minutes before they reach the kitchen.",
+    choices: [
+      { label: 'Welcome them professionally and hope for the best', delta: { money: 200, morale: 10 }, logMsg: 'The inspection went well. The kitchen passed. You breathed again.' },
+      { label: 'Quickly address the most obvious issues', delta: { money: 100, energy: -15 }, logMsg: 'Sprint-cleaned four things. The inspector found a fifth. Still passed.' },
+      { label: "Claim there's a private event and try to delay", delta: { money: -150, morale: -10 }, logMsg: "They came back an hour later. The kitchen was worse. You are being fined." },
+    ],
+  },
+  {
+    id: 'restaurant_no_show_chef',
+    title: 'Chef Called In Sick',
+    description: "The head chef just texted — food poisoning, ironically. You have a full booking and a sous-chef who has only ever cooked eggs.",
+    choices: [
+      { label: "Step in yourself — how hard can cooking be", delta: { money: 100, energy: -25, morale: 10 }, logMsg: "You cooked. It was chaotic. Somehow everything went out. Guests were broadly pleased." },
+      { label: 'Call every culinary contact you have', delta: { money: 200, morale: 10 }, logMsg: "You found a retired chef from three suburbs away. They saved the evening." },
+      { label: 'Simplify the menu and be honest with customers', delta: { money: -80, morale: 15 }, logMsg: "You offered three dishes instead of twelve. Several tables were charmed by the honesty." },
+    ],
+  },
+  {
+    id: 'restaurant_impossible_order',
+    title: 'The Impossible Order',
+    description: "A customer wants the pasta with no pasta, the sauce on the side but heated separately, and the cheese flavour retained without actual cheese. They are not joking.",
+    choices: [
+      { label: "Attempt the order heroically", delta: { money: 200, energy: -15, morale: 20 }, logMsg: "The kitchen improvised brilliantly. The customer was astounded. So were you." },
+      { label: 'Politely explain what is and is not possible', delta: { money: 100, morale: 10 }, logMsg: "Gentle negotiation reached a compromise. They ordered the risotto." },
+      { label: "Send the chef out to 'clarify'", delta: { morale: 15, energy: -5 }, logMsg: "The chef explained things bluntly. The customer appreciated the directness and ordered the same thing anyway." },
+    ],
+  },
+  {
+    id: 'restaurant_spilled_soup',
+    title: 'Soup Incident',
+    description: "A full bowl of steaming tomato soup has been spilled on a customer in an expensive white suit. They haven't looked down yet.",
+    choices: [
+      { label: 'Apologise immediately and comp the entire meal', delta: { money: -80, morale: 15 }, logMsg: "Fast, genuine apology. The meal was free. They left an unexpectedly good review." },
+      { label: 'Offer napkins, a discount, and genuine horror', delta: { money: 100, morale: 10 }, logMsg: "Handled with appropriate shame. They accepted the discount and dry-cleaned the suit themselves." },
+      { label: 'Blame the floor', delta: { fired: true, morale: 5 }, logMsg: "You blamed the floor. The floor had no comment. Your manager had many." },
+    ],
+  },
+  {
+    id: 'restaurant_ingredient_shortage',
+    title: "We're Out of Salmon",
+    description: "Forty minutes into service, the kitchen discovers they're out of the most popular dish. There are 12 tables waiting for it.",
+    choices: [
+      { label: 'Upsell alternatives with enthusiasm', delta: { money: 200, morale: 15 }, logMsg: "You described the alternatives so vividly that half the tables preferred them." },
+      { label: 'Apologise and offer a discount on substitutions', delta: { money: -80, morale: 10 }, logMsg: "Honest and fair. Most tables were understanding." },
+      { label: "Pretend it was always off-menu tonight", delta: { morale: 20, health: -5 }, logMsg: "The bluff almost worked. One table had checked the website. You endured a lecture." },
+    ],
+  },
+  {
+    id: 'restaurant_table_dispute',
+    title: 'The Reservation Fight',
+    description: "Two parties have arrived for the same table at the same time. Both have confirmation emails. Both dressed up. This is very bad.",
+    choices: [
+      { label: 'Split the table diplomatically', delta: { money: 100, morale: 10 }, logMsg: "A creative arrangement worked. Both parties ended up sharing a bottle of wine." },
+      { label: 'Upgrade one party and comp a round of drinks', delta: { money: -80, morale: 20 }, logMsg: "Expensive but elegant. The upgraded table left a very large tip." },
+      { label: 'Let them negotiate it between themselves', delta: { money: -150, morale: -10 }, logMsg: "They argued for eleven minutes. Three nearby tables asked to move. You lost two bookings." },
+    ],
+  },
+  {
+    id: 'restaurant_kitchen_fire',
+    title: 'Small Kitchen Emergency',
+    description: "A pan caught fire in the kitchen. It's contained — but the smoke is reaching the dining room and guests are noticing the smell.",
+    choices: [
+      { label: 'Handle it calmly and announce a brief pause in service', delta: { money: 200, health: -5, morale: 10 }, logMsg: "Professional crisis management. Guests were impressed by your composure." },
+      { label: "Announce it as an 'exciting flambé experience'", delta: { morale: 25, money: 100 }, logMsg: "Two tables actually applauded. Nobody questioned the timeline." },
+      { label: 'Send front-of-house on break until the smoke clears', delta: { money: -80, morale: 5 }, logMsg: "The plan worked until the smoke alarm went off. Tables were evacuated briefly." },
+    ],
+  },
+  {
+    id: 'restaurant_yelp_reviewer',
+    title: 'Active Yelp Review',
+    description: "A diner is openly typing a review on their phone while staring at their half-eaten meal with profound judgment. They have taken eight photos of the bread.",
+    choices: [
+      { label: 'Check in and genuinely ask if everything is okay', delta: { money: 300, morale: 10 }, logMsg: "Authentic concern turned them around completely. Four stars became five." },
+      { label: 'Send a complimentary dessert without fanfare', delta: { money: -30, morale: 20 }, logMsg: "The dessert appeared. They paused. They ate it. They updated the review." },
+      { label: "Describe the bread menu at length while they type", delta: { morale: 15, money: 100 }, logMsg: "Your passion for sourdough confused them so much they forgot to finish the review." },
+    ],
+  },
+  {
+    id: 'restaurant_wrong_bill',
+    title: 'The Overcharged Table',
+    description: "You charged table four the bill for table seven — a difference of $160. Table four has paid and looks happy. Table seven looks confused.",
+    choices: [
+      { label: 'Chase down table four and correct it immediately', delta: { money: 200, morale: 10, energy: -10 }, logMsg: "You caught them at the door. They were surprised but gracious." },
+      { label: 'Absorb the loss — let table four keep the discount', delta: { money: -160, morale: 15 }, logMsg: "Generous solution. The manager was not thrilled but respected the decision." },
+      { label: 'Ask table seven if maybe they ordered more than they think', delta: { fired: true, morale: -20 }, logMsg: "They had receipts. You did not. The conversation that followed was very short." },
+    ],
+  },
+  {
+    id: 'restaurant_birthday_ambush',
+    title: 'Birthday Surprise Gone Wrong',
+    description: "A group has arranged a birthday surprise for their friend. The birthday person walks in and immediately announces they already knew. They want to skip the fuss.",
+    choices: [
+      { label: "Distract with an enthusiastic surprise cake anyway", delta: { money: 100, morale: 20 }, logMsg: "The cake appeared. The group laughed. The birthday person caved. Everyone sang." },
+      { label: "Let the friends handle it and disappear professionally", delta: { morale: 5 }, logMsg: "You retreated wisely. The situation resolved itself without casualties." },
+      { label: "Offer complimentary cocktails to restore spirits", delta: { money: -80, morale: 25 }, logMsg: "Four cocktails and thirty minutes later, everyone was very happy." },
+    ],
+  },
+  {
+    id: 'restaurant_expired_seafood',
+    title: 'The Specials Problem',
+    description: "You discover the daily special uses seafood that is — optimistically — one day past ideal. The chef says it's fine. Your nose disagrees. Three tables have already ordered it.",
+    choices: [
+      { label: 'Pull the special and warn those three tables immediately', delta: { money: 200, morale: 10 }, logMsg: "Tables were offered free alternatives. All three were impressed by the transparency." },
+      { label: "Trust the chef — they know these things", delta: { money: -150, health: -10, morale: -15 }, logMsg: "Two tables had very long evenings. You were involved in a health complaint report." },
+      { label: 'Upgrade the three tables to a better dish before it goes out', delta: { money: -80, morale: 20 }, logMsg: "Quietly sorted before service. Nobody knew. The tables were delighted by the upgrade." },
+    ],
+  },
+]
+
+export const CLOTHING_WORK_EVENTS: WorkEvent[] = [
+  {
+    id: 'clothing_fitting_room',
+    title: 'Stuck in the Fitting Room',
+    description: "A customer has been in fitting room 3 for 35 minutes. The handle appears to be stuck. They are calm but are beginning to hum very softly.",
+    choices: [
+      { label: 'Call maintenance and sort it properly', delta: { money: 200, morale: 10 }, logMsg: "Maintenance freed them in four minutes. They bought three items out of goodwill." },
+      { label: "Try to sort the lock yourself", delta: { money: 100, energy: -15 }, logMsg: "You fixed it with a pen and determination. They were oddly impressed." },
+      { label: "Slide snacks under the door while you wait for help", delta: { morale: 25, money: 100 }, logMsg: "You passed them a cereal bar. They passed back a five-star review." },
+    ],
+  },
+  {
+    id: 'clothing_shoplifter',
+    title: 'The Shoplifter',
+    description: "A customer has very obviously put a blazer on under their existing coat. They are walking very stiffly toward the exit and not making eye contact with anyone.",
+    choices: [
+      { label: 'Intercept them professionally at the door', delta: { money: 200, morale: 10 }, logMsg: "You handled it calmly. The blazer was returned. They left quickly." },
+      { label: "Loudly announce a 'complimentary jacket-fitting event'", delta: { morale: 20 }, logMsg: "The announcement confused everyone including the shoplifter, who put the blazer back." },
+      { label: "Let them go — the blazer didn't suit them anyway", delta: { money: -80, morale: 15 }, logMsg: "You watched them leave. The blazer was a bad fit. You feel oddly at peace with it." },
+    ],
+  },
+  {
+    id: 'clothing_impossible_return',
+    title: 'The Worn Return',
+    description: "A customer is attempting to return a blouse that has clearly been worn, washed, worn again, and possibly picnicked in. They insist it 'arrived like this.'",
+    choices: [
+      { label: 'Decline politely but firmly', delta: { money: 200, morale: 5 }, logMsg: "You held the line with professionalism. They eventually accepted it." },
+      { label: 'Accept it to end the interaction', delta: { money: -80, morale: 10 }, logMsg: "You processed the return. The blouse was quietly retired." },
+      { label: 'Examine it very slowly until they give up', delta: { morale: 20, money: 100 }, logMsg: "You studied the blouse for four minutes. They got a phone call and left without it." },
+    ],
+  },
+  {
+    id: 'clothing_mislabeled_prices',
+    title: 'The $1 Cashmere',
+    description: "An entire rack of premium cashmere sweaters has been mislabeled at $1 each. Three customers have grabbed armfuls and are heading to the register.",
+    choices: [
+      { label: "Honour the price — it's a marketing win", delta: { money: -150, morale: 20 }, logMsg: "Three customers became regulars. The social media post about the accidental sale got 3,000 likes." },
+      { label: 'Correct the labels and apologise before checkout', delta: { money: 100, morale: 10 }, logMsg: "Most customers were understanding. One gave a dramatic speech about false advertising." },
+      { label: "Reroute all customers to a different section quietly", delta: { morale: 15, money: 200 }, logMsg: "You subtly guided everyone away from the rack. The labels were fixed in six minutes." },
+    ],
+  },
+  {
+    id: 'clothing_influencer',
+    title: 'Going Live',
+    description: "A social media influencer with 800,000 followers is doing a live stream in your store. They are currently asking their audience whether the mannequin looks better with or without the display hat.",
+    choices: [
+      { label: 'Offer a staff discount and wave at the camera', delta: { money: 300, morale: 20 }, logMsg: "You waved. The audience liked the wave. Sales spiked by the end of the stream." },
+      { label: 'Ask them to film in a less disruptive area', delta: { money: 100, morale: 5 }, logMsg: "They moved graciously. Still filmed. Still posted. Still drove footfall." },
+      { label: 'Walk into every shot with full confidence', delta: { morale: 25, money: 100 }, logMsg: "You appeared in eleven clips. Three people came in specifically asking for you." },
+    ],
+  },
+  {
+    id: 'clothing_mannequin_disaster',
+    title: 'The Mannequin Incident',
+    description: "A freestanding mannequin has toppled onto a customer. They are unhurt but frozen in shock. The mannequin is dressed better than most people in the shop.",
+    choices: [
+      { label: 'Rush over with apologies and a discount voucher', delta: { money: -80, morale: 20 }, logMsg: "Fast, sincere response. They left with a voucher and came back the following week." },
+      { label: 'Help them up, check they are okay, offer a seat', delta: { money: 100, morale: 15 }, logMsg: "Calm and caring. They were fine. They bought the mannequin's outfit." },
+      { label: "Ask if they'd like to keep the mannequin's outfit", delta: { morale: 25, money: 200 }, logMsg: "They said yes. The outfit was a perfect fit. This is genuinely what happened." },
+    ],
+  },
+  {
+    id: 'clothing_wrong_delivery',
+    title: 'Wrong Order',
+    description: "The week's delivery arrived. It contains 400 units of an extremely neon tracksuit that nobody ordered. Your actual order is presumably somewhere else.",
+    choices: [
+      { label: 'Refuse delivery and call the supplier immediately', delta: { money: 200, morale: 5 }, logMsg: "The supplier sorted it within the day. Your order arrived next morning." },
+      { label: "Display a few as 'statement pieces' while sorting it out", delta: { morale: 20, money: 100 }, logMsg: "Three sold. Ironically. The rest were collected the following day." },
+      { label: 'Write them off and donate the lot', delta: { money: -150, morale: 15 }, logMsg: "The local athletics club was delighted. The supplier eventually reimbursed you, mostly." },
+    ],
+  },
+  {
+    id: 'clothing_celebrity',
+    title: 'Famous Face',
+    description: "You are 90% sure the person in the hats section is a celebrity. They are wearing large sunglasses indoors and a very unconvincing beanie. Three customers have already noticed.",
+    choices: [
+      { label: 'Treat them exactly like any other customer', delta: { money: 300, morale: 10 }, logMsg: "They bought four hats and left a generous tip for the team. They come back occasionally." },
+      { label: 'Quietly suggest a private fitting area', delta: { money: 200, morale: 20 }, logMsg: "They appreciated the discretion enormously. Their assistant called about a bulk order." },
+      { label: 'Ask loudly if they need help recognising anything', delta: { fired: true, morale: 20 }, logMsg: "It was definitely them. You were definitely fired. The internet was briefly very interested." },
+    ],
+  },
+  {
+    id: 'clothing_style_argument',
+    title: 'Fashion Expert',
+    description: "A customer is about to buy an outfit that — professionally speaking — is a significant error. Every item clashes. They want your honest opinion.",
+    choices: [
+      { label: 'Give honest feedback, diplomatically', delta: { money: 100, morale: 10 }, logMsg: "They reconsidered two items. Left with three better ones. Thanked you on the way out." },
+      { label: 'Suggest three alternatives with genuine enthusiasm', delta: { money: 200, morale: 15 }, logMsg: "Your enthusiasm was infectious. They bought all three alternatives plus the original shoes." },
+      { label: "Say it looks incredible. Watch them leave confident.", delta: { morale: 5 }, logMsg: "They left delighted. You caught your reflection in the mirror. You feel complicated about it." },
+    ],
+  },
+  {
+    id: 'clothing_theft_accusation',
+    title: 'Customer vs Customer',
+    description: "A customer is loudly accusing another customer of shoplifting a scarf. There is no evidence. The accused looks mortified. The shop has gone completely silent.",
+    choices: [
+      { label: 'Intervene professionally and de-escalate both parties', delta: { money: 200, morale: 15 }, logMsg: "You sorted it with calm authority. The scarf was on a shelf. Both customers bought something." },
+      { label: 'Quietly check the situation yourself first', delta: { money: 100, morale: 10 }, logMsg: "You investigated discreetly. The scarf was in their bag, purchased three months ago. Tension dissolved." },
+      { label: "Announce a store-wide scarf amnesty", delta: { morale: 25 }, logMsg: "Nobody knew what that meant, but it broke the tension completely. Both customers left laughing." },
+    ],
+  },
+  {
+    id: 'clothing_fashion_emergency',
+    title: 'Fashion Emergency',
+    description: "A person burst in ten minutes ago. They have a wedding in 45 minutes. They own only the tracksuit they are currently wearing. They are desperate.",
+    choices: [
+      { label: "Drop everything and personally style them", delta: { money: 300, morale: 20, energy: -15 }, logMsg: "You styled them in 25 minutes. They looked genuinely excellent. They made the ceremony." },
+      { label: 'Point them to the fastest options and wish them luck', delta: { money: 200, morale: 15 }, logMsg: "They found a suit in six minutes. They ran. You heard they made it." },
+      { label: "Suggest the tracksuit is wedding-appropriate — ironically", delta: { morale: 25, money: 100 }, logMsg: "They laughed, then cried, then bought the tracksuit in navy. They went. It was ironically perfect." },
+    ],
+  },
+  {
+    id: 'clothing_dressing_room_mess',
+    title: 'The Aftermath',
+    description: "Fitting room 4 has been left in a state suggesting the customer was trying on 40 items simultaneously. There are clothes everywhere. One shoe is on the ceiling.",
+    choices: [
+      { label: 'Clean it yourself — fastest option', delta: { money: 100, energy: -15, morale: 5 }, logMsg: "Sorted in twelve minutes. The ceiling shoe remains unexplained." },
+      { label: 'Assign it to the newest team member', delta: { morale: 15, money: 200 }, logMsg: "They handled it well. You made a note to give them a reference." },
+      { label: "Implement a 'return-to-hanger' policy on the spot, loudly", delta: { morale: 20, money: 100 }, logMsg: "The announcement was heard three streets away. Compliance increased significantly." },
+    ],
+  },
+]
+
+const LOCATION_WORK_EVENTS: Partial<Record<LocationId, WorkEvent[]>> = {
+  restaurant: RESTAURANT_WORK_EVENTS,
+  clothing: CLOTHING_WORK_EVENTS,
+}
+
+export function rollWorkEvent(track: CareerTrack, locationId?: LocationId): string | null {
+  if (locationId) {
+    const locEvents = LOCATION_WORK_EVENTS[locationId]
+    if (locEvents?.length) {
+      return locEvents[Math.floor(Math.random() * locEvents.length)].id
+    }
+  }
   const events = WORK_EVENTS[track]
   if (!events?.length) return null
   return events[Math.floor(Math.random() * events.length)].id
 }
 
 export function getWorkEvent(track: CareerTrack, id: string): WorkEvent | undefined {
+  for (const events of Object.values(LOCATION_WORK_EVENTS)) {
+    const found = events?.find(e => e.id === id)
+    if (found) return found
+  }
   return WORK_EVENTS[track]?.find(e => e.id === id)
 }

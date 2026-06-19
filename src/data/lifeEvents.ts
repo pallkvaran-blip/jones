@@ -1343,4 +1343,15 @@ export const ALL_LIFE_EVENTS: LifeEvent[] = [
     immediateDelta: { morale: -40 },
     immediateLog: 'Property foreclosed — lost the home.',
   },
+  {
+    id: 'job_hired',
+    title: "You're Hired!",
+    description: "\"Welcome aboard. We think you'll be a great fit here.\" You have a job. It's not glamorous. But it pays. Show them what you're made of.",
+    weight: 0,
+    cooldownWeeks: 0,
+    canFire: () => false,
+    type: 'immediate',
+    immediateDelta: { morale: 10 },
+    immediateLog: 'Got the job! Morale +10.',
+  },
 ]

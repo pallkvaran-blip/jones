@@ -81,7 +81,10 @@ export class StatsPanel {
         <span class="stat-value" id="sp-job">Unemployed</span>
       </div>
 
-
+      <div class="stat-row">
+        <span class="stat-label">Edu</span>
+        <span class="stat-value" id="sp-education" style="color:#a0c8f8">0.0</span>
+      </div>
 
       <div class="stat-row">
         <span class="stat-label">Home</span>
@@ -210,6 +213,10 @@ export class StatsPanel {
       const valEl = this.el.querySelector<HTMLElement>(`#${need.valId}`);
       if (valEl) valEl.textContent = Math.round(need.value).toString();
     }
+
+    // Education counter
+    const eduEl = this.el.querySelector<HTMLElement>('#sp-education');
+    if (eduEl) eduEl.textContent = player.education.toFixed(1);
 
     // Job display — prefer location-specific titles, fall back to CAREER_JOBS
     const jobEl = this.el.querySelector('#sp-job');

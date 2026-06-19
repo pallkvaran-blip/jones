@@ -68,19 +68,19 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 8px;
+  font-size: 9px;
 }
 
 .stat-label {
   color: var(--color-text-dim);
-  font-size: 7px;
+  font-size: 8px;
   letter-spacing: 1px;
   text-transform: uppercase;
 }
 
 .stat-value {
   color: var(--color-text);
-  font-size: 8px;
+  font-size: 9px;
 }
 
 /* Amber LED readout for cash */
@@ -163,9 +163,9 @@ body {
 }
 
 .need-label {
-  font-size: 7px;
+  font-size: 8px;
   color: var(--color-text-dim);
-  min-width: 38px;
+  min-width: 42px;
 }
 
 .section-divider {
@@ -287,12 +287,12 @@ body {
 }
 
 .action-label {
-  font-size: 8px;
+  font-size: 9px;
   color: var(--color-accent);
 }
 
 .action-detail {
-  font-size: 6px;
+  font-size: 7px;
   color: var(--color-text-dim);
   line-height: 1.4;
 }
