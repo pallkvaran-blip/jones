@@ -61,7 +61,6 @@ export class CityScene extends Phaser.Scene {
   private hud!: HUD
   private streetGraphics!: Phaser.GameObjects.Graphics
   private frameGraphics!: Phaser.GameObjects.Graphics
-  private nightOverlay!: Phaser.GameObjects.Rectangle
   private overlayText: Phaser.GameObjects.Text | null = null
   private unsubscribeStore: (() => void) | null = null
   private muteButton: HTMLButtonElement | null = null
@@ -111,13 +110,6 @@ export class CityScene extends Phaser.Scene {
     const start = startSprite ? startSprite.getCenter() : { x: startLoc.cx, y: startLoc.cy }
     this.avatar = new Avatar(this, start.x, start.y)
 
-    // --- Day/night ambient tint overlay (over the board, under banners) ---
-    this.nightOverlay = this.add
-      .rectangle(BOARD_W / 2, BOARD_H / 2, BOARD_W, BOARD_H, 0x101a3a, 0)
-      .setDepth(30)
-    this.nightOverlay.setBlendMode(Phaser.BlendModes.MULTIPLY)
-    this.updateAmbient(state.calendar.timeUnits)
-
     // --- Beveled board frame (drawn on top of everything board-side) ---
     this.frameGraphics = this.add.graphics().setDepth(40)
     this.drawFrame()
@@ -136,7 +128,6 @@ export class CityScene extends Phaser.Scene {
     // --- Store subscription ---
     this.unsubscribeStore = store.subscribe((newState) => {
       this.hud.update(newState)
-      this.updateAmbient(newState.calendar.timeUnits)
 
       // Sync sprites + HUD when location changes outside of player movement
       // (e.g. advanceDay teleports the player home at end of day)
@@ -392,31 +383,6 @@ export class CityScene extends Phaser.Scene {
         }
       }
     }
-  }
-
-  /** Drive a semi-transparent tint by time of day: morning clear → dusk → night. */
-  private updateAmbient(timeUnits: number): void {
-    // timeUnits: 100 = morning (clear), 50 = golden dusk, 0 = night.
-    let color: number
-    let alpha: number
-    if (timeUnits >= 50) {
-      const t = (timeUnits - 50) / 50 // 1=morning, 0=dusk
-      // dusk gold -> clear
-      const r = Math.round(0xff * (1 - t) + 0xff * t)
-      const g = Math.round(0xb0 * (1 - t) + 0xff * t)
-      const b = Math.round(0x6a * (1 - t) + 0xff * t)
-      color = (r << 16) | (g << 8) | b
-      alpha = (1 - t) * 0.28
-    } else {
-      const t = timeUnits / 50 // 1=dusk, 0=deep night
-      const r = Math.round(0x20 * (1 - t) + 0xff * t)
-      const g = Math.round(0x28 * (1 - t) + 0xb0 * t)
-      const b = Math.round(0x5a * (1 - t) + 0x6a * t)
-      color = (r << 16) | (g << 8) | b
-      alpha = 0.28 + (1 - t) * 0.34
-    }
-    this.nightOverlay.setFillStyle(color)
-    this.nightOverlay.setAlpha(alpha)
   }
 
   private drawStreets(): void {
