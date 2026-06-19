@@ -70,6 +70,7 @@ export class CityScene extends Phaser.Scene {
   private lastPendingEventId: string | null = null
   private lastWorkEventId: string | null = null
   private lastWeekendEventId: string | null = null
+  private lastLocationId!: LocationId
   private turnHandoffOverlay = new TurnHandoffOverlay()
   private lastHandoffState = false
 
@@ -80,6 +81,7 @@ export class CityScene extends Phaser.Scene {
   create(): void {
     const store = getStore()
     const state = store.getState()
+    this.lastLocationId = state.currentLocationId
 
     // --- Base background ---
     this.add.rectangle(BOARD_W / 2, BOARD_H / 2, BOARD_W, BOARD_H, 0x232733).setDepth(0)
@@ -135,6 +137,21 @@ export class CityScene extends Phaser.Scene {
     this.unsubscribeStore = store.subscribe((newState) => {
       this.hud.update(newState)
       this.updateAmbient(newState.calendar.timeUnits)
+
+      // Sync sprites + HUD when location changes outside of player movement
+      // (e.g. advanceDay teleports the player home at end of day)
+      if (newState.currentLocationId !== this.lastLocationId && !this.avatar.isCurrentlyMoving()) {
+        this.locationSprites.forEach((sprite, locId) => {
+          sprite.setLocationActive(locId === newState.currentLocationId)
+        })
+        this.hud.showActions(
+          newState.currentLocationId,
+          newState,
+          (id) => this.handleAction(id),
+          (msg) => this.showToast(msg),
+        )
+      }
+      this.lastLocationId = newState.currentLocationId
 
       // Switch to danger BGM if health or hunger critically low
       const isDanger = newState.player.health <= 20 || newState.player.hunger <= 15
@@ -514,12 +531,6 @@ export class CityScene extends Phaser.Scene {
     }
 
     if (this.avatar.isCurrentlyMoving()) return
-
-    // Block movement when out of energy
-    if (state.player.energy <= 0) {
-      this.showToast('Too tired to move — rest first!')
-      return
-    }
 
     const targetSprite = this.locationSprites.get(id)
     if (!targetSprite) return
