@@ -75,6 +75,7 @@ export function createInitialState(name: string, difficulty: Difficulty): GameSt
     lossReason: null,
     pendingLifeEventId: null,
     pendingWorkEventId: null,
+    pendingWeekendEventId: null,
     pendingTurnHandoff: false,
     numPlayers: 1,
     activePlayer: 1,

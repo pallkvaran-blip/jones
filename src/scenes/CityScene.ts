@@ -1,7 +1,7 @@
 import Phaser from 'phaser'
 import { getStore } from '../state/store'
 import { locations, getLocationById, BOARD_W, FRAME } from '../data/locations'
-import { consumeTime } from '../systems/TimeSystem'
+import { consumeTime, advanceWeek } from '../systems/TimeSystem'
 import { executeAction } from '../systems/ActionSystem'
 import { audioSystem } from '../systems/AudioSystem'
 import { Avatar } from '../entities/Avatar'
@@ -13,6 +13,8 @@ import { applyImmediateEvent, resolveEventChoice } from '../systems/EventSystem'
 import { EventModal, type EffectChip } from '../ui/EventModal'
 import { getWorkEvent } from '../data/workEvents'
 import { TurnHandoffOverlay } from '../ui/TurnHandoffOverlay'
+import { WeekendEventModal } from '../ui/WeekendEventModal'
+import { ALL_WEEKEND_EVENTS } from '../data/weekendEvents'
 
 function stateToChips(before: GameState, after: GameState): EffectChip[] {
   const chips: EffectChip[] = []
@@ -64,8 +66,10 @@ export class CityScene extends Phaser.Scene {
   private unsubscribeStore: (() => void) | null = null
   private muteButton: HTMLButtonElement | null = null
   private eventModal: EventModal = new EventModal()
+  private weekendModal = new WeekendEventModal()
   private lastPendingEventId: string | null = null
   private lastWorkEventId: string | null = null
+  private lastWeekendEventId: string | null = null
   private turnHandoffOverlay = new TurnHandoffOverlay()
   private lastHandoffState = false
 
@@ -312,6 +316,44 @@ export class CityScene extends Phaser.Scene {
 
       if (!newState.pendingWorkEventId) {
         this.lastWorkEventId = null
+      }
+
+      // Weekend event modal
+      if (newState.pendingWeekendEventId && newState.pendingWeekendEventId !== this.lastWeekendEventId) {
+        this.lastWeekendEventId = newState.pendingWeekendEventId
+        const weekendEvent = ALL_WEEKEND_EVENTS.find(e => e.id === newState.pendingWeekendEventId)
+        if (weekendEvent) {
+          store.setState(prev => ({ ...prev, pendingWeekendEventId: null }))
+          this.lastWeekendEventId = null
+
+          this.weekendModal.show(weekendEvent, newState.player, (option) => {
+            const beforeState = store.getState()
+            const fx = option.effects
+            const cap = (v: number) => Math.min(100, Math.max(0, v))
+            store.setState(prev => {
+              const p = prev.player
+              const updated = {
+                ...prev,
+                player: {
+                  ...p,
+                  money:     fx.money     != null ? Math.max(0, p.money     + fx.money)     : p.money,
+                  hunger:    fx.hunger    != null ? cap(p.hunger    + fx.hunger)    : p.hunger,
+                  energy:    fx.energy    != null ? cap(p.energy    + fx.energy)    : p.energy,
+                  health:    fx.health    != null ? cap(p.health    + fx.health)    : p.health,
+                  morale:    fx.morale    != null ? cap(p.morale    + fx.morale)    : p.morale,
+                  education: fx.education != null ? p.education + fx.education : p.education,
+                },
+              }
+              return advanceWeek(updated)
+            })
+            const chips = stateToChips(beforeState, store.getState())
+            this.weekendModal.showResult(weekendEvent.title, chips, () => {})
+          })
+        }
+      }
+
+      if (!newState.pendingWeekendEventId) {
+        this.lastWeekendEventId = null
       }
     })
   }

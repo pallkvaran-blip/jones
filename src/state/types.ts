@@ -77,6 +77,7 @@ export interface GameState {
   lossReason: string | null;
   pendingLifeEventId: string | null;
   pendingWorkEventId: string | null;
+  pendingWeekendEventId: string | null;
   pendingTurnHandoff: boolean;
   numPlayers: 1 | 2;
   activePlayer: 1 | 2;

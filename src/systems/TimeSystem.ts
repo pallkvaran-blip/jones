@@ -2,6 +2,7 @@ import type { GameState, LocationId } from '../state/types'
 import { applyWeeklyEconomy } from './EconomySystem'
 import { getHousingTier } from '../data/housing'
 import { rollLifeEvent } from './EventSystem'
+import { pickRandomWeekendEvent } from '../data/weekendEvents'
 
 export function consumeTime(state: GameState, units: number): GameState {
   const newUnits = state.calendar.timeUnits - units;
@@ -110,8 +111,13 @@ export function advanceDay(state: GameState): GameState {
     }
   }
 
-  if (newDay > 7) {
-    return advanceWeek(finalState);
+  if (newDay > 5) {
+    // Pause for the weekend event; week advances when the player resolves it
+    return {
+      ...finalState,
+      calendar: { ...finalState.calendar, day: 6 },
+      pendingWeekendEventId: pickRandomWeekendEvent().id,
+    };
   }
 
   return finalState;
