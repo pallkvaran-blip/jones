@@ -44,7 +44,7 @@ function addLog(state: GameState, msg: string): GameState {
 const studyAtHomeAction: ActionDef = {
   id: 'study_home',
   label: 'Study at Home',
-  detail: 'Education+0.3, Energy-8 | 12m',
+  detail: 'Education+0.05, Energy-8 | 12m',
   timeCost: 12,
   available: (state) => state.player.energy >= 8,
   unavailableReason: (s) => `Too tired to study (${Math.round(s.player.energy)}) — rest first!`,
@@ -54,7 +54,7 @@ const studyAtHomeAction: ActionDef = {
       ...state,
       player: {
         ...state.player,
-        education: state.player.education + 0.3 + petStudyEduBonus(pets),
+        education: state.player.education + 0.05 + petStudyEduBonus(pets),
         energy: cap(state.player.energy - 8),
         morale: cap(state.player.morale + petMoraleBonus(pets)),
       },
@@ -121,8 +121,8 @@ function applyWorkShift(state: GameState): GameState {
     },
   };
 
-  // 40% chance of a work event modal
-  if (Math.random() < 0.4) {
+  // 7% chance of a work event modal
+  if (Math.random() < 0.07) {
     const eventId = rollWorkEvent(track, state.currentLocationId);
     if (eventId) {
       newState = { ...newState, pendingWorkEventId: eventId };
@@ -168,12 +168,12 @@ function getCourseActions(state: GameState): ActionDef[] {
     return [{
       id: 'free_study',
       label: 'Study',
-      detail: 'Education+0.2 | 15m',
+      detail: 'Education+0.1 | 15m',
       timeCost: 15,
       available: () => true,
       unavailableReason: () => '',
       apply(s) {
-        return addLog({ ...s, player: { ...s.player, education: s.player.education + 0.2 } }, 'Studied independently — Education +0.2')
+        return addLog({ ...s, player: { ...s.player, education: s.player.education + 0.1 } }, 'Studied independently — Education +0.1')
       },
     }]
   }
