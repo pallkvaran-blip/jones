@@ -204,6 +204,44 @@ function getCourseActions(state: GameState): ActionDef[] {
 }
 
 // --- BANK actions ---
+
+function getBankSnark(s: GameState, amount: number): string {
+  const { player } = s
+  if (!player.jobId || player.jobRank < 1) {
+    const msgs = [
+      'No income, no collateral, no loan.',
+      'Come back when someone is paying you.',
+      'Employment: none. Loan: also none.',
+    ]
+    return msgs[amount % msgs.length]
+  }
+  const locJob = LOCATION_JOBS[player.jobId as LocationId]
+  const title = locJob?.titles[player.jobRank - 1] ?? 'your role'
+  if (amount >= 50000) {
+    const msgs = [
+      `A ${title} applying for $50k. Our analyst laughed.`,
+      `$50,000 on a ${title}'s pay? That's not finance, that's fiction.`,
+      `Bold. Deeply misguided. But bold.`,
+    ]
+    return msgs[player.jobRank % msgs.length]
+  }
+  if (amount >= 25000) {
+    const msgs = [
+      `${title} wages won't clear this desk.`,
+      `Not on a ${title}'s salary. Hard pass.`,
+      `We'd need a better title than "${title}" for this one.`,
+    ]
+    return msgs[player.jobRank % msgs.length]
+  }
+  // $10k
+  const msgs = [
+    `A ${title}'s income doesn't support $10k yet.`,
+    `Try after your first promotion.`,
+    `We'll need more than a ${title}'s wage for that.`,
+  ]
+  return msgs[player.jobRank % msgs.length]
+}
+
 function makeRepayAction(amount: number | 'all'): ActionDef {
   const isAll = amount === 'all'
   return {
@@ -282,8 +320,9 @@ const takeLoanAction: ActionDef = {
   label: 'Personal Loan $1k',
   detail: '+$1000, Debt+1000, CreditScore-20 | 10m',
   timeCost: 10,
-  available: (state) => state.player.creditScore >= 550 && state.player.debt < 8000,
+  available: (state) => state.player.jobRank >= 1 && state.player.creditScore >= 550 && state.player.debt < 8000,
   unavailableReason: (state) => {
+    if (state.player.jobRank < 1) return getBankSnark(state, 1000);
     if (state.player.creditScore < 550) return 'Need CreditScore≥550';
     return 'Too much existing debt';
   },
@@ -300,15 +339,16 @@ const takeLoanAction: ActionDef = {
   },
 };
 
-function makePropertyLoanAction(amount: number, minScore: number, scoreDrop: number): ActionDef {
+function makePropertyLoanAction(amount: number, minScore: number, scoreDrop: number, minJobRank: number): ActionDef {
   const label = `Property Loan $${(amount / 1000).toFixed(0)}k`;
   return {
     id: `property_loan_${amount}`,
     label,
     detail: `+$${amount.toLocaleString()}, Debt+${amount.toLocaleString()}, 5%/wk | 15m`,
     timeCost: 15,
-    available: (s) => s.player.creditScore >= minScore && s.player.debt + amount <= 120000,
+    available: (s) => s.player.jobRank >= minJobRank && s.player.creditScore >= minScore && s.player.debt + amount <= 120000,
     unavailableReason: (s) => {
+      if (s.player.jobRank < minJobRank) return getBankSnark(s, amount);
       if (s.player.creditScore < minScore) return `CreditScore≥${minScore}`;
       return 'Max debt $120k';
     },
@@ -321,9 +361,9 @@ function makePropertyLoanAction(amount: number, minScore: number, scoreDrop: num
   };
 }
 
-const propertyLoan10k = makePropertyLoanAction(10000, 600, 30);
-const propertyLoan25k = makePropertyLoanAction(25000, 650, 40);
-const propertyLoan50k = makePropertyLoanAction(50000, 700, 60);
+const propertyLoan10k = makePropertyLoanAction(10000, 600, 30, 2);
+const propertyLoan25k = makePropertyLoanAction(25000, 650, 40, 3);
+const propertyLoan50k = makePropertyLoanAction(50000, 700, 60, 4);
 
 // --- GROCERY actions ---
 const buyGroceriesAction: ActionDef = {
