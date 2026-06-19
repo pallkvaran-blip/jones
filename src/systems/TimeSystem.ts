@@ -4,21 +4,30 @@ import { getHousingTier } from '../data/housing'
 import { rollLifeEvent } from './EventSystem'
 import { pickRandomWeekendEvent } from '../data/weekendEvents'
 
+const HUNGER_PER_TIME_UNIT = 0.6
+
 export function consumeTime(state: GameState, units: number): GameState {
-  const newUnits = state.calendar.timeUnits - units;
+  const stateWithHunger = {
+    ...state,
+    player: {
+      ...state.player,
+      hunger: Math.max(0, state.player.hunger - units * HUNGER_PER_TIME_UNIT),
+    },
+  }
+  const newUnits = stateWithHunger.calendar.timeUnits - units;
 
   if (newUnits > 0) {
     return {
-      ...state,
+      ...stateWithHunger,
       calendar: {
-        ...state.calendar,
+        ...stateWithHunger.calendar,
         timeUnits: newUnits,
       },
     };
   }
 
   // Time ran out for this day — advance the day
-  return advanceDay(state);
+  return advanceDay(stateWithHunger);
 }
 
 export function advanceDay(state: GameState): GameState {
@@ -43,7 +52,6 @@ export function advanceDay(state: GameState): GameState {
   const updatedPlayer = {
     ...state.player,
     morale: Math.max(0, state.player.morale - 5),
-    hunger: Math.max(0, state.player.hunger - 20),
     energy: Math.min(100, Math.max(0, state.player.energy - 5 + energyBonus)),
   };
 

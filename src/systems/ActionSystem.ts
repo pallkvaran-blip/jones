@@ -82,27 +82,6 @@ const sleepAction: ActionDef = {
   },
 };
 
-const cookMealAction: ActionDef = {
-  id: 'cook_meal',
-  label: 'Cook a Meal',
-  detail: 'Hunger+40, -$15 | 8m',
-  timeCost: 8,
-  available: (state) => state.player.money >= 15,
-  unavailableReason: () => 'Need $15',
-  apply(state) {
-    const pets = state.player.pets ?? [];
-    return {
-      ...state,
-      player: {
-        ...state.player,
-        hunger: cap(state.player.hunger + 40),
-        money: state.player.money - 15,
-        morale: cap(state.player.morale + petMoraleBonus(pets)),
-      },
-    };
-  },
-};
-
 // --- JOB SHIFT / QUIT ---
 function applyWorkShift(state: GameState): GameState {
   const { player } = state;
@@ -852,7 +831,7 @@ function getJobActions(locationId: LocationId, state: GameState): ActionDef[] {
 export function getActionsForLocation(locationId: LocationId, state: GameState): ActionDef[] {
   switch (locationId) {
     case 'home':
-      return [sleepAction, cookMealAction, studyAtHomeAction];
+      return [sleepAction, studyAtHomeAction];
 
     case 'employment':
       return [...PET_SHOP_ACTIONS, ...getJobActions(locationId, state)];

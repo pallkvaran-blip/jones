@@ -70,6 +70,8 @@ export class CityScene extends Phaser.Scene {
   private lastWorkEventId: string | null = null
   private lastWeekendEventId: string | null = null
   private lastLocationId!: LocationId
+  private lastCalendarDay!: number
+  private lastCalendarWeek!: number
   private turnHandoffOverlay = new TurnHandoffOverlay()
   private lastHandoffState = false
 
@@ -81,6 +83,8 @@ export class CityScene extends Phaser.Scene {
     const store = getStore()
     const state = store.getState()
     this.lastLocationId = state.currentLocationId
+    this.lastCalendarDay = state.calendar.day
+    this.lastCalendarWeek = state.calendar.week
 
     // --- Base background ---
     this.add.rectangle(BOARD_W / 2, BOARD_H / 2, BOARD_W, BOARD_H, 0x232733).setDepth(0)
@@ -127,6 +131,18 @@ export class CityScene extends Phaser.Scene {
 
     // --- Store subscription ---
     this.unsubscribeStore = store.subscribe((newState) => {
+      const subDayAdvanced = newState.calendar.day !== this.lastCalendarDay || newState.calendar.week !== this.lastCalendarWeek
+      const subWeekAdvanced = newState.calendar.week !== this.lastCalendarWeek
+      this.lastCalendarDay = newState.calendar.day
+      this.lastCalendarWeek = newState.calendar.week
+      if (!newState.pendingWeekendEventId && subWeekAdvanced) {
+        audioSystem.playSFX('weekEnd')
+        this.showDayBanner(`Week ${newState.calendar.week}`)
+      } else if (!newState.pendingWeekendEventId && subDayAdvanced) {
+        audioSystem.playSFX('dayEnd')
+        this.showDayBanner(`Day ${newState.calendar.day} — ${this.getDayName(newState.calendar.day)}`)
+      }
+
       this.hud.update(newState)
 
       // Sync sprites + HUD when location changes outside of player movement
@@ -514,25 +530,13 @@ export class CityScene extends Phaser.Scene {
       () => {
         // Finalize: rebase on startTimeUnits so consumeTime handles day/week correctly.
         audioSystem.playSFX('arrive')
-        const prevDay = state.calendar.day
-        const prevWeek = state.calendar.week
         store.setState((s) => {
           const rebased = { ...s, calendar: { ...s.calendar, timeUnits: startTimeUnits } }
           const afterMove = consumeTime(rebased, timeCost)
           const withEnergy = { ...afterMove, player: { ...afterMove.player, energy: Math.max(0, afterMove.player.energy - energyCost) } }
           return { ...withEnergy, currentLocationId: id }
         })
-        // Side effects after state is settled — check what advanced
         const newState = store.getState()
-        const dayAdvanced = newState.calendar.day !== prevDay || newState.calendar.week !== prevWeek
-        const weekAdvanced = newState.calendar.week !== prevWeek
-        if (weekAdvanced) {
-          audioSystem.playSFX('weekEnd')
-          this.showDayBanner(`Week ${newState.calendar.week}`)
-        } else if (dayAdvanced) {
-          audioSystem.playSFX('dayEnd')
-          this.showDayBanner(`Day ${newState.calendar.day} — ${this.getDayName(newState.calendar.day)}`)
-        }
         targetSprite.setLocationActive(true)
         // Show actions for the new location
         this.hud.showActions(id, newState, (actionId) => this.handleAction(actionId), (msg) => this.showToast(msg))
