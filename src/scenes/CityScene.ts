@@ -251,7 +251,7 @@ export class CityScene extends Phaser.Scene {
             const resolved = applyImmediateEvent(event, newState)
             store.setState(() => resolved)
             const chips = stateToChips(newState, resolved)
-            this.eventModal.show(event, () => {}, { chips })
+            this.eventModal.show(event, () => { this.lastPendingEventId = null }, { chips })
           } else {
             // Show choice modal — apply delta when user picks, then show result screen
             this.eventModal.show(event, (choiceIdx) => {
@@ -260,14 +260,10 @@ export class CityScene extends Phaser.Scene {
               store.setState(() => next)
               const logMsg = next.eventLog[0] ?? ''
               const chips = stateToChips(current, next)
-              this.eventModal.showResult(event.title, logMsg, chips, () => {})
+              this.eventModal.showResult(event.title, logMsg, chips, () => { this.lastPendingEventId = null })
             })
           }
         }
-      }
-
-      if (!newState.pendingLifeEventId) {
-        this.lastPendingEventId = null
       }
 
       // Work event modal
@@ -279,7 +275,6 @@ export class CityScene extends Phaser.Scene {
           if (workEvent) {
             // Clear immediately so it doesn't re-trigger
             store.setState(prev => ({ ...prev, pendingWorkEventId: null }))
-            this.lastWorkEventId = null
 
             this.eventModal.show(
               {
@@ -321,6 +316,7 @@ export class CityScene extends Phaser.Scene {
                 if (fired) audioSystem.playSFX('demotion')
                 else if ((d.money ?? 0) > 0 || (d.morale ?? 0) > 10) audioSystem.playSFX('eventGood')
                 this.eventModal.showResult(workEvent.title, choice.logMsg, chips, () => {
+                  this.lastWorkEventId = null
                   // After result dismissed, trigger job_fired life event if applicable
                   if (fired) store.setState(prev => ({ ...prev, pendingLifeEventId: 'job_fired' }))
                 })
@@ -331,17 +327,12 @@ export class CityScene extends Phaser.Scene {
         }
       }
 
-      if (!newState.pendingWorkEventId) {
-        this.lastWorkEventId = null
-      }
-
       // Weekend event modal
       if (newState.pendingWeekendEventId && newState.pendingWeekendEventId !== this.lastWeekendEventId) {
         this.lastWeekendEventId = newState.pendingWeekendEventId
         const weekendEvent = ALL_WEEKEND_EVENTS.find(e => e.id === newState.pendingWeekendEventId)
         if (weekendEvent) {
           store.setState(prev => ({ ...prev, pendingWeekendEventId: null }))
-          this.lastWeekendEventId = null
 
           this.weekendModal.show(weekendEvent, newState.player, (option) => {
             const beforeState = store.getState()
@@ -364,13 +355,9 @@ export class CityScene extends Phaser.Scene {
               return advanceWeek(updated)
             })
             const chips = stateToChips(beforeState, store.getState())
-            this.weekendModal.showResult(weekendEvent.title, chips, () => {})
+            this.weekendModal.showResult(weekendEvent.title, chips, () => { this.lastWeekendEventId = null })
           })
         }
-      }
-
-      if (!newState.pendingWeekendEventId) {
-        this.lastWeekendEventId = null
       }
     })
   }
