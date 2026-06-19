@@ -112,14 +112,14 @@ export class EventModal {
         btn.style.borderColor = '#3a3a52'
         btn.style.background = '#0e1020'
       })
-      btn.addEventListener('pointerdown', (e) => {
+      // Stop both pointer phases so the canvas never sees them
+      btn.addEventListener('pointerdown', (e) => e.stopPropagation())
+      btn.addEventListener('pointerup', (e) => {
         e.stopPropagation()
         const idx = parseInt(btn.dataset.idx ?? '0', 10)
         if (isChoice) {
-          // Choice event: don't auto-close — caller will call showResult()
           onChoice(idx)
         } else {
-          // Immediate event: close first, then callback
           this.hide()
           onChoice(idx)
         }
@@ -160,7 +160,8 @@ export class EventModal {
     if (okBtn) {
       okBtn.addEventListener('mouseenter', () => { okBtn.style.background = '#ffb830' })
       okBtn.addEventListener('mouseleave', () => { okBtn.style.background = '#f5a623' })
-      okBtn.addEventListener('pointerdown', (e) => {
+      okBtn.addEventListener('pointerdown', (e) => e.stopPropagation())
+      okBtn.addEventListener('pointerup', (e) => {
         e.stopPropagation()
         this.hide()
         onDismiss()

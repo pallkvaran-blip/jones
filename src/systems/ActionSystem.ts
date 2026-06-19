@@ -23,21 +23,6 @@ function petStudyEduBonus(pets: string[]): number {
   return PETS.filter(p => pets.includes(p.id)).reduce((sum, p) => sum + p.homeStudyEduBonus, 0);
 }
 
-const COURSE_SHORT_NAMES: Record<string, string> = {
-  creative_arts: 'Creative Arts',
-  design: 'Design',
-  job_skills: 'Job Skills',
-  business_101: 'Business 101',
-  accounting: 'Accounting',
-  finance_adv: 'Adv Finance',
-  health_basics: 'Health Basics',
-  first_aid: 'First Aid',
-  med_tech: 'Med Tech',
-  intro_tech: 'Intro Tech',
-  web_dev: 'Web Dev',
-  software_eng: 'Software Eng',
-  data_analysis: 'Data Analysis',
-}
 
 export interface ActionDef {
   id: string;
@@ -764,21 +749,14 @@ function getJobActions(locationId: LocationId, state: GameState): ActionDef[] {
 
   if (!locJob.jobTiers?.length) {
     const firstTier = CAREER_JOBS[locJob.track].tiers[0];
-    const required = locJob.requiredCourses ?? []
     return [{
       id: `apply_${locationId}`,
-      label: 'Apply for Job',
-      detail: `${locJob.titles[0]} – $${firstTier.dailyPay}/shift | 5m`,
+      label: `Apply: ${locJob.titles[0]} – $${firstTier.dailyPay}/shift`,
+      detail: `Open to all | 5m`,
       timeCost: 5,
       available: () => true,
       unavailableReason: () => '',
       apply(s) {
-        const completed = s.player.completedCourses ?? []
-        const hasAll = required.every(c => completed.includes(c))
-        if (!hasAll) {
-          const hasAny = required.some(c => completed.includes(c))
-          return { ...s, pendingLifeEventId: hasAny ? 'job_rejected_experience' : 'job_rejected_education' }
-        }
         const wasEmployed = s.player.jobId !== null
         return addLog({
           ...s,
@@ -800,24 +778,19 @@ function getJobActions(locationId: LocationId, state: GameState): ActionDef[] {
     const careerTier = careerDef.tiers[jobTier.rank - 1]
     const title = locJob.titles[jobTier.rank - 1]
     const pay = careerTier?.dailyPay ?? 60
-    const reqCourses = jobTier.requiredCourses
-    const reqStr = reqCourses.length === 0
-      ? 'No requirements'
-      : 'Req: ' + reqCourses.map(c => COURSE_SHORT_NAMES[c] ?? c).join(', ')
+    const req = jobTier.requiredEducation
+    const reqStr = req === 0 ? 'Open to all' : `Edu ≥ ${req.toFixed(1)}`
 
     return {
       id: `apply_${locationId}_rank${jobTier.rank}`,
-      label: `${title} – $${pay}/shift`,
+      label: `Apply: ${title} – $${pay}/shift`,
       detail: `${reqStr} | 5m`,
       timeCost: 5,
       available: () => true,
       unavailableReason: () => '',
       apply(s: GameState) {
-        const completed = s.player.completedCourses ?? []
-        const hasAll = reqCourses.every(c => completed.includes(c))
-        if (!hasAll) {
-          const hasAny = reqCourses.some(c => completed.includes(c))
-          return { ...s, pendingLifeEventId: hasAny ? 'job_rejected_experience' : 'job_rejected_education' }
+        if (s.player.education < req) {
+          return { ...s, pendingLifeEventId: 'job_rejected_education' }
         }
         const wasEmployed = s.player.jobId !== null
         return addLog({

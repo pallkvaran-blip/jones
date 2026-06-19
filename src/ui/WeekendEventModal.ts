@@ -86,7 +86,8 @@ export class WeekendEventModal {
         btn.style.borderColor = '#2a6444'
         btn.style.background = '#0e1020'
       })
-      btn.addEventListener('pointerdown', (e) => {
+      btn.addEventListener('pointerdown', (e) => e.stopPropagation())
+      btn.addEventListener('pointerup', (e) => {
         e.stopPropagation()
         const idx = parseInt(btn.dataset.idx ?? '0', 10)
         const option = event.options[idx]
@@ -124,7 +125,8 @@ export class WeekendEventModal {
     if (okBtn) {
       okBtn.addEventListener('mouseenter', () => { okBtn.style.background = '#3a8058' })
       okBtn.addEventListener('mouseleave', () => { okBtn.style.background = '#2a6444' })
-      okBtn.addEventListener('pointerdown', (e) => {
+      okBtn.addEventListener('pointerdown', (e) => e.stopPropagation())
+      okBtn.addEventListener('pointerup', (e) => {
         e.stopPropagation()
         this.hide()
         onDismiss()
