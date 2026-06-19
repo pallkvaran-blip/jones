@@ -21,6 +21,13 @@
     /* Full-screen overlay root for modals, menus, game-over, turn-handoff */
     #ui-root { position: fixed; inset: 0; pointer-events: none; z-index: 200; }
     #ui-root > * { pointer-events: auto; }
+    /* Mobile: vertical stack so canvas is visible on narrow screens */
+    @media (max-width: 600px) {
+      html, body        { flex-direction: column; }
+      #left-slot        { width: 100%; height: 0; overflow: visible; flex-shrink: 0; }
+      #canvas-container { width: 100%; height: 75vw; max-height: 55vh; flex: none; flex-shrink: 0; position: relative; overflow: hidden; }
+      #right-slot       { width: 100%; flex: 1; min-height: 120px; height: auto; overflow-y: auto; position: relative; }
+    }
   </style>
 </head>
 <body>
