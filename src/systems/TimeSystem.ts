@@ -3,6 +3,7 @@ import { applyWeeklyEconomy } from './EconomySystem'
 import { getHousingTier } from '../data/housing'
 import { rollLifeEvent } from './EventSystem'
 import { pickRandomWeekendEvent } from '../data/weekendEvents'
+import { pickRoughNightEventId } from '../data/lifeEvents'
 
 const HUNGER_PER_TIME_UNIT = 0.6
 
@@ -32,10 +33,14 @@ export function consumeTime(state: GameState, units: number): GameState {
 
 export function advanceDay(state: GameState): GameState {
   if (state.currentLocationId !== 'home') {
-    state = {
-      ...state,
-      currentLocationId: 'home' as LocationId,
-      pendingLifeEventId: 'slept_on_street',
+    if (state.player.energy <= 0) {
+      state = {
+        ...state,
+        currentLocationId: 'home' as LocationId,
+        pendingLifeEventId: pickRoughNightEventId(),
+      }
+    } else {
+      state = { ...state, currentLocationId: 'home' as LocationId }
     }
   }
 
