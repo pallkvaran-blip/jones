@@ -32,15 +32,11 @@ export function consumeTime(state: GameState, units: number): GameState {
 }
 
 export function advanceDay(state: GameState): GameState {
-  if (state.currentLocationId !== 'home') {
-    if (state.player.energy <= 0) {
-      state = {
-        ...state,
-        currentLocationId: 'home' as LocationId,
-        pendingLifeEventId: pickRoughNightEventId(),
-      }
-    } else {
-      state = { ...state, currentLocationId: 'home' as LocationId }
+  if (state.currentLocationId !== 'home' && state.player.energy <= 0) {
+    state = {
+      ...state,
+      currentLocationId: 'home' as LocationId,
+      pendingLifeEventId: pickRoughNightEventId(),
     }
   }
 

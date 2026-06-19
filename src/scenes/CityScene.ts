@@ -367,7 +367,7 @@ export class CityScene extends Phaser.Scene {
               return advanceWeek(updated)
             })
             const chips = stateToChips(beforeState, store.getState())
-            this.weekendModal.showResult(weekendEvent.title, chips, () => { this.lastWeekendEventId = null })
+            this.weekendModal.showResult(weekendEvent.title, option.resultText, chips, () => { this.lastWeekendEventId = null })
           })
         }
       }

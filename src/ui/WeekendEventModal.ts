@@ -25,7 +25,6 @@ export class WeekendEventModal {
 
     const optionsHtml = event.options.map((opt, i) => {
       const available = opt.available ? opt.available(player) : true
-      const hintHtml = this.buildEffectHints(opt.effects, player, available)
       const disabledStyle = available ? '' : 'opacity: 0.4; cursor: not-allowed;'
       return `
         <button class="weekend-opt-btn" data-idx="${i}" ${available ? '' : 'disabled'} style="
@@ -47,7 +46,6 @@ export class WeekendEventModal {
         ">
           <span style="font-size: 8px; color: #5de5a0;">${opt.label}</span>
           <span style="font-size: 6px; color: #a0a0b8; line-height: 1.6;">${opt.description}</span>
-          ${hintHtml}
         </button>
       `
     }).join('')
@@ -100,7 +98,7 @@ export class WeekendEventModal {
     })
   }
 
-  showResult(title: string, chips: EffectChip[], onDismiss: () => void): void {
+  showResult(title: string, resultText: string, chips: EffectChip[], onDismiss: () => void): void {
     if (!this.backdrop) return
     const inner = this.backdrop.querySelector<HTMLElement>(':scope > div')
     if (!inner) return
@@ -109,7 +107,7 @@ export class WeekendEventModal {
     inner.innerHTML = `
       <div style="font-size:6px; letter-spacing:2px; color:#5de5a0; background:#0a1a0f; border:1px solid #2a6444; display:inline-block; padding:2px 7px;">&#x1F3D6; WEEKEND</div>
       <div style="color: #5de5a0; font-size: 10px; letter-spacing: 1px; text-shadow: 2px 2px 0 #000;">${title}</div>
-      <div style="width:100%; height:1px; background:#1a2a20;"></div>
+      <div style="color: #c8c8e0; font-size: 7px; line-height: 1.8; letter-spacing: 0.5px; padding: 8px 0; border-top: 1px solid #1a2a20; border-bottom: 1px solid #1a2a20;">${resultText}</div>
       ${chipsHtml}
       <div style="display:flex; justify-content:flex-end; margin-top:4px;">
         <button id="weekend-ok-btn" style="
