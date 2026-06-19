@@ -76,6 +76,52 @@ export function applyWeeklyEconomy(state: GameState): GameState {
     entries.push(`Debt interest +$${interest}`)
   }
 
+  // --- Loan overdue escalation ---
+  if (s.player.debt > 0 && s.player.loanWeekTaken !== null && !s.isGameOver) {
+    const dueWeek = s.player.loanWeekTaken + 4
+    const weeksOverdue = s.calendar.week - dueWeek
+
+    if (weeksOverdue >= 4) {
+      s = { ...s, isGameOver: true, winCondition: 'lost', lossReason: 'Your loan defaulted. The debt collectors took everything.' }
+    } else if (weeksOverdue === 3) {
+      s = {
+        ...s,
+        player: {
+          ...s.player,
+          money: Math.max(0, s.player.money - 150),
+          morale: Math.max(0, s.player.morale - 30),
+          creditScore: Math.max(0, s.player.creditScore - 50),
+        },
+        pendingLifeEventId: 'loan_final_warning',
+      }
+      entries.push('FINAL WARNING — loan default next week!')
+    } else if (weeksOverdue === 2) {
+      s = {
+        ...s,
+        player: {
+          ...s.player,
+          money: Math.max(0, s.player.money - 100),
+          morale: Math.max(0, s.player.morale - 20),
+          creditScore: Math.max(0, s.player.creditScore - 30),
+        },
+        pendingLifeEventId: 'loan_overdue_2',
+      }
+      entries.push('Loan 2nd notice — $100 penalty')
+    } else if (weeksOverdue === 1) {
+      s = {
+        ...s,
+        player: {
+          ...s.player,
+          money: Math.max(0, s.player.money - 50),
+          morale: Math.max(0, s.player.morale - 10),
+          creditScore: Math.max(0, s.player.creditScore - 20),
+        },
+        pendingLifeEventId: 'loan_overdue_1',
+      }
+      entries.push('Loan overdue — $50 penalty')
+    }
+  }
+
   // --- Stock price changes ---
   s = tickStockPrices(s)
 

@@ -18,6 +18,7 @@ export interface Player {
   bankBalance: number;
   debt: number;
   creditScore: number;
+  loanWeekTaken: number | null;
   portfolio: Record<string, number>;
   housingId: string;
   isOwner: boolean;

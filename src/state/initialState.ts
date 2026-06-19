@@ -33,6 +33,7 @@ export function createInitialState(name: string, difficulty: Difficulty): GameSt
       bankBalance: 0,
       debt: 0,
       creditScore: 650,
+      loanWeekTaken: null,
       portfolio: {},
       housingId: 'studio',
       isOwner: false,

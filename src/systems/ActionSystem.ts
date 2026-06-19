@@ -240,13 +240,15 @@ function makeRepayAction(amount: number | 'all'): ActionDef {
     },
     apply(state) {
       const repay = isAll ? state.player.debt : Math.min(amount as number, state.player.debt)
+      const newDebt = state.player.debt - repay
       return addLog({
         ...state,
         player: {
           ...state.player,
           money: state.player.money - repay,
-          debt: state.player.debt - repay,
+          debt: newDebt,
           creditScore: Math.min(850, state.player.creditScore + 10),
+          loanWeekTaken: newDebt <= 0 ? null : state.player.loanWeekTaken,
         },
       }, `Repaid $${repay.toFixed(0)} of debt.`)
     },
@@ -296,53 +298,27 @@ const withdraw200Action: ActionDef = {
 
 const takeLoanAction: ActionDef = {
   id: 'take_loan',
-  label: 'Personal Loan $1k',
-  detail: '+$1000, Debt+1000, CreditScore-20 | 10m',
+  label: 'Personal Loan $250',
+  detail: '+$250, due in 4 weeks, 5%/wk interest | 10m',
   timeCost: 10,
-  available: (state) => state.player.jobRank >= 1 && state.player.creditScore >= 550 && state.player.debt < 8000,
+  available: (state) => state.player.debt === 0,
   unavailableReason: (state) => {
-    if (state.player.jobRank < 1) return getBankSnark(state, 1000);
-    if (state.player.creditScore < 550) return 'Need CreditScore≥550';
-    return 'Too much existing debt';
+    if (state.player.debt > 0) return 'Loan already active — repay first';
+    return getBankSnark(state, 250);
   },
   apply(state) {
     return {
       ...state,
       player: {
         ...state.player,
-        money: state.player.money + 1000,
-        debt: state.player.debt + 1000,
-        creditScore: state.player.creditScore - 20,
+        money: state.player.money + 250,
+        debt: state.player.debt + 250,
+        creditScore: Math.max(0, state.player.creditScore - 20),
+        loanWeekTaken: state.calendar.week,
       },
     };
   },
 };
-
-function makePropertyLoanAction(amount: number, minScore: number, scoreDrop: number, minJobRank: number): ActionDef {
-  const label = `Property Loan $${(amount / 1000).toFixed(0)}k`;
-  return {
-    id: `property_loan_${amount}`,
-    label,
-    detail: `+$${amount.toLocaleString()}, Debt+${amount.toLocaleString()}, 5%/wk | 15m`,
-    timeCost: 15,
-    available: (s) => s.player.jobRank >= minJobRank && s.player.creditScore >= minScore && s.player.debt + amount <= 120000,
-    unavailableReason: (s) => {
-      if (s.player.jobRank < minJobRank) return getBankSnark(s, amount);
-      if (s.player.creditScore < minScore) return `CreditScore≥${minScore}`;
-      return 'Max debt $120k';
-    },
-    apply(s) {
-      return addLog({
-        ...s,
-        player: { ...s.player, money: s.player.money + amount, debt: s.player.debt + amount, creditScore: s.player.creditScore - scoreDrop },
-      }, `${label}: +$${amount.toLocaleString()}`);
-    },
-  };
-}
-
-const propertyLoan10k = makePropertyLoanAction(10000, 600, 30, 2);
-const propertyLoan25k = makePropertyLoanAction(25000, 650, 40, 3);
-const propertyLoan50k = makePropertyLoanAction(50000, 700, 60, 4);
 
 // --- GROCERY actions ---
 const buyGroceriesAction: ActionDef = {
@@ -840,7 +816,7 @@ export function getActionsForLocation(locationId: LocationId, state: GameState):
       return [...getCourseActions(state), ...getJobActions(locationId, state)];
 
     case 'bank':
-      return [depositAllAction, withdraw200Action, takeLoanAction, propertyLoan10k, propertyLoan25k, propertyLoan50k, repay200Action, repayAllAction, ...getJobActions(locationId, state)];
+      return [depositAllAction, withdraw200Action, takeLoanAction, repay200Action, repayAllAction, ...getJobActions(locationId, state)];
 
     case 'grocery':
       return [buyGroceriesAction, quickSnackAction, ...getJobActions(locationId, state)];
