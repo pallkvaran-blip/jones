@@ -140,11 +140,7 @@ export class CityScene extends Phaser.Scene {
         this.showDayBanner(`Week ${newState.calendar.week}`)
       } else if (!newState.pendingWeekendEventId && subDayAdvanced) {
         audioSystem.playSFX('dayEnd')
-        const sentHome = newState.currentLocationId === 'home' && this.lastLocationId !== 'home'
-        const msg = sentHome
-          ? `Day ended — you headed home`
-          : `Day ${newState.calendar.day} — ${this.getDayName(newState.calendar.day)}`
-        this.showDayBanner(msg)
+        this.showDayBanner(`Day ${newState.calendar.day} — ${this.getDayName(newState.calendar.day)}`)
       }
 
       this.hud.update(newState)
