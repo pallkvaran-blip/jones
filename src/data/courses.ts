@@ -112,4 +112,54 @@ export const COURSES: CourseDef[] = [
     description: 'Advanced patient care, pharmacology, and clinical practice.',
     cost: 280, timeCost: 30, eduPoints: 1.0, prerequisites: ['med_tech'],
   },
+
+  // ── Tier 4: professional / specialist ─────────────────────────────────────
+  {
+    id: 'project_mgmt',
+    title: 'Project Management',
+    description: 'Agile methods, resource planning, and leading cross-functional teams.',
+    cost: 220, timeCost: 25, eduPoints: 1.0, prerequisites: ['business_101', 'intro_tech'],
+  },
+  {
+    id: 'data_science',
+    title: 'Data Science',
+    description: 'Machine learning basics, predictive modelling, and big-data pipelines.',
+    cost: 280, timeCost: 28, eduPoints: 1.2, prerequisites: ['data_analysis'],
+  },
+  {
+    id: 'digital_marketing',
+    title: 'Digital Marketing',
+    description: 'SEO, social media strategy, paid campaigns, and growth analytics.',
+    cost: 260, timeCost: 26, eduPoints: 1.1, prerequisites: ['marketing', 'intro_tech'],
+  },
+  {
+    id: 'biomedical',
+    title: 'Biomedical Sciences',
+    description: 'Cell biology, pharmacology, and research methods in medicine.',
+    cost: 340, timeCost: 30, eduPoints: 1.3, prerequisites: ['med_tech'],
+  },
+  {
+    id: 'business_adv',
+    title: 'Business Administration',
+    description: 'Strategy, organisational behaviour, and executive leadership.',
+    cost: 420, timeCost: 35, eduPoints: 1.5, prerequisites: ['accounting', 'marketing'],
+  },
+  {
+    id: 'systems_arch',
+    title: 'Systems Architecture',
+    description: 'Distributed systems, cloud infrastructure, and engineering at scale.',
+    cost: 380, timeCost: 32, eduPoints: 1.4, prerequisites: ['software_eng'],
+  },
+  {
+    id: 'quant_finance',
+    title: 'Quantitative Finance',
+    description: 'Derivatives pricing, portfolio optimisation, and algorithmic trading.',
+    cost: 390, timeCost: 33, eduPoints: 1.4, prerequisites: ['finance_adv', 'data_analysis'],
+  },
+  {
+    id: 'clinical_adv',
+    title: 'Advanced Clinical Practice',
+    description: 'Specialist rotations, surgical assist, and senior patient management.',
+    cost: 450, timeCost: 36, eduPoints: 1.6, prerequisites: ['nursing'],
+  },
 ]
