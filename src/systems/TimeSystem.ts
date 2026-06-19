@@ -35,7 +35,7 @@ export function advanceDay(state: GameState): GameState {
     state = {
       ...state,
       currentLocationId: 'home' as LocationId,
-      pendingLifeEventId: state.pendingLifeEventId ?? 'slept_on_street',
+      pendingLifeEventId: 'slept_on_street',
     }
   }
 

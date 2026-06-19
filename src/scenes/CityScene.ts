@@ -149,12 +149,17 @@ export class CityScene extends Phaser.Scene {
 
       this.hud.update(newState)
 
-      // Sync sprites + HUD when location changes outside of player movement
+      // Sync sprites, avatar, and HUD when location changes outside of player movement
       // (e.g. advanceDay teleports the player home at end of day)
       if (newState.currentLocationId !== this.lastLocationId && !this.avatar.isCurrentlyMoving()) {
         this.locationSprites.forEach((sprite, locId) => {
           sprite.setLocationActive(locId === newState.currentLocationId)
         })
+        const newLocSprite = this.locationSprites.get(newState.currentLocationId)
+        if (newLocSprite) {
+          const pos = newLocSprite.getCenter()
+          this.avatar.setPosition(pos.x, pos.y)
+        }
         this.hud.showActions(
           newState.currentLocationId,
           newState,
