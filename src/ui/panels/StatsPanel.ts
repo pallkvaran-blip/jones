@@ -26,119 +26,125 @@ export class StatsPanel {
         <small>IN THE FAST LANE</small>
       </div>
 
-      <div class="stat-row">
-        <span class="stat-label">Week</span>
-        <span class="stat-value" id="sp-week">1 / 24</span>
-      </div>
-
-      <div class="day-indicator" id="sp-day-dots">
-        ${[1,2,3,4,5,6,7].map(i => `<div class="day-dot${i === 1 ? ' active' : ''}" data-day="${i}"></div>`).join('')}
-      </div>
-
-      <div class="stat-row">
-        <span class="stat-label">Day</span>
-        <span class="stat-value" id="sp-day-name">Monday</span>
-      </div>
-
-      <div class="stat-row">
-        <span class="stat-label">Time</span>
-        <span class="stat-value" id="sp-time">8:00 AM</span>
-      </div>
-
-      <div class="bar-container" title="Time remaining today">
-        <div class="bar-fill time-bar" id="sp-time-bar" style="width:100%"></div>
-      </div>
-
-      <hr class="section-divider" />
-
-      <div class="stat-row">
-        <span class="stat-label">Cash</span>
-        <span class="stat-value money" id="sp-money">$500.00</span>
-      </div>
-
-      <div class="stat-row">
-        <span class="stat-label">Bank</span>
-        <span class="stat-value" id="sp-bank">$0.00</span>
-      </div>
-
-      <div class="stat-row" id="sp-portfolio-row" style="display:none">
-        <span class="stat-label">Stocks</span>
-        <span class="stat-value" id="sp-portfolio" style="color:#4a90d9">$0.00</span>
-      </div>
-
-      <div class="stat-row" id="sp-debt-row" style="display:none">
-        <span class="stat-label">Debt</span>
-        <span class="stat-value" id="sp-debt" style="color:#e74c3c">$0.00</span>
-      </div>
-
-      <div class="stat-row">
-        <span class="stat-label">Location</span>
-        <span class="stat-value location-name" id="sp-location">Your Apartment</span>
-      </div>
-
-      <div class="stat-row">
-        <span class="stat-label">Job</span>
-        <span class="stat-value" id="sp-job">Unemployed</span>
-      </div>
-
-      <div class="stat-row">
-        <span class="stat-label">Edu</span>
-        <span class="stat-value" id="sp-education" style="color:#a0c8f8">0.0</span>
-      </div>
-
-      <div class="stat-row">
-        <span class="stat-label">Home</span>
-        <span class="stat-value" id="sp-housing" style="color:#9ab4d6">Basic Apartment</span>
-      </div>
-
-      <div class="stat-row">
-        <span class="stat-label">Net Worth</span>
-        <span class="stat-value" id="sp-networth" style="color:#ffd24a">$0</span>
-      </div>
-
-      <hr class="section-divider" />
-
-      <div class="stat-label" style="margin-bottom:4px">NEEDS</div>
-      <div class="needs-section">
-        <div class="need-row">
-          <span class="need-icon">&#x1F34E;</span>
-          <span class="need-label">Hunger</span>
-          <div class="need-bar-wrap">
-            <div class="bar-container">
-              <div class="bar-fill high" id="sp-hunger-bar" style="width:80%"></div>
-            </div>
+      <div class="sp-columns">
+        <div class="sp-col sp-col-left">
+          <div class="stat-row">
+            <span class="stat-label">Week</span>
+            <span class="stat-value" id="sp-week">1 / 24</span>
           </div>
-          <span class="need-val" id="sp-hunger-val">80</span>
+
+          <div class="day-indicator" id="sp-day-dots">
+            ${[1,2,3,4,5,6,7].map(i => `<div class="day-dot${i === 1 ? ' active' : ''}" data-day="${i}"></div>`).join('')}
+          </div>
+
+          <div class="stat-row">
+            <span class="stat-label">Day</span>
+            <span class="stat-value" id="sp-day-name">Monday</span>
+          </div>
+
+          <div class="stat-row">
+            <span class="stat-label">Time</span>
+            <span class="stat-value" id="sp-time">8:00 AM</span>
+          </div>
+
+          <div class="bar-container" title="Time remaining today">
+            <div class="bar-fill time-bar" id="sp-time-bar" style="width:100%"></div>
+          </div>
+
+          <hr class="section-divider" />
+
+          <div class="stat-row">
+            <span class="stat-label">Cash</span>
+            <span class="stat-value money" id="sp-money">$500.00</span>
+          </div>
+
+          <div class="stat-row">
+            <span class="stat-label">Bank</span>
+            <span class="stat-value" id="sp-bank">$0.00</span>
+          </div>
+
+          <div class="stat-row" id="sp-portfolio-row" style="display:none">
+            <span class="stat-label">Stocks</span>
+            <span class="stat-value" id="sp-portfolio" style="color:#4a90d9">$0.00</span>
+          </div>
+
+          <div class="stat-row" id="sp-debt-row" style="display:none">
+            <span class="stat-label">Debt</span>
+            <span class="stat-value" id="sp-debt" style="color:#e74c3c">$0.00</span>
+          </div>
+
+          <div class="stat-row">
+            <span class="stat-label">Net Worth</span>
+            <span class="stat-value" id="sp-networth" style="color:#ffd24a">$0</span>
+          </div>
         </div>
-        <div class="need-row">
-          <span class="need-icon">&#x26A1;</span>
-          <span class="need-label">Energy</span>
-          <div class="need-bar-wrap">
-            <div class="bar-container">
-              <div class="bar-fill high" id="sp-energy-bar" style="width:80%"></div>
+
+        <div class="sp-col sp-col-right">
+          <div class="stat-row">
+            <span class="stat-label">Location</span>
+            <span class="stat-value location-name" id="sp-location">Your Apartment</span>
+          </div>
+
+          <div class="stat-row">
+            <span class="stat-label">Job</span>
+            <span class="stat-value" id="sp-job">Unemployed</span>
+          </div>
+
+          <div class="stat-row">
+            <span class="stat-label">Edu</span>
+            <span class="stat-value" id="sp-education" style="color:#a0c8f8">0.0</span>
+          </div>
+
+          <div class="stat-row">
+            <span class="stat-label">Home</span>
+            <span class="stat-value" id="sp-housing" style="color:#9ab4d6">Basic Apartment</span>
+          </div>
+
+          <hr class="section-divider" />
+
+          <div class="stat-label" style="margin-bottom:4px">NEEDS</div>
+          <div class="needs-section">
+            <div class="need-row">
+              <span class="need-icon">&#x1F34E;</span>
+              <span class="need-label">Hunger</span>
+              <div class="need-bar-wrap">
+                <div class="bar-container">
+                  <div class="bar-fill high" id="sp-hunger-bar" style="width:80%"></div>
+                </div>
+              </div>
+              <span class="need-val" id="sp-hunger-val">80</span>
+            </div>
+            <div class="need-row">
+              <span class="need-icon">&#x26A1;</span>
+              <span class="need-label">Energy</span>
+              <div class="need-bar-wrap">
+                <div class="bar-container">
+                  <div class="bar-fill high" id="sp-energy-bar" style="width:80%"></div>
+                </div>
+              </div>
+              <span class="need-val" id="sp-energy-val">80</span>
+            </div>
+            <div class="need-row">
+              <span class="need-icon">&#x2764;&#xFE0F;</span>
+              <span class="need-label">Health</span>
+              <div class="need-bar-wrap">
+                <div class="bar-container">
+                  <div class="bar-fill high" id="sp-health-bar" style="width:80%"></div>
+                </div>
+              </div>
+              <span class="need-val" id="sp-health-val">80</span>
+            </div>
+            <div class="need-row">
+              <span class="need-icon">&#x1F60A;</span>
+              <span class="need-label">Morale</span>
+              <div class="need-bar-wrap">
+                <div class="bar-container">
+                  <div class="bar-fill high" id="sp-morale-bar" style="width:80%"></div>
+                </div>
+              </div>
+              <span class="need-val" id="sp-morale-val">80</span>
             </div>
           </div>
-          <span class="need-val" id="sp-energy-val">80</span>
-        </div>
-        <div class="need-row">
-          <span class="need-icon">&#x2764;&#xFE0F;</span>
-          <span class="need-label">Health</span>
-          <div class="need-bar-wrap">
-            <div class="bar-container">
-              <div class="bar-fill high" id="sp-health-bar" style="width:80%"></div>
-            </div>
-          </div>
-          <span class="need-val" id="sp-health-val">80</span>
-        </div>
-        <div class="need-row">
-          <span class="need-icon">&#x1F60A;</span>
-          <span class="need-label">Morale</span>
-          <div class="need-bar-wrap">
-            <div class="bar-container">
-              <div class="bar-fill high" id="sp-morale-bar" style="width:80%"></div>
-            </div>
-          </div>
-          <span class="need-val" id="sp-morale-val">80</span>
         </div>
       </div>
     `;
