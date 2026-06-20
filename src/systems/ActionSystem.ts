@@ -659,49 +659,58 @@ function makeStockActions(state: GameState): ActionDef[] {
     const changePct = prevPrice > 0 ? ((price - prevPrice) / prevPrice * 100) : 0
     const changeStr = changePct >= 0 ? `+${changePct.toFixed(0)}%` : `${changePct.toFixed(0)}%`
     const name = STOCK_NAMES[stock as StockId]
-    const shares = state.player.portfolio[stock] ?? 0
+    const owned = state.player.portfolio[stock] ?? 0
 
-    actions.push({
-      id: `buy_${stock}`,
-      label: `Buy ${stock}`,
-      detail: `${name} $${price.toFixed(0)} ${changeStr} | 5m`,
-      timeCost: 5,
-      available: (s) => s.player.money >= (s.economy.stockPrices[stock] ?? 0),
-      unavailableReason: () => `Need $${price.toFixed(0)}`,
-      apply(s) {
-        const p = s.economy.stockPrices[stock] ?? 0
-        return addLog({
-          ...s,
-          player: {
-            ...s.player,
-            money: s.player.money - p,
-            portfolio: { ...s.player.portfolio, [stock]: (s.player.portfolio[stock] ?? 0) + 1 },
-          },
-        }, `Bought 1 share of ${stock} @ $${p.toFixed(0)}`)
-      },
-    })
+    for (const qty of [5, 10] as const) {
+      const cost = Math.round(qty * price)
 
-    actions.push({
-      id: `sell_${stock}`,
-      label: `Sell ${stock}`,
-      detail: shares > 0
-        ? `${shares} shares → $${(shares * price).toFixed(0)} | 5m`
-        : 'No shares owned',
-      timeCost: 5,
-      available: (s) => (s.player.portfolio[stock] ?? 0) > 0,
-      unavailableReason: () => 'No shares owned',
-      apply(s) {
-        const n = s.player.portfolio[stock] ?? 0
-        const p = s.economy.stockPrices[stock] ?? 0
-        const proceeds = n * p
-        const newPortfolio = { ...s.player.portfolio }
-        delete newPortfolio[stock]
-        return addLog({
-          ...s,
-          player: { ...s.player, money: s.player.money + proceeds, portfolio: newPortfolio },
-        }, `Sold ${n} shares of ${stock} for $${proceeds.toFixed(0)}`)
-      },
-    })
+      actions.push({
+        id: `buy_${stock}_${qty}`,
+        label: `Buy ${qty} · ${name}`,
+        detail: `$${price.toFixed(0)}/share ${changeStr} · total $${cost} | 5m`,
+        timeCost: 5,
+        available: (s) => s.player.money >= qty * (s.economy.stockPrices[stock] ?? 0),
+        unavailableReason: () => `Need $${cost}`,
+        apply(s) {
+          const p = s.economy.stockPrices[stock] ?? 0
+          const total = Math.round(qty * p)
+          return addLog({
+            ...s,
+            player: {
+              ...s.player,
+              money: s.player.money - total,
+              portfolio: { ...s.player.portfolio, [stock]: (s.player.portfolio[stock] ?? 0) + qty },
+            },
+          }, `Bought ${qty} ${name} @ $${p.toFixed(0)} ea ($${total})`)
+        },
+      })
+
+      actions.push({
+        id: `sell_${stock}_${qty}`,
+        label: `Sell ${qty} · ${name}`,
+        detail: owned >= qty
+          ? `${owned} owned · sell ${qty} → $${Math.round(qty * price)} | 5m`
+          : `Need ${qty} shares (have ${owned})`,
+        timeCost: 5,
+        available: (s) => (s.player.portfolio[stock] ?? 0) >= qty,
+        unavailableReason: () => `Need ${qty} shares (have ${owned})`,
+        apply(s) {
+          const p = s.economy.stockPrices[stock] ?? 0
+          const proceeds = Math.round(qty * p)
+          const remaining = (s.player.portfolio[stock] ?? 0) - qty
+          const newPortfolio = { ...s.player.portfolio }
+          if (remaining <= 0) {
+            delete newPortfolio[stock]
+          } else {
+            newPortfolio[stock] = remaining
+          }
+          return addLog({
+            ...s,
+            player: { ...s.player, money: s.player.money + proceeds, portfolio: newPortfolio },
+          }, `Sold ${qty} ${name} for $${proceeds}`)
+        },
+      })
+    }
   }
 
   return actions

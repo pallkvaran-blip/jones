@@ -1,5 +1,5 @@
 import type { GameState } from '../state/types'
-import { STOCKS, STOCK_VOLATILITY, type StockId } from '../data/stocks'
+import { STOCKS, STOCK_VOLATILITY, STOCK_DRIFT, type StockId } from '../data/stocks'
 import { getHousingTier } from '../data/housing'
 
 const BANK_INTEREST_RATE = 0.02
@@ -140,8 +140,9 @@ function tickStockPrices(state: GameState): GameState {
   for (const stock of STOCKS) {
     const vol = STOCK_VOLATILITY[stock as StockId]
     const current = newPrices[stock] ?? 0
+    const drift = current * (STOCK_DRIFT[stock as StockId] ?? 0)
     const swing = current * vol * (Math.random() * 2 - 1)
-    const newPrice = Math.max(1, Math.round((current + swing) * 100) / 100)
+    const newPrice = Math.max(1, Math.round((current + drift + swing) * 100) / 100)
     newHistory[stock] = [...(newHistory[stock] ?? []), current].slice(-8)
     newPrices[stock] = newPrice
   }
