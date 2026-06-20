@@ -391,18 +391,16 @@ export class MenuScene extends Phaser.Scene {
     this.scene.start('CityScene');
   }
 
-  private showHighScores(): void {
+  private async showHighScores(): Promise<void> {
     const uiRoot = document.getElementById('ui-root');
     if (!uiRoot) return;
 
     const pf = `'Press Start 2P', 'Courier New', monospace`;
-    const scores = getHighScores();
 
     const diffLabels: Record<Difficulty, string> = { short: 'SHORT (4 WKS)', medium: 'MEDIUM (8 WKS)', long: 'LONG (12 WKS)' };
     const diffColors: Record<Difficulty, string> = { short: '#E74C3C', medium: '#F5A623', long: '#2ECC71' };
 
-    const buildTable = (diff: Difficulty): string => {
-      const entries = scores[diff];
+    const buildTable = (diff: Difficulty, entries: import('../data/highScores').HighScoreEntry[]): string => {
       const color = diffColors[diff];
       const rows = entries.length > 0
         ? entries.map((e, i) => {
@@ -442,6 +440,7 @@ export class MenuScene extends Phaser.Scene {
       font-family: ${pf};
     `;
 
+    const tablesId = 'hs-tables';
     overlay.innerHTML = `
       <div style="
         background: #14141f;
@@ -467,15 +466,29 @@ export class MenuScene extends Phaser.Scene {
           ">CLOSE</button>
         </div>
         <div style="font-size:6px; color:#4a4a66; letter-spacing:1px;">RANKED BY TOTAL CASH &amp; SAVINGS</div>
-        <div style="display:flex; gap:20px; flex-wrap:wrap; align-items:flex-start;">
-          ${buildTable('short')}
-          ${buildTable('medium')}
-          ${buildTable('long')}
+        <div id="${tablesId}" style="display:flex; gap:20px; flex-wrap:wrap; align-items:flex-start;">
+          <div style="color:#4a4a66; font-size:8px; width:100%; text-align:center; padding:20px 0;">Loading...</div>
         </div>
       </div>
     `;
 
     uiRoot.appendChild(overlay);
+
+    // Fetch scores async and populate tables
+    getHighScores().then((scores) => {
+      const tablesEl = document.getElementById(tablesId);
+      if (tablesEl && overlay.parentNode) {
+        tablesEl.innerHTML =
+          buildTable('short', scores.short) +
+          buildTable('medium', scores.medium) +
+          buildTable('long', scores.long);
+      }
+    }).catch(() => {
+      const tablesEl = document.getElementById(tablesId);
+      if (tablesEl && overlay.parentNode) {
+        tablesEl.innerHTML = `<div style="color:#e74c3c; font-size:7px; width:100%; text-align:center; padding:20px 0;">Failed to load scores.</div>`;
+      }
+    });
 
     const closeBtn = document.getElementById('hs-close-btn');
     if (closeBtn) {
