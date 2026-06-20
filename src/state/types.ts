@@ -73,4 +73,5 @@ export interface GameState {
   pendingTurnHandoff: boolean;
   numPlayers: 1 | 2;
   activePlayer: 1 | 2;
+  mapSeed: number;
 }

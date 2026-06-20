@@ -1,6 +1,7 @@
 import Phaser from 'phaser'
 import { getStore } from '../state/store'
-import { locations, getLocationById, BOARD_W, FRAME } from '../data/locations'
+import { shuffleLocations, getLocationById, BOARD_W, FRAME } from '../data/locations'
+import type { LocationDef } from '../data/locations'
 import { consumeTime, advanceWeek, applyEnergyCheck, applyStarvationEnergyDrain } from '../systems/TimeSystem'
 import { executeAction } from '../systems/ActionSystem'
 import { audioSystem } from '../systems/AudioSystem'
@@ -57,6 +58,7 @@ const BOARD_H = 540
 
 export class CityScene extends Phaser.Scene {
   private avatar!: Avatar
+  private mapLocations: LocationDef[] = []
   private locationSprites: Map<LocationId, LocationSprite> = new Map()
   private hud!: HUD
   private streetGraphics!: Phaser.GameObjects.Graphics
@@ -82,6 +84,7 @@ export class CityScene extends Phaser.Scene {
   create(): void {
     const store = getStore()
     const state = store.getState()
+    this.mapLocations = shuffleLocations(state.mapSeed)
     this.lastLocationId = state.currentLocationId
     this.lastCalendarDay = state.calendar.day
     this.lastCalendarWeek = state.calendar.week
@@ -94,7 +97,7 @@ export class CityScene extends Phaser.Scene {
     this.drawStreets()
 
     // --- Location buildings ---
-    for (const loc of locations) {
+    for (const loc of this.mapLocations) {
       const sprite = new LocationSprite(this, loc)
       sprite.setDepth(5)
       this.locationSprites.set(loc.id, sprite)
@@ -110,7 +113,7 @@ export class CityScene extends Phaser.Scene {
 
     // --- Avatar (starts on the current location's doorstep) ---
     const startSprite = this.locationSprites.get(state.currentLocationId)
-    const startLoc = getLocationById(state.currentLocationId)
+    const startLoc = getLocationById(state.currentLocationId, this.mapLocations)
     const start = startSprite ? startSprite.getCenter() : { x: startLoc.cx, y: startLoc.cy }
     this.avatar = new Avatar(this, start.x, start.y)
 
@@ -449,7 +452,7 @@ export class CityScene extends Phaser.Scene {
     }
 
     // Sidewalks bordering each building footprint.
-    for (const loc of locations) {
+    for (const loc of this.mapLocations) {
       const pad = 6
       g.fillStyle(SIDEWALK, 1)
       g.fillRect(loc.x - pad, loc.y - pad, loc.width + pad * 2, loc.height + pad * 2 + 8)
@@ -500,7 +503,7 @@ export class CityScene extends Phaser.Scene {
     const state = store.getState()
 
     if (state.currentLocationId === id) {
-      this.showToast(`You are at ${getLocationById(id).name}`)
+      this.showToast(`You are at ${getLocationById(id, this.mapLocations).name}`)
       return
     }
 

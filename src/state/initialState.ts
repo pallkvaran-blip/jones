@@ -73,5 +73,6 @@ export function createInitialState(name: string, difficulty: Difficulty): GameSt
     pendingTurnHandoff: false,
     numPlayers: 1,
     activePlayer: 1,
+    mapSeed: Math.floor(Math.random() * 0xffffffff),
   };
 }

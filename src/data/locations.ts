@@ -327,9 +327,7 @@ const RAW: RawLoc[] = [
   },
 ]
 
-export const locations: LocationDef[] = RAW.map((r) => {
-  const x = COL[r.col]
-  const y = ROW[r.row]
+function buildLoc(r: RawLoc, x: number, y: number): LocationDef {
   const { cx, cy } = doorstep(x, y)
   return {
     id: r.id,
@@ -348,10 +346,46 @@ export const locations: LocationDef[] = RAW.map((r) => {
     travelCost: 10,
     description: r.description,
   }
-})
+}
 
-export function getLocationById(id: LocationId): LocationDef {
-  const loc = locations.find((l) => l.id === id)
+export const locations: LocationDef[] = RAW.map((r) =>
+  buildLoc(r, COL[r.col], ROW[r.row])
+)
+
+// Seeded PRNG (Mulberry32) for reproducible shuffles.
+function mulberry32(seed: number): () => number {
+  let s = seed >>> 0
+  return () => {
+    s = (s + 0x6d2b79f5) >>> 0
+    let t = Math.imul(s ^ (s >>> 15), 1 | s)
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t
+    return ((t ^ (t >>> 14)) >>> 0) / 0x100000000
+  }
+}
+
+// Shuffle an array in-place using a given RNG, returns the array.
+function fisherYates<T>(arr: T[], rng: () => number): T[] {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(rng() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]]
+  }
+  return arr
+}
+
+/**
+ * Returns a LocationDef[] with the same 12 buildings but randomly assigned
+ * to grid slots. Calling with the same seed always produces the same layout.
+ */
+export function shuffleLocations(seed: number): LocationDef[] {
+  const rng = mulberry32(seed)
+  // Build the 12 grid positions in canonical order, then shuffle them.
+  const slots = RAW.map((r) => ({ x: COL[r.col], y: ROW[r.row] }))
+  fisherYates(slots, rng)
+  return RAW.map((r, i) => buildLoc(r, slots[i].x, slots[i].y))
+}
+
+export function getLocationById(id: LocationId, locs: LocationDef[] = locations): LocationDef {
+  const loc = locs.find((l) => l.id === id)
   if (!loc) throw new Error(`Location not found: ${id}`)
   return loc
 }
