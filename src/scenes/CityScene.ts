@@ -1,7 +1,7 @@
 import Phaser from 'phaser'
 import { getStore } from '../state/store'
 import { locations, getLocationById, BOARD_W, FRAME } from '../data/locations'
-import { consumeTime, advanceWeek } from '../systems/TimeSystem'
+import { consumeTime, advanceWeek, applyEnergyCheck } from '../systems/TimeSystem'
 import { executeAction } from '../systems/ActionSystem'
 import { audioSystem } from '../systems/AudioSystem'
 import { Avatar } from '../entities/Avatar'
@@ -537,14 +537,15 @@ export class CityScene extends Phaser.Scene {
         audioSystem.playSFX('arrive')
         store.setState((s) => {
           const rebased = { ...s, calendar: { ...s.calendar, timeUnits: startTimeUnits } }
-          const afterMove = consumeTime(rebased, timeCost)
-          const withEnergy = { ...afterMove, player: { ...afterMove.player, energy: Math.max(0, afterMove.player.energy - energyCost) } }
-          return { ...withEnergy, currentLocationId: id }
+          // Energy deducted first so advanceDay's rough-night check sees the real energy
+          const withEnergy = { ...rebased, player: { ...rebased.player, energy: Math.max(0, rebased.player.energy - energyCost) } }
+          const afterMove = consumeTime(withEnergy, timeCost)
+          return applyEnergyCheck({ ...afterMove, currentLocationId: id })
         })
         const newState = store.getState()
-        targetSprite.setLocationActive(true)
-        // Show actions for the new location
-        this.hud.showActions(id, newState, (actionId) => this.handleAction(actionId), (msg) => this.showToast(msg))
+        const arrivedAt = newState.currentLocationId  // may be 'home' if rough night fired
+        targetSprite.setLocationActive(arrivedAt === id)
+        this.hud.showActions(arrivedAt, newState, (actionId) => this.handleAction(actionId), (msg) => this.showToast(msg))
       },
       (progress) => {
         // Smoothly interpolate timeUnits as the avatar walks.

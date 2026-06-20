@@ -1,5 +1,5 @@
 import type { GameState, LocationId } from '../state/types'
-import { consumeTime } from './TimeSystem'
+import { consumeTime, applyEnergyCheck } from './TimeSystem'
 import { CAREER_JOBS, LOCATION_JOBS } from '../data/jobs'
 import { STOCKS, STOCK_NAMES, type StockId } from '../data/stocks'
 import { RENTAL_TIERS, OWN_TIERS, getHousingTier } from '../data/housing'
@@ -910,5 +910,5 @@ export function executeAction(actionId: string, locationId: LocationId, state: G
 
   const afterAction = action.apply(state);
   const afterTime = consumeTime(afterAction, action.timeCost);
-  return checkGoals(afterTime);
+  return applyEnergyCheck(checkGoals(afterTime));
 }

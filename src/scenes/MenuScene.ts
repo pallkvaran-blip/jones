@@ -86,29 +86,6 @@ export class MenuScene extends Phaser.Scene {
 
     const pf = `'Press Start 2P', 'Courier New', monospace`;
     this.menuContainer.innerHTML = `
-      <div style="
-        font-family:${pf};
-        font-size:6px;
-        color:#8a8aa6;
-        max-width:300px;
-        width:90%;
-        line-height:1.8;
-        letter-spacing:0.5px;
-        text-align:left;
-        margin-bottom:4px;
-      ">
-        <div style="color:#6a6a82; margin-bottom:4px; letter-spacing:1px;">GOALS</div>
-        <div>Earn $50k+ | Education 80+ | Reach Career Rank 4 | Happiness 80+</div>
-        <div style="color:#6a6a82; margin-top:6px; margin-bottom:4px; letter-spacing:1px;">GAME LENGTH</div>
-        <div>Short: 5 wks | Medium: 10 wks | Long: 15 wks.</div>
-        <div>Each week is one full day of actions.</div>
-        <div>Miss a night at home and sleep rough.</div>
-        <div>Run out of health and it's game over.</div>
-        <div style="color:#6a6a82; margin-top:6px; margin-bottom:4px; letter-spacing:1px;">TIPS</div>
-        <div>Keep hunger up. Work hard but rest harder.</div>
-        <div>Invest early. Buy property when you can.</div>
-      </div>
-
       <div style="text-align:center; margin-bottom: 4px; font-family:${pf};">
         <h1 style="
           font-family:${pf};

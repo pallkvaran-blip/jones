@@ -17,17 +17,40 @@ export function consumeTime(state: GameState, units: number): GameState {
   const newUnits = stateWithHunger.calendar.timeUnits - units;
 
   if (newUnits > 0) {
-    return {
+    let result: GameState = {
       ...stateWithHunger,
-      calendar: {
-        ...stateWithHunger.calendar,
-        timeUnits: newUnits,
-      },
+      calendar: { ...stateWithHunger.calendar, timeUnits: newUnits },
     };
+    // Starvation onset mid-day: advanceDay won't run, so check here
+    if (result.player.hunger <= 0 && !result.player.isStarving && !result.pendingLifeEventId && !result.isGameOver) {
+      result = {
+        ...result,
+        player: { ...result.player, isStarving: true },
+        pendingLifeEventId: 'starving_warning',
+      }
+    }
+    return result;
   }
 
   // Time ran out for this day — advance the day
   return advanceDay(stateWithHunger);
+}
+
+/** Call after any energy-depleting action/move. Triggers rough night if energy hit 0 away from home. */
+export function applyEnergyCheck(state: GameState): GameState {
+  if (
+    state.player.energy <= 0 &&
+    state.currentLocationId !== 'home' &&
+    !state.isGameOver &&
+    !state.pendingLifeEventId
+  ) {
+    return {
+      ...state,
+      currentLocationId: 'home' as LocationId,
+      pendingLifeEventId: pickRoughNightEventId(),
+    }
+  }
+  return state
 }
 
 export function advanceDay(state: GameState): GameState {
