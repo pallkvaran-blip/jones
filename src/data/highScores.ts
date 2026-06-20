@@ -11,7 +11,7 @@ export interface HighScoreEntry {
   timestamp: number
 }
 
-const STORAGE_KEY = 'fusi_high_scores'
+const STORAGE_KEY = 'jones_high_scores'
 const MAX_PER_DIFFICULTY = 5
 
 function loadRaw(): HighScoreEntry[] {
