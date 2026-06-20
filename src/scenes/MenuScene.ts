@@ -398,7 +398,7 @@ export class MenuScene extends Phaser.Scene {
     const pf = `'Press Start 2P', 'Courier New', monospace`;
     const scores = getHighScores();
 
-    const diffLabels: Record<Difficulty, string> = { short: 'SHORT (5 WKS)', medium: 'MEDIUM (10 WKS)', long: 'LONG (15 WKS)' };
+    const diffLabels: Record<Difficulty, string> = { short: 'SHORT (4 WKS)', medium: 'MEDIUM (8 WKS)', long: 'LONG (12 WKS)' };
     const diffColors: Record<Difficulty, string> = { short: '#E74C3C', medium: '#F5A623', long: '#2ECC71' };
 
     const buildTable = (diff: Difficulty): string => {
