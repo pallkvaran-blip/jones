@@ -45,70 +45,89 @@ export class BootScene extends Phaser.Scene {
     this.buildShadow()
   }
 
-  // --- Avatar (2-frame chunky pixel person) ---------------------------------
+  // --- Avatar (2-frame 8-bit pixel dog) ---------------------------------------
 
   private buildAvatar(): void {
-    // ASSET: replace with real character spritesheet here
-    // 10 wide × 16 tall virtual pixels.
-    const W = 10
+    // 14 wide × 16 tall virtual pixels — golden dog sprite
+    const W = 14
     const H = 16
-    const hair = '#3a2a1a'
-    const skin = '#f0c08a'
-    const shirt = '#e0533a'
-    const shirtDark = '#b8412c'
-    const pants = '#2c3a5a'
-    const shoe = '#1a1a22'
-    const outline = '#161018'
+    const F  = '#d4a857'   // base golden fur
+    const Li = '#ead07a'   // light fur  (chest / muzzle highlight)
+    const Dk = '#9a7030'   // dark fur   (ears / body shading)
+    const Dp = '#5e3c14'   // deep shadow
+    const No = '#100c08'   // nose & eye colour
+    const Eh = '#fff8d0'   // eye specular highlight
 
-    const drawBase = (b: FacadeBuilder, legSwap: boolean) => {
-      // outline silhouette
-      b.rect(2, 0, 6, 16, outline)
-      b.rect(1, 5, 8, 16, outline)
-      // hair
-      b.rect(3, 1, 4, 3, hair)
-      // face
-      b.rect(3, 4, 4, 3, skin)
-      // eyes
-      b.rect(4, 5, 1, 1, outline)
-      b.rect(6, 5, 1, 1, outline)
-      // torso (shirt)
-      b.rect(2, 7, 6, 5, shirt)
-      b.rect(2, 9, 6, 1, shirtDark)
-      // arms
-      b.rect(1, 7, 1, 4, shirt)
-      b.rect(8, 7, 1, 4, shirt)
-      // hands
-      b.rect(1, 11, 1, 1, skin)
-      b.rect(8, 11, 1, 1, skin)
-      // legs (swap for walk)
-      if (legSwap) {
-        b.rect(2, 12, 2, 3, pants)
-        b.rect(6, 12, 2, 2, pants)
-        b.rect(2, 15, 2, 1, shoe)
-        b.rect(6, 14, 2, 1, shoe)
+    const draw = (b: FacadeBuilder, legSwap: boolean) => {
+      // TAIL (right side, curves upward)
+      b.rect(12, 2, 1, 1, Dk)
+      b.rect(12, 3, 1, 3, F)
+      b.rect(11, 6, 2, 1, Dk)
+
+      // EARS  (floppy, flanking the head)
+      b.rect(1,  2, 2, 5, Dk)   // left ear
+      b.rect(10, 2, 2, 5, Dk)   // right ear
+      b.rect(11, 2, 1, 5, Dp)   // right ear deep shadow
+
+      // HEAD fill
+      b.rect(3,  0, 8, 6, F)
+      b.rect(2,  1, 1, 4, F)    // widen slightly at sides
+      b.rect(10, 1, 1, 4, F)
+
+      // MUZZLE  (lighter golden)
+      b.rect(4, 2, 6, 4, Li)
+
+      // EYES
+      b.rect(3, 1, 2, 2, No)    // left eye
+      b.rect(3, 1, 1, 1, Eh)    // left specular
+      b.rect(9, 1, 2, 2, No)    // right eye
+      b.rect(9, 1, 1, 1, Eh)    // right specular
+
+      // NOSE
+      b.rect(5, 3, 4, 2, No)
+      b.rect(6, 3, 1, 1, '#3a1828')
+
+      // CHIN
+      b.rect(4, 5, 6, 1, Li)
+
+      // NECK
+      b.rect(5, 6, 4, 2, F)
+
+      // BODY
+      b.rect(2,  8, 10, 5, F)   // main fill
+      b.rect(4,  8,  6, 4, Li)  // lighter chest / belly
+      b.rect(2,  8,  2, 5, Dk)  // left shading
+      b.rect(10, 8,  2, 5, Dk)  // right shading
+      b.rect(2,  12, 10, 1, Dp) // base shadow stripe
+
+      // FRONT LEGS  (swap for walk cycle)
+      if (!legSwap) {
+        b.rect(2, 13, 3, 3, F)
+        b.rect(9, 13, 3, 3, F)
       } else {
-        b.rect(2, 12, 2, 2, pants)
-        b.rect(6, 12, 2, 3, pants)
-        b.rect(2, 14, 2, 1, shoe)
-        b.rect(6, 15, 2, 1, shoe)
+        b.rect(2, 12, 3, 4, F)   // left leg reaches one row lower
+        b.rect(9, 13, 3, 3, F)
       }
+      // paw tips
+      b.rect(2, 15, 3, 1, Dk)
+      b.rect(9, 15, 3, 1, Dk)
     }
 
     const f0 = new FacadeBuilder(this, W, H)
-    drawBase(f0, false)
+    draw(f0, false)
     f0.generate('avatar-0')
 
     const f1 = new FacadeBuilder(this, W, H)
-    drawBase(f1, true)
+    draw(f1, true)
     f1.generate('avatar-1')
   }
 
   private buildShadow(): void {
     const g = this.make.graphics({ x: 0, y: 0 })
     g.fillStyle(0x000000, 0.28)
-    g.fillEllipse(16 * PX, 4 * PX, 28 * PX, 7 * PX)
+    g.fillEllipse(14 * PX, 4 * PX, 24 * PX, 6 * PX)
     if (this.textures.exists('soft-shadow')) this.textures.remove('soft-shadow')
-    g.generateTexture('soft-shadow', 32 * PX, 8 * PX)
+    g.generateTexture('soft-shadow', 28 * PX, 8 * PX)
     g.destroy()
   }
 
