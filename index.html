@@ -24,8 +24,8 @@
     /* Mobile portrait: vertical stack — stats top, map middle, actions bottom */
     @media (max-width: 600px) {
       html, body        { flex-direction: column; overflow: hidden; }
-      #right-slot       { order: 1; width: 100%; height: 30vh; flex-shrink: 0; position: relative; overflow: hidden; }
-      #canvas-container { order: 2; width: 100%; height: 50vw; max-height: 28vh; flex: none; flex-shrink: 0; position: relative; overflow: hidden; }
+      #right-slot       { order: 1; width: 100%; height: 26vh; flex-shrink: 0; position: relative; overflow: hidden; }
+      #canvas-container { order: 2; width: 100%; aspect-ratio: 4/3; flex: none; flex-shrink: 0; position: relative; overflow: hidden; }
       #left-slot        { order: 3; width: 100%; flex: 1; min-height: 120px; position: relative; overflow: hidden; }
     }
   </style>
