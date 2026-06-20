@@ -76,10 +76,17 @@ export class EventModal {
           font-family: ${this.pf};
         ">OK</button>`
 
+    const isRoughNight = 'id' in event && (event.id as string).startsWith('rough_night')
+    const titleHtml = isRoughNight
+      ? `<div style="color:#e74c3c; font-size:7px; letter-spacing:2px; text-transform:uppercase; margin-bottom:2px;">Rough Night</div>
+         <div style="color:#f5a623; font-size:10px; letter-spacing:1px; text-shadow:2px 2px 0 #000;">${event.title}</div>
+         <div style="color:#8a8aa6; font-size:6px; letter-spacing:0.5px; line-height:1.6;">You ran out of energy and spent the night outside.</div>`
+      : `<div style="color:#f5a623; font-size:10px; letter-spacing:1px; text-shadow:2px 2px 0 #000;">${event.title}</div>`
+
     backdrop.innerHTML = `
       <div style="
         background: #14141f;
-        border: 3px solid #4a4a66;
+        border: 3px solid ${isRoughNight ? '#7a1a1a' : '#4a4a66'};
         box-shadow: inset -3px -3px 0 #06060c, 8px 8px 0 rgba(0,0,0,0.6);
         padding: 22px 20px 18px;
         max-width: 340px;
@@ -89,7 +96,7 @@ export class EventModal {
         gap: 12px;
       ">
         ${labelHtml}
-        <div style="color: #f5a623; font-size: 10px; letter-spacing: 1px; text-shadow: 2px 2px 0 #000;">${event.title}</div>
+        ${titleHtml}
         <div style="color: #c8c8e0; font-size: 7px; line-height: 1.8; letter-spacing: 0.5px;">${event.description}</div>
         ${chipsHtml}
         <div style="display: flex; gap: 8px; flex-wrap: wrap;">

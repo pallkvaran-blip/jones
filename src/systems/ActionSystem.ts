@@ -29,6 +29,7 @@ export interface ActionDef {
   label: string;
   detail: string;
   timeCost: number;
+  energyCost?: number;
   available(state: GameState): boolean;
   unavailableReason(state: GameState): string;
   apply(state: GameState): GameState;
@@ -46,8 +47,9 @@ const studyAtHomeAction: ActionDef = {
   label: 'Study at Home',
   detail: 'Education+0.05, Energy-8 | 12m',
   timeCost: 12,
-  available: (state) => state.player.energy >= 8,
-  unavailableReason: (s) => `Too tired to study (${Math.round(s.player.energy)}) — rest first!`,
+  energyCost: 8,
+  available: () => true,
+  unavailableReason: () => '',
   apply(state) {
     const pets = state.player.pets ?? [];
     return {
@@ -117,8 +119,9 @@ function makeWorkShiftAction(pay: number): ActionDef {
     label: 'Work a Shift',
     detail: `Energy-20, +$${pay} | 25m`,
     timeCost: 25,
-    available: (s) => s.player.energy >= 20,
-    unavailableReason: (s) => `Not enough energy (${Math.round(s.player.energy)}) — go home and sleep!`,
+    energyCost: 20,
+    available: () => true,
+    unavailableReason: () => '',
     apply: applyWorkShift,
   };
 }
@@ -162,10 +165,11 @@ function getCourseActions(state: GameState): ActionDef[] {
     label: c.title,
     detail: `Edu+${c.eduPoints} | -$${c.cost} | ${c.timeCost}m`,
     timeCost: c.timeCost,
-    available: (s: GameState) => s.player.money >= c.cost && s.player.energy >= 10,
+    energyCost: 10,
+    available: (s: GameState) => s.player.money >= c.cost,
     unavailableReason: (s: GameState) => {
       if (s.player.money < c.cost) return `Need $${c.cost}`
-      return `Need Energy≥10`
+      return ''
     },
     apply(s: GameState) {
       return addLog({

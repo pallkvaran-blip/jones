@@ -89,9 +89,11 @@ export class ActionPanel {
     const btns = actions.map((action) => {
       const avail = action.available(state);
       const detail = avail ? action.detail : action.unavailableReason(state);
+      const willDeplete = avail && (action.energyCost ?? 0) > 0 && state.player.energy <= (action.energyCost ?? 0);
       const disabledClass = avail ? '' : ' disabled';
+      const warnClass = willDeplete ? ' warn' : '';
       return `
-        <button class="action-btn${disabledClass}" data-action-id="${action.id}" ${avail ? '' : 'aria-disabled="true"'}>
+        <button class="action-btn${disabledClass}${warnClass}" data-action-id="${action.id}" ${avail ? '' : 'aria-disabled="true"'}>
           <span class="action-label">${action.label}</span>
           <span class="action-detail">${detail}</span>
         </button>
@@ -151,6 +153,7 @@ export class ActionPanel {
 
       const avail = action.available(state);
       const detail = avail ? action.detail : action.unavailableReason(state);
+      const willDeplete = avail && (action.energyCost ?? 0) > 0 && state.player.energy <= (action.energyCost ?? 0);
 
       if (avail) {
         btn.classList.remove('disabled');
@@ -158,6 +161,12 @@ export class ActionPanel {
       } else {
         btn.classList.add('disabled');
         btn.setAttribute('aria-disabled', 'true');
+      }
+
+      if (willDeplete) {
+        btn.classList.add('warn');
+      } else {
+        btn.classList.remove('warn');
       }
 
       const detailEl = btn.querySelector<HTMLElement>('.action-detail');

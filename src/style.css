@@ -286,6 +286,20 @@ body {
   cursor: not-allowed;
 }
 
+.action-btn.warn {
+  border-color: #c0392b;
+  background: #1a0a08;
+}
+
+.action-btn.warn:hover {
+  background: #2a1210;
+  border-color: #e74c3c;
+}
+
+.action-btn.warn .action-label {
+  color: #e74c3c;
+}
+
 .action-label {
   font-size: 9px;
   color: var(--color-accent);
