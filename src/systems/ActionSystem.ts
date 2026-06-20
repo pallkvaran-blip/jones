@@ -1,5 +1,5 @@
 import type { GameState, LocationId } from '../state/types'
-import { consumeTime, applyEnergyCheck } from './TimeSystem'
+import { consumeTime, applyEnergyCheck, applyStarvationEnergyDrain } from './TimeSystem'
 import { CAREER_JOBS, LOCATION_JOBS } from '../data/jobs'
 import { STOCKS, STOCK_NAMES, type StockId } from '../data/stocks'
 import { RENTAL_TIERS, OWN_TIERS, getHousingTier } from '../data/housing'
@@ -912,7 +912,9 @@ export function executeAction(actionId: string, locationId: LocationId, state: G
     return state;
   }
 
+  const prevEnergy = state.player.energy;
   const afterAction = action.apply(state);
-  const afterTime = consumeTime(afterAction, action.timeCost);
+  const afterStarvation = applyStarvationEnergyDrain(prevEnergy, afterAction);
+  const afterTime = consumeTime(afterStarvation, action.timeCost);
   return applyEnergyCheck(checkGoals(afterTime));
 }

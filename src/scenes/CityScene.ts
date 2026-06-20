@@ -1,7 +1,7 @@
 import Phaser from 'phaser'
 import { getStore } from '../state/store'
 import { locations, getLocationById, BOARD_W, FRAME } from '../data/locations'
-import { consumeTime, advanceWeek, applyEnergyCheck } from '../systems/TimeSystem'
+import { consumeTime, advanceWeek, applyEnergyCheck, applyStarvationEnergyDrain } from '../systems/TimeSystem'
 import { executeAction } from '../systems/ActionSystem'
 import { audioSystem } from '../systems/AudioSystem'
 import { Avatar } from '../entities/Avatar'
@@ -538,8 +538,10 @@ export class CityScene extends Phaser.Scene {
         store.setState((s) => {
           const rebased = { ...s, calendar: { ...s.calendar, timeUnits: startTimeUnits } }
           // Energy deducted first so advanceDay's rough-night check sees the real energy
-          const withEnergy = { ...rebased, player: { ...rebased.player, energy: Math.max(0, rebased.player.energy - energyCost) } }
-          const afterMove = consumeTime(withEnergy, timeCost)
+          const prevEnergy = rebased.player.energy
+          const withEnergy = { ...rebased, player: { ...rebased.player, energy: Math.max(0, prevEnergy - energyCost) } }
+          const withStarvation = applyStarvationEnergyDrain(prevEnergy, withEnergy)
+          const afterMove = consumeTime(withStarvation, timeCost)
           return applyEnergyCheck({ ...afterMove, currentLocationId: id })
         })
         const newState = store.getState()

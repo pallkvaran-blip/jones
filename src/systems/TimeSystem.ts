@@ -36,6 +36,22 @@ export function consumeTime(state: GameState, units: number): GameState {
   return advanceDay(stateWithHunger);
 }
 
+/** When starving, each energy point spent also bleeds health and morale. */
+export function applyStarvationEnergyDrain(prevEnergy: number, state: GameState): GameState {
+  if (!state.player.isStarving) return state
+  const lost = Math.max(0, prevEnergy - state.player.energy)
+  if (lost === 0) return state
+  const drain = Math.max(1, Math.floor(lost * 0.4))
+  return {
+    ...state,
+    player: {
+      ...state.player,
+      health: Math.max(0, state.player.health - drain),
+      morale: Math.max(0, state.player.morale - drain),
+    },
+  }
+}
+
 /** Call after any energy-depleting action/move. Triggers rough night if energy hit 0 away from home. */
 export function applyEnergyCheck(state: GameState): GameState {
   if (
