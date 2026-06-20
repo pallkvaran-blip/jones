@@ -4,40 +4,25 @@ import { createInitialState } from '../state/initialState'
 import { audioSystem } from '../systems/AudioSystem'
 import { formatMoney } from '../utils/format'
 import { addHighScore } from '../data/highScores'
-import type { GameState, Player, Calendar } from '../state/types'
+import type { GameState, Player } from '../state/types'
 
-// ── Score / Grade helpers ─────────────────────────────────────────────────────
+// ── Net worth / Grade helpers ─────────────────────────────────────────────────
 
-function calculateScore(
-  player: Player,
-  _calendar: Calendar,
-  goalsMet: Record<string, boolean>
-): number {
-  let score = 0
-  // Wealth: max 200pts (target is ~50k)
-  score += Math.min(200, Math.floor((player.money + player.bankBalance) / 250))
-  // Education: max 100pts
-  score += Math.min(100, player.education)
-  // Career: max 100pts
-  score += player.jobRank * 25
-  // Morale: max 100pts
-  score += Math.min(100, player.morale)
-  // Health: max 100pts
-  score += Math.min(100, player.health)
-  // Goals met: 150pts each, max 600pts
-  score += Object.values(goalsMet).filter(Boolean).length * 150
-  // Survived to end (not health death)
-  if (player.health > 0) score += 100
-  return score
+function calcNetWorth(state: GameState): number {
+  const { player, economy } = state
+  const portfolioValue = Object.entries(player.portfolio).reduce(
+    (sum, [stock, shares]) => sum + shares * (economy.stockPrices[stock] ?? 0), 0
+  )
+  return player.money + player.bankBalance + portfolioValue + player.propertyValue - player.debt
 }
 
-function getGrade(score: number, _won: boolean, lossReason: string | null): string {
+function getGrade(netWorth: number, lossReason: string | null): string {
   if (lossReason?.includes('starved') || lossReason?.includes('health failed')) return 'F'
-  if (score >= 800) return 'S'
-  if (score >= 600) return 'A'
-  if (score >= 400) return 'B'
-  if (score >= 250) return 'C'
-  if (score >= 100) return 'D'
+  if (netWorth >= 50000) return 'S'
+  if (netWorth >= 20000) return 'A'
+  if (netWorth >= 8000)  return 'B'
+  if (netWorth >= 2000)  return 'C'
+  if (netWorth >= 0)     return 'D'
   return 'F'
 }
 
@@ -54,12 +39,12 @@ function gradeColor(grade: string): string {
 
 function gradeTagline(grade: string): string {
   switch (grade) {
-    case 'S': return 'Absolutely crushing it.'
-    case 'A': return 'Living your best life.'
-    case 'B': return 'Solid run.'
-    case 'C': return 'You survived. Barely.'
-    case 'D': return 'Could be worse.'
-    default:  return 'This is the bottom.'
+    case 'S': return 'Loaded. Pure profit.'
+    case 'A': return 'Comfortable. Very comfortable.'
+    case 'B': return 'Solid earnings.'
+    case 'C': return 'Could be worse.'
+    case 'D': return "You're barely in the green."
+    default:  return 'In the red. Again.'
   }
 }
 
@@ -68,6 +53,40 @@ function statBar(value: number, max = 100, color = '#4a9eff'): string {
   return `
     <div style="flex:1; height:6px; background:#2a2a3e; border:1px solid #3a3a52; overflow:hidden;">
       <div style="width:${pct}%; height:100%; background:${color};"></div>
+    </div>
+  `
+}
+
+function moneyBreakdown(state: GameState): string {
+  const { player, economy } = state
+  const portfolioValue = Object.entries(player.portfolio).reduce(
+    (sum, [stock, shares]) => sum + shares * (economy.stockPrices[stock] ?? 0), 0
+  )
+  const pf = `'Press Start 2P', 'Courier New', monospace`
+
+  const row = (label: string, value: number, color = '#e8e8f0') => {
+    if (value === 0) return ''
+    return `
+      <div style="display:flex; justify-content:space-between; gap:8px; font-size:7px; font-family:${pf};">
+        <span style="color:#8a8aa6;">${label}</span>
+        <span style="color:${color};">${formatMoney(value)}</span>
+      </div>
+    `
+  }
+
+  const netWorth = player.money + player.bankBalance + portfolioValue + player.propertyValue - player.debt
+  const nwColor = netWorth >= 0 ? '#ffd24a' : '#e74c3c'
+
+  return `
+    ${row('Cash', player.money, '#ffd24a')}
+    ${row('Savings', player.bankBalance, '#ffd24a')}
+    ${row('Investments', portfolioValue, '#a0d8a0')}
+    ${row('Property', player.propertyValue, '#a0b8d8')}
+    ${player.debt > 0 ? row('Debt', -player.debt, '#e74c3c') : ''}
+    <div style="border-top:1px solid #3a3a52; margin:6px 0;"></div>
+    <div style="display:flex; justify-content:space-between; gap:8px; font-size:8px; font-family:${pf};">
+      <span style="color:#8a8aa6;">NET WORTH</span>
+      <span style="color:${nwColor}; font-weight:bold;">${formatMoney(netWorth)}</span>
     </div>
   `
 }
@@ -84,23 +103,19 @@ export class GameOverScene extends Phaser.Scene {
   create(): void {
     audioSystem.stopBGM();
 
-    // Dark background
     const bg = this.add.graphics();
     bg.fillGradientStyle(0x0d0d17, 0x0d0d17, 0x1a0033, 0x1a0033, 1);
     bg.fillRect(0, 0, 960, 540);
 
-    // Get final state
     const store = getStore();
     const state = store.getState();
 
-    const isWin = state.winCondition === 'won';
+    const survived = state.winCondition === 'won';
 
-    // Play result SFX after brief delay
     setTimeout(() => {
-      audioSystem.playSFX(isWin ? 'gameWin' : 'gameLose');
+      audioSystem.playSFX(survived ? 'gameWin' : 'gameLose');
     }, 300);
 
-    // Build DOM overlay
     const uiRoot = document.getElementById('ui-root');
     if (!uiRoot) return;
 
@@ -121,19 +136,18 @@ export class GameOverScene extends Phaser.Scene {
     const pf = `'Press Start 2P', 'Courier New', monospace`;
 
     if (state.numPlayers === 2) {
-      // 2-player results screen
       const bothStates = store.getBothStates();
       const s1 = bothStates[0]!;
       const s2 = bothStates[1]!;
 
       for (const s of [s1, s2]) {
-        const sScore = calculateScore(s.player, s.calendar, s.goalsMet as Record<string, boolean>);
+        const nw = calcNetWorth(s)
         addHighScore({
           playerName: s.player.name,
           difficulty: s.difficulty,
-          money: s.player.money + s.player.bankBalance,
-          score: sScore,
-          grade: getGrade(sScore, s.winCondition === 'won', s.lossReason),
+          money: nw,
+          score: nw,
+          grade: getGrade(nw, s.lossReason),
           winCondition: s.winCondition,
           weeksReached: Math.max(0, s.calendar.week - 1),
           timestamp: Date.now(),
@@ -141,30 +155,14 @@ export class GameOverScene extends Phaser.Scene {
       }
 
       const renderPlayerCard = (s: GameState, highlight: boolean): string => {
-        const cardIsWin = s.winCondition === 'won';
-        const outcomeColor = cardIsWin ? '#2ECC71' : '#E74C3C';
-        const outcomeText = cardIsWin ? 'WON' : 'LOST';
+        const nw = calcNetWorth(s)
+        const survived2 = s.winCondition === 'won'
+        const outcomeColor = survived2 ? '#2ECC71' : '#E74C3C';
+        const outcomeText = survived2 ? 'SURVIVED' : 'LOST';
         const borderColor = highlight ? '#F5A623' : '#4a4a66';
         const nameColor = highlight ? '#F5A623' : '#8a8aa6';
-
-        const cardGoalKeys: Array<keyof typeof s.goalsMet> = ['targetWealth', 'targetEducation', 'targetCareerRank', 'targetHappiness'];
-        const cardGoalNames = ['Wealth', 'Edu', 'Career', 'Happy'];
-        const cardGoalsRows = cardGoalKeys.map((key, i) => {
-          const met = s.goalsMet[key];
-          const icon = met ? '&#x2713;' : '&#x2717;';
-          const color = met ? '#2ECC71' : '#E74C3C';
-          return `
-            <div style="display:flex; justify-content:space-between; gap:8px; color:#e8e8f0; font-size:7px;">
-              <span style="color:#8a8aa6;">${cardGoalNames[i]}</span>
-              <span style="color:${color};">${icon}</span>
-            </div>
-          `;
-        }).join('');
-
-        const metCount = cardGoalKeys.filter(k => s.goalsMet[k]).length;
-        const cardScore = calculateScore(s.player, s.calendar, s.goalsMet as Record<string, boolean>);
-        const cardGrade = getGrade(cardScore, cardIsWin, s.lossReason);
-        const cardGradeColor = gradeColor(cardGrade);
+        const grade = getGrade(nw, s.lossReason)
+        const gColor = gradeColor(grade)
 
         return `
           <div style="
@@ -181,58 +179,32 @@ export class GameOverScene extends Phaser.Scene {
           ">
             <div style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
               <div style="color:${nameColor}; font-size:9px; letter-spacing:1px;">${s.player.name}</div>
-              <div style="font-size:20px; color:${cardGradeColor}; text-shadow:2px 2px 0 #000;">${cardGrade}</div>
+              <div style="font-size:20px; color:${gColor}; text-shadow:2px 2px 0 #000;">${grade}</div>
             </div>
-            <div style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
-              <div style="color:${outcomeColor}; font-size:8px; letter-spacing:1px;">${outcomeText}</div>
-              <div style="font-size:7px; color:#F5A623;">${cardScore.toLocaleString()} pts</div>
-            </div>
+            <div style="color:${outcomeColor}; font-size:8px; letter-spacing:1px;">${outcomeText}</div>
+            <hr style="border:none; border-top:1px solid #3a3a52;" />
+            ${moneyBreakdown(s)}
             <hr style="border:none; border-top:1px solid #3a3a52;" />
             <div style="display:flex; justify-content:space-between; gap:8px; font-size:7px;">
-              <span style="color:#8a8aa6;">Cash</span>
-              <span style="color:#ffd24a;">${formatMoney(s.player.money)}</span>
-            </div>
-            <div style="display:flex; justify-content:space-between; gap:8px; font-size:7px;">
-              <span style="color:#8a8aa6;">Edu</span>
-              <span>${s.player.education}</span>
-            </div>
-            <div style="display:flex; justify-content:space-between; gap:8px; font-size:7px;">
-              <span style="color:#8a8aa6;">Rank</span>
-              <span>${s.player.jobRank}</span>
+              <span style="color:#8a8aa6;">Health</span>
+              <span>${s.player.health}</span>
             </div>
             <div style="display:flex; justify-content:space-between; gap:8px; font-size:7px;">
               <span style="color:#8a8aa6;">Morale</span>
               <span>${s.player.morale}</span>
             </div>
-            <hr style="border:none; border-top:1px solid #3a3a52;" />
-            <div style="color:#8a8aa6; font-size:6px; margin-bottom:2px;">GOALS (${metCount}/4)</div>
-            ${cardGoalsRows}
           </div>
         `;
       };
 
-      // Determine winner
-      const s1Goals = (['targetWealth', 'targetEducation', 'targetCareerRank', 'targetHappiness'] as const).filter(k => s1.goalsMet[k]).length;
-      const s2Goals = (['targetWealth', 'targetEducation', 'targetCareerRank', 'targetHappiness'] as const).filter(k => s2.goalsMet[k]).length;
-
-      let winnerName = '';
-      let p1Wins = false;
-      let p2Wins = false;
-      if (s1Goals > s2Goals) {
-        winnerName = s1.player.name;
-        p1Wins = true;
-      } else if (s2Goals > s1Goals) {
-        winnerName = s2.player.name;
-        p2Wins = true;
-      } else if (s1.player.money > s2.player.money) {
-        winnerName = s1.player.name;
-        p1Wins = true;
-      } else if (s2.player.money > s1.player.money) {
-        winnerName = s2.player.name;
-        p2Wins = true;
-      } else {
-        winnerName = 'TIE';
-      }
+      const nw1 = calcNetWorth(s1)
+      const nw2 = calcNetWorth(s2)
+      let winnerName = ''
+      let p1Wins = false
+      let p2Wins = false
+      if (nw1 > nw2) { winnerName = s1.player.name; p1Wins = true }
+      else if (nw2 > nw1) { winnerName = s2.player.name; p2Wins = true }
+      else { winnerName = 'TIE' }
 
       const winLine = winnerName === 'TIE'
         ? `<div style="color:#8a8aa6; font-size:10px; letter-spacing:2px;">IT'S A TIE!</div>`
@@ -250,6 +222,7 @@ export class GameOverScene extends Phaser.Scene {
             margin-bottom: 8px;
           ">GAME OVER</h1>
           ${winLine}
+          <div style="color:#8a8aa6; font-size:7px; letter-spacing:1px; margin-top:4px;">Highest net worth wins</div>
         </div>
 
         <div style="display:flex; gap:16px; max-width:560px; width:90%; align-items:flex-start;">
@@ -272,45 +245,28 @@ export class GameOverScene extends Phaser.Scene {
       `;
 
     } else {
-      // 1-player results screen — rich layout with score, grade, story recap
-      const score = calculateScore(state.player, state.calendar, state.goalsMet as Record<string, boolean>);
-      const grade = getGrade(score, isWin, state.lossReason);
-      const gColor = gradeColor(grade);
+      const netWorth = calcNetWorth(state)
+      const grade = getGrade(netWorth, state.lossReason)
+      const gColor = gradeColor(grade)
 
       addHighScore({
         playerName: state.player.name,
         difficulty: state.difficulty,
-        money: state.player.money + state.player.bankBalance,
-        score,
+        money: netWorth,
+        score: netWorth,
         grade,
         winCondition: state.winCondition,
         weeksReached: Math.max(0, state.calendar.week - 1),
         timestamp: Date.now(),
       });
-      const tagline = gradeTagline(grade);
 
-      const titleColor = isWin ? '#2ECC71' : '#E74C3C';
-      const titleText = isWin ? 'YOU WIN!' : 'GAME OVER';
-      const subtitleText = state.lossReason ?? (isWin ? 'All goals achieved!' : "Time's up!");
+      const tagline = gradeTagline(grade)
+      const titleColor = survived ? '#F5A623' : '#E74C3C'
+      const titleText = survived ? "TIME'S UP!" : 'GAME OVER'
+      const subtitleText = state.lossReason ?? 'Final net worth is your score.'
+      const nwColor = netWorth >= 0 ? '#ffd24a' : '#e74c3c'
 
-      const goalNames = ['Wealth', 'Education', 'Career', 'Happiness'];
-      const goalKeys: Array<keyof typeof state.goalsMet> = [
-        'targetWealth', 'targetEducation', 'targetCareerRank', 'targetHappiness',
-      ];
-
-      const goalsRows = goalKeys.map((key, i) => {
-        const met = state.goalsMet[key];
-        const icon = met ? '&#x2713;' : '&#x2717;';
-        const color = met ? '#2ECC71' : '#E74C3C';
-        return `
-          <div style="display:flex; justify-content:space-between; align-items:center; gap:12px;">
-            <span style="color:#8a8aa6; font-size:7px; text-transform:uppercase; flex:1;">${goalNames[i]}</span>
-            <span style="color:${color}; font-size:10px;">${icon}</span>
-          </div>
-        `;
-      }).join('');
-
-      // Last 8 event log entries (newest first)
+      // Last 8 event log entries
       const recentLog = [...state.eventLog].slice(0, 8);
       const logRows = recentLog.length > 0
         ? recentLog.map(entry => `
@@ -375,10 +331,10 @@ export class GameOverScene extends Phaser.Scene {
               ">${subtitleText}</div>
             </div>
 
-            <!-- Score -->
-            <div style="text-align:right; min-width:100px;">
-              <div style="font-size:7px; color:#8a8aa6; text-transform:uppercase; margin-bottom:4px;">Score</div>
-              <div style="font-size:14px; color:#F5A623; text-shadow:2px 2px 0 #000;">${score.toLocaleString()}</div>
+            <!-- Net Worth -->
+            <div style="text-align:right; min-width:110px;">
+              <div style="font-size:6px; color:#8a8aa6; text-transform:uppercase; letter-spacing:1px; margin-bottom:4px;">Net Worth</div>
+              <div style="font-size:14px; color:${nwColor}; text-shadow:2px 2px 0 #000;">${formatMoney(netWorth)}</div>
             </div>
           </div>
 
@@ -416,20 +372,19 @@ export class GameOverScene extends Phaser.Scene {
               flex-direction: column;
               gap: 10px;
             ">
-              <!-- Player name -->
               <div style="font-size:9px; color:#F5A623; letter-spacing:1px; margin-bottom:2px;">${state.player.name}</div>
 
-              <!-- Weeks -->
               <div style="display:flex; justify-content:space-between; align-items:center;">
                 <span style="color:#8a8aa6; font-size:7px; text-transform:uppercase;">Weeks</span>
                 <span style="color:#e8e8f0; font-size:7px;">${weeksPlayed} / ${state.calendar.maxWeeks}</span>
               </div>
 
-              <!-- Money -->
-              <div style="display:flex; justify-content:space-between; align-items:center;">
-                <span style="color:#8a8aa6; font-size:7px; text-transform:uppercase;">Cash</span>
-                <span style="color:#ffd24a; font-size:7px;">${formatMoney(state.player.money)}</span>
-              </div>
+              <hr style="border:none; border-top:1px solid #2a2a42; margin:2px 0;" />
+
+              <!-- Money breakdown -->
+              ${moneyBreakdown(state)}
+
+              <hr style="border:none; border-top:1px solid #2a2a42; margin:2px 0;" />
 
               <!-- Health bar -->
               <div>
@@ -437,9 +392,7 @@ export class GameOverScene extends Phaser.Scene {
                   <span style="color:#8a8aa6; font-size:6px; text-transform:uppercase;">Health</span>
                   <span style="color:#e8e8f0; font-size:6px;">${state.player.health}</span>
                 </div>
-                <div style="display:flex; align-items:center; gap:6px;">
-                  ${statBar(state.player.health, 100, '#2ECC71')}
-                </div>
+                ${statBar(state.player.health, 100, '#2ECC71')}
               </div>
 
               <!-- Morale bar -->
@@ -448,36 +401,8 @@ export class GameOverScene extends Phaser.Scene {
                   <span style="color:#8a8aa6; font-size:6px; text-transform:uppercase;">Morale</span>
                   <span style="color:#e8e8f0; font-size:6px;">${state.player.morale}</span>
                 </div>
-                <div style="display:flex; align-items:center; gap:6px;">
-                  ${statBar(state.player.morale, 100, '#9B59B6')}
-                </div>
+                ${statBar(state.player.morale, 100, '#9B59B6')}
               </div>
-
-              <!-- Education bar -->
-              <div>
-                <div style="display:flex; justify-content:space-between; margin-bottom:3px;">
-                  <span style="color:#8a8aa6; font-size:6px; text-transform:uppercase;">Education</span>
-                  <span style="color:#e8e8f0; font-size:6px;">${state.player.education}</span>
-                </div>
-                <div style="display:flex; align-items:center; gap:6px;">
-                  ${statBar(state.player.education, 100, '#3498DB')}
-                </div>
-              </div>
-
-              <hr style="border:none; border-top:1px solid #2a2a42; margin:2px 0;" />
-
-              <!-- Goals -->
-              <div style="font-size:6px; color:#4a4a66; text-transform:uppercase; letter-spacing:1px;">Goals</div>
-              ${goalsRows}
-
-              <!-- Win condition / loss reason -->
-              <div style="
-                font-size:6px;
-                color:#6a6a88;
-                font-style:italic;
-                line-height:1.6;
-                margin-top:2px;
-              ">${subtitleText}</div>
             </div>
           </div>
 
@@ -513,7 +438,6 @@ export class GameOverScene extends Phaser.Scene {
     const btn = document.getElementById('play-again-btn');
     if (btn) {
       btn.addEventListener('click', () => {
-        // Reset with same name and difficulty
         initStore(createInitialState(state.player.name, state.difficulty));
         if (this.uiContainer?.parentNode) {
           this.uiContainer.parentNode.removeChild(this.uiContainer);

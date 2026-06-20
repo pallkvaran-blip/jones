@@ -3,9 +3,9 @@ import { STOCK_INITIAL_PRICES, STOCKS } from '../data/stocks'
 
 export function createInitialState(name: string, difficulty: Difficulty): GameState {
   const difficultySettings = {
-    short:  { money: 0, maxWeeks: 5,  goals: { targetWealth: 25000, targetEducation: 3, targetCareerRank: 1, targetHappiness: 80 } },
-    medium: { money: 0, maxWeeks: 10, goals: { targetWealth: 10000, targetEducation: 2, targetCareerRank: 1, targetHappiness: 70 } },
-    long:   { money: 0, maxWeeks: 15, goals: { targetWealth: 5000,  targetEducation: 1, targetCareerRank: 1, targetHappiness: 60 } },
+    short:  { money: 0, maxWeeks: 5  },
+    medium: { money: 0, maxWeeks: 10 },
+    long:   { money: 0, maxWeeks: 15 },
   };
 
   const settings = difficultySettings[difficulty];
@@ -59,13 +59,6 @@ export function createInitialState(name: string, difficulty: Difficulty): GameSt
       marketPrices: {},
       stockPrices: Object.fromEntries(STOCKS.map(s => [s, STOCK_INITIAL_PRICES[s]])),
       stockHistory: Object.fromEntries(STOCKS.map(s => [s, []])),
-    },
-    goals: settings.goals,
-    goalsMet: {
-      targetWealth: false,
-      targetEducation: false,
-      targetCareerRank: false,
-      targetHappiness: false,
     },
     activeEvents: [],
     eventLog: [],

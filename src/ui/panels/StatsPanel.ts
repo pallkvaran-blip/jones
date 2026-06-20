@@ -92,8 +92,8 @@ export class StatsPanel {
       </div>
 
       <div class="stat-row">
-        <span class="stat-label">Goals</span>
-        <span class="stat-value" id="sp-goals">&#x25CB; &#x25CB; &#x25CB; &#x25CB;</span>
+        <span class="stat-label">Net Worth</span>
+        <span class="stat-value" id="sp-networth" style="color:#ffd24a">$0</span>
       </div>
 
       <hr class="section-divider" />
@@ -245,20 +245,15 @@ export class StatsPanel {
       housingEl.style.color = player.isOwner ? '#f2c94c' : '#9ab4d6';
     }
 
-    // Goals indicators
-    const goalsEl = this.el.querySelector('#sp-goals');
-    if (goalsEl) {
-      const { goalsMet } = state;
-      const met = '#2ECC71';
-      const unmet = '#5a5a72';
-      const dot = (isMet: boolean) =>
-        `<span style="color:${isMet ? met : unmet}">${isMet ? '&#x25CF;' : '&#x25CB;'}</span>`;
-      goalsEl.innerHTML = [
-        dot(goalsMet.targetWealth),
-        dot(goalsMet.targetEducation),
-        dot(goalsMet.targetCareerRank),
-        dot(goalsMet.targetHappiness),
-      ].join(' ');
+    const networthEl = this.el.querySelector<HTMLElement>('#sp-networth');
+    if (networthEl) {
+      const { player, economy } = state;
+      const portfolioValue = Object.entries(player.portfolio).reduce(
+        (sum, [stock, shares]) => sum + shares * (economy.stockPrices[stock] ?? 0), 0
+      );
+      const netWorth = player.money + player.bankBalance + portfolioValue + player.propertyValue - player.debt;
+      networthEl.textContent = formatMoney(netWorth);
+      networthEl.style.color = netWorth >= 0 ? '#ffd24a' : '#e74c3c';
     }
   }
 

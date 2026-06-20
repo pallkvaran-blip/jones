@@ -49,13 +49,6 @@ export interface Economy {
   stockHistory: Record<string, number[]>;
 }
 
-export interface Goals {
-  targetWealth: number;
-  targetEducation: number;
-  targetCareerRank: number;
-  targetHappiness: number;
-}
-
 export interface ActiveEvent {
   id: string;
   chainStep: number;
@@ -67,8 +60,6 @@ export interface GameState {
   player: Player;
   calendar: Calendar;
   economy: Economy;
-  goals: Goals;
-  goalsMet: Record<keyof Goals, boolean>;
   activeEvents: ActiveEvent[];
   eventLog: string[];
   currentLocationId: LocationId;

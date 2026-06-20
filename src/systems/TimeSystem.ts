@@ -178,8 +178,8 @@ export function advanceWeek(state: GameState): GameState {
         timeUnits: 100,
       },
       isGameOver: true,
-      winCondition: 'lost',
-      lossReason: 'Time has run out!',
+      winCondition: 'won',
+      lossReason: null,
     };
   }
 

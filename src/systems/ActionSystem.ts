@@ -851,53 +851,16 @@ export function getActionsForLocation(locationId: LocationId, state: GameState):
   }
 }
 
-export function checkGoals(state: GameState): GameState {
-  const { player, goals } = state;
-
-  const portfolioValue = Object.entries(player.portfolio).reduce(
-    (sum, [stock, shares]) => sum + shares * (state.economy.stockPrices[stock] ?? 0), 0
-  )
-  const totalWealth = player.money + player.bankBalance + portfolioValue - player.debt
-
-  const newlyMet = {
-    targetWealth: totalWealth >= goals.targetWealth,
-    targetEducation: player.education >= goals.targetEducation,
-    targetCareerRank: player.jobRank >= goals.targetCareerRank,
-    targetHappiness: player.hunger >= 70 && player.energy >= 70 && player.health >= 70 && player.morale >= 70,
-  };
-
-  // Goals once met stay met
-  const goalsMet = {
-    targetWealth: state.goalsMet.targetWealth || newlyMet.targetWealth,
-    targetEducation: state.goalsMet.targetEducation || newlyMet.targetEducation,
-    targetCareerRank: state.goalsMet.targetCareerRank || newlyMet.targetCareerRank,
-    targetHappiness: state.goalsMet.targetHappiness || newlyMet.targetHappiness,
-  };
-
-  // Health failure check
-  if (player.health <= 0) {
+function checkHealth(state: GameState): GameState {
+  if (state.player.health <= 0 && !state.isGameOver) {
     return {
       ...state,
-      goalsMet,
       isGameOver: true,
       winCondition: 'lost',
-      lossReason: 'Your health failed.',
+      lossReason: state.player.isStarving ? 'You starved to death.' : 'Your health failed.',
     };
   }
-
-  // All goals met?
-  const allMet = goalsMet.targetWealth && goalsMet.targetEducation && goalsMet.targetCareerRank && goalsMet.targetHappiness;
-  if (allMet) {
-    return {
-      ...state,
-      goalsMet,
-      isGameOver: true,
-      winCondition: 'won',
-      lossReason: null,
-    };
-  }
-
-  return { ...state, goalsMet };
+  return state;
 }
 
 export function executeAction(actionId: string, locationId: LocationId, state: GameState): GameState {
@@ -916,5 +879,5 @@ export function executeAction(actionId: string, locationId: LocationId, state: G
   const afterAction = action.apply(state);
   const afterStarvation = applyStarvationEnergyDrain(prevEnergy, afterAction);
   const afterTime = consumeTime(afterStarvation, action.timeCost);
-  return applyEnergyCheck(checkGoals(afterTime));
+  return applyEnergyCheck(checkHealth(afterTime));
 }
