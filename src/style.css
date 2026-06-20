@@ -405,23 +405,24 @@ body {
   #stats-panel .panel-title { font-size: 14px; }
 }
 
-/* Mobile: action panel becomes a fixed overlay; stats panel uses top border */
+/* Mobile portrait: action panel fills the bottom slot; stats panel sits at top */
 @media (max-width: 600px) {
   #action-panel {
-    position: fixed;
-    left: 0;
-    top: 0;
-    width: 200px;
-    height: 75vw;
-    max-height: 55vh;
-    z-index: 150;
+    position: absolute;
+    inset: 0;
+    width: auto;
+    height: auto;
+    z-index: 10;
     overflow-y: auto;
+    border-right: none;
+    border-top: 2px solid var(--color-panel-edge-light);
+    box-shadow: inset 0 4px 0 var(--color-panel-edge-dark);
   }
 
   #stats-panel {
     border-left: none;
-    border-top: 3px solid var(--color-panel-edge-light);
-    box-shadow: inset 0 4px 0 var(--color-panel-edge-dark);
+    border-bottom: 3px solid var(--color-panel-edge-light);
+    box-shadow: inset 0 -4px 0 var(--color-panel-edge-dark);
   }
 }
 
