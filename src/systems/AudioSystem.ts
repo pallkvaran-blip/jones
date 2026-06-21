@@ -17,6 +17,8 @@ class AudioSystem {
   private muted = false;
   private bgmPlaying = false;
   private masterGain: GainNode | null = null;
+  private bgmGain: GainNode | null = null;   // BGM-only gain, ducked during SFX
+  private sfxGain: GainNode | null = null;   // SFX-only gain
   private currentMood: 'normal' | 'danger' = 'normal';
   private normalTrackIndex = 0;
   private dangerTrackIndex = 0;
@@ -53,6 +55,14 @@ class AudioSystem {
       this.masterGain = this.ctx.createGain();
       this.masterGain.gain.value = this.muted ? 0 : 0.3;
       this.masterGain.connect(this.ctx.destination);
+
+      this.bgmGain = this.ctx.createGain();
+      this.bgmGain.gain.value = 1.0;
+      this.bgmGain.connect(this.masterGain);
+
+      this.sfxGain = this.ctx.createGain();
+      this.sfxGain.gain.value = 1.0;
+      this.sfxGain.connect(this.masterGain);
     }
     if (this.ctx.state === 'suspended') {
       this.ctx.resume().catch(() => {});
@@ -66,7 +76,8 @@ class AudioSystem {
     startTime: number,
     duration: number,
     type: OscillatorType = 'square',
-    gainValue = 0.15
+    gainValue = 0.15,
+    target?: AudioNode,
   ): void {
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
@@ -80,14 +91,21 @@ class AudioSystem {
     gain.gain.linearRampToValueAtTime(0, startTime + duration);
 
     osc.connect(gain);
-    if (this.masterGain) {
-      gain.connect(this.masterGain);
-    } else {
-      gain.connect(ctx.destination);
-    }
+    gain.connect(target ?? this.sfxGain ?? this.masterGain ?? ctx.destination);
 
     osc.start(startTime);
     osc.stop(startTime + duration + 0.05);
+  }
+
+  /** Temporarily lower BGM volume so SFX can be heard clearly, then restore. */
+  private duckBGM(durationSecs: number): void {
+    if (!this.bgmGain || !this.ctx) return;
+    const now = this.ctx.currentTime;
+    this.bgmGain.gain.cancelScheduledValues(now);
+    this.bgmGain.gain.setValueAtTime(this.bgmGain.gain.value, now);
+    this.bgmGain.gain.linearRampToValueAtTime(0.08, now + 0.04);
+    this.bgmGain.gain.setValueAtTime(0.08, now + Math.max(durationSecs - 0.15, 0.1));
+    this.bgmGain.gain.linearRampToValueAtTime(1.0, now + durationSecs + 0.1);
   }
 
   private scheduleBGMLoop(startTime: number): void {
@@ -229,11 +247,12 @@ class AudioSystem {
     const track = tracks[isDanger ? this.dangerTrackIndex : this.normalTrackIndex];
     const loopDuration = 4.25;
 
+    const bgm = this.bgmGain ?? this.masterGain ?? ctx.destination
     for (const note of track.melody) {
-      this.playNote(ctx, note.freq, startTime + note.time, note.duration, track.oscType, track.gain);
+      this.playNote(ctx, note.freq, startTime + note.time, note.duration, track.oscType, track.gain, bgm);
     }
     for (const note of track.bass) {
-      this.playNote(ctx, note.freq, startTime + note.time, note.duration, 'triangle', 0.08);
+      this.playNote(ctx, note.freq, startTime + note.time, note.duration, 'triangle', 0.08, bgm);
     }
 
     // Advance to next track after this loop completes
@@ -310,6 +329,7 @@ class AudioSystem {
       }
 
       case 'weekEnd':
+        this.duckBGM(1.1);
         this.playNote(ctx, 523.25, now,        0.15, 'triangle', 0.2);
         this.playNote(ctx, 659.25, now + 0.16, 0.15, 'triangle', 0.2);
         this.playNote(ctx, 784.00, now + 0.32, 0.15, 'triangle', 0.2);
@@ -318,6 +338,7 @@ class AudioSystem {
 
       case 'eventGood':
         // Bright ascending 3-note chime: C5 → E5 → G5, sine wave
+        this.duckBGM(0.55);
         this.playNote(ctx, this.NOTES.C5, now,        0.08, 'sine', 0.18);
         this.playNote(ctx, this.NOTES.E5, now + 0.09, 0.08, 'sine', 0.18);
         this.playNote(ctx, this.NOTES.G5, now + 0.18, 0.12, 'sine', 0.18);
@@ -325,6 +346,7 @@ class AudioSystem {
 
       case 'eventBad':
         // Low descending thud: G3 → E3 → C3, triangle wave
+        this.duckBGM(0.55);
         this.playNote(ctx, this.NOTES.G3, now,        0.06, 'triangle', 0.2);
         this.playNote(ctx, this.NOTES.E3, now + 0.07, 0.06, 'triangle', 0.2);
         this.playNote(ctx, this.NOTES.C3, now + 0.14, 0.12, 'triangle', 0.2);
@@ -332,6 +354,7 @@ class AudioSystem {
 
       case 'levelUp':
         // Ascending arpeggio: C4→E4→G4→C5, small gap between notes
+        this.duckBGM(0.7);
         this.playNote(ctx, this.NOTES.C4, now,        0.1, 'square', 0.15);
         this.playNote(ctx, this.NOTES.E4, now + 0.12, 0.1, 'square', 0.15);
         this.playNote(ctx, this.NOTES.G4, now + 0.24, 0.1, 'square', 0.15);
@@ -340,6 +363,7 @@ class AudioSystem {
 
       case 'demotion':
         // Descending sad tones: C4→A3→F3, triangle wave
+        this.duckBGM(0.65);
         this.playNote(ctx, this.NOTES.C4, now,        0.12, 'triangle', 0.18);
         this.playNote(ctx, this.NOTES.A3, now + 0.13, 0.12, 'triangle', 0.18);
         this.playNote(ctx, this.NOTES.F3, now + 0.26, 0.12, 'triangle', 0.18);
@@ -354,6 +378,7 @@ class AudioSystem {
 
       case 'gameWin':
         // Triumphant 5-note fanfare: C4→E4→G4→C5→E5, square wave
+        this.duckBGM(1.2);
         this.playNote(ctx, this.NOTES.C4, now,        0.15, 'square', 0.2);
         this.playNote(ctx, this.NOTES.E4, now + 0.16, 0.15, 'square', 0.2);
         this.playNote(ctx, this.NOTES.G4, now + 0.32, 0.15, 'square', 0.2);
@@ -363,6 +388,7 @@ class AudioSystem {
 
       case 'gameLose': {
         // 4 slow descending notes with a slight delay/reverb effect
+        this.duckBGM(1.8);
         const dest = this.masterGain ?? ctx.destination;
 
         // Create a tiny delay node for reverb effect

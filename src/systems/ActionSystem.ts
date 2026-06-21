@@ -452,9 +452,9 @@ const browseDealershipAction: ActionDef = {
   },
 }
 
-const buyBicycleAction = makeBuyVehicleAction('buy_bicycle', 'Bicycle', 'bicycle', 800, 8)
-const buySUVAction     = makeBuyVehicleAction('buy_suv', 'SUV', 'suv', 25000, 10)
-const buySportsCarAction = makeBuyVehicleAction('buy_sportscar', 'Sports Car', 'sportscar', 50000, 10)
+const buyBicycleAction   = makeBuyVehicleAction('buy_bicycle',   'Bicycle',    'bicycle',   200,  8)
+const buySUVAction       = makeBuyVehicleAction('buy_suv',       'SUV',        'suv',       1000, 10)
+const buySportsCarAction = makeBuyVehicleAction('buy_sportscar', 'Sports Car', 'sportscar', 2500, 10)
 
 // --- RESTAURANT actions ---
 const eatMealAction: ActionDef = {
