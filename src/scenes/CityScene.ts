@@ -5,7 +5,7 @@ import type { LocationDef } from '../data/locations'
 import { consumeTime, advanceWeek, applyEnergyCheck, applyStarvationEnergyDrain } from '../systems/TimeSystem'
 import { executeAction } from '../systems/ActionSystem'
 import { audioSystem } from '../systems/AudioSystem'
-import { Avatar } from '../entities/Avatar'
+import { Car, buildRoute, routeLength } from '../entities/Car'
 import { LocationSprite } from '../entities/LocationSprite'
 import { HUD } from '../ui/HUD'
 import type { LocationId, GameState } from '../state/types'
@@ -57,7 +57,7 @@ function stateToChips(before: GameState, after: GameState): EffectChip[] {
 const BOARD_H = 540
 
 export class CityScene extends Phaser.Scene {
-  private avatar!: Avatar
+  private car!: Car
   private mapLocations: LocationDef[] = []
   private locationSprites: Map<LocationId, LocationSprite> = new Map()
   private hud!: HUD
@@ -111,11 +111,9 @@ export class CityScene extends Phaser.Scene {
     const activeLoc = this.locationSprites.get(state.currentLocationId)
     if (activeLoc) activeLoc.setLocationActive(true)
 
-    // --- Avatar (starts on the current location's doorstep) ---
-    const startSprite = this.locationSprites.get(state.currentLocationId)
+    // --- Car (starts on the current location's doorstep) ---
     const startLoc = getLocationById(state.currentLocationId, this.mapLocations)
-    const start = startSprite ? startSprite.getCenter() : { x: startLoc.cx, y: startLoc.cy }
-    this.avatar = new Avatar(this, start.x, start.y)
+    this.car = new Car(this, startLoc.cx, startLoc.cy)
 
     // --- Beveled board frame (drawn on top of everything board-side) ---
     this.frameGraphics = this.add.graphics().setDepth(40)
@@ -148,17 +146,14 @@ export class CityScene extends Phaser.Scene {
 
       this.hud.update(newState)
 
-      // Sync sprites, avatar, and HUD when location changes outside of player movement
+      // Sync sprites, car, and HUD when location changes outside of player movement
       // (e.g. advanceDay teleports the player home at end of day)
-      if (newState.currentLocationId !== this.lastLocationId && !this.avatar.isCurrentlyMoving()) {
+      if (newState.currentLocationId !== this.lastLocationId && !this.car.isCurrentlyMoving()) {
         this.locationSprites.forEach((sprite, locId) => {
           sprite.setLocationActive(locId === newState.currentLocationId)
         })
-        const newLocSprite = this.locationSprites.get(newState.currentLocationId)
-        if (newLocSprite) {
-          const pos = newLocSprite.getCenter()
-          this.avatar.setPosition(pos.x, pos.y)
-        }
+        const teleportLoc = getLocationById(newState.currentLocationId, this.mapLocations)
+        this.car.setPosition(teleportLoc.cx, teleportLoc.cy)
         this.hud.showActions(
           newState.currentLocationId,
           newState,
@@ -507,7 +502,7 @@ export class CityScene extends Phaser.Scene {
       return
     }
 
-    if (this.avatar.isCurrentlyMoving()) return
+    if (this.car.isCurrentlyMoving()) return
 
     const targetSprite = this.locationSprites.get(id)
     if (!targetSprite) return
@@ -518,13 +513,12 @@ export class CityScene extends Phaser.Scene {
     // Hide actions while traveling
     this.hud.hideActions()
 
-    const targetCenter = targetSprite.getCenter()
+    // Build street route and compute distance-proportional time/energy/duration.
+    const sourceLoc = getLocationById(state.currentLocationId, this.mapLocations)
+    const targetLoc = getLocationById(id, this.mapLocations)
+    const route = buildRoute(sourceLoc, targetLoc)
+    const dist = routeLength(route)
 
-    // Distance-proportional time cost and tween duration.
-    const startPos = this.avatar.getPosition()
-    const dist = Math.sqrt(
-      (targetCenter.x - startPos.x) ** 2 + (targetCenter.y - startPos.y) ** 2,
-    )
     const timeCost = Math.max(3, Math.min(12, Math.round(dist / 50)))
     const energyCost = Math.max(2, Math.ceil(timeCost * 0.4))
     const moveDuration = Math.max(400, Math.min(1400, Math.round(dist * 2.2)))
@@ -532,9 +526,8 @@ export class CityScene extends Phaser.Scene {
 
     audioSystem.playSFX('move')
 
-    this.avatar.moveTo(
-      targetCenter.x,
-      targetCenter.y,
+    this.car.driveRoute(
+      route,
       () => {
         // Finalize: rebase on startTimeUnits so consumeTime handles day/week correctly.
         audioSystem.playSFX('arrive')
@@ -553,7 +546,7 @@ export class CityScene extends Phaser.Scene {
         this.hud.showActions(arrivedAt, newState, (actionId) => this.handleAction(actionId), (msg) => this.showToast(msg))
       },
       (progress) => {
-        // Smoothly interpolate timeUnits as the avatar walks.
+        // Smoothly interpolate timeUnits as the car drives.
         store.setState((s) => ({
           ...s,
           calendar: {

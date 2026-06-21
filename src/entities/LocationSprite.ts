@@ -11,7 +11,6 @@ export class LocationSprite extends Phaser.GameObjects.Container {
   private namePlate: Phaser.GameObjects.Rectangle
   private nameText: Phaser.GameObjects.Text
   private glow: Phaser.GameObjects.Rectangle
-  private pin: Phaser.GameObjects.Container
   private hitZone: Phaser.GameObjects.Zone
   private isActive = false
 
@@ -57,11 +56,6 @@ export class LocationSprite extends Phaser.GameObjects.Container {
     this.nameText.setResolution(3)
     this.add(this.nameText)
 
-    // "YOU ARE HERE" pin/flag (hidden unless active).
-    this.pin = this.buildPin(scene, w / 2, -10)
-    this.pin.setVisible(false)
-    this.add(this.pin)
-
     // Dedicated zone at world coords for reliable hit detection.
     // Zones are processed by Phaser's input system independently of the Container
     // transform chain, giving 100% reliable pointer events.
@@ -74,22 +68,6 @@ export class LocationSprite extends Phaser.GameObjects.Container {
     this.hitZone.on('pointerdown', () => this.onPointerDown())
 
     scene.add.existing(this as unknown as Phaser.GameObjects.GameObject)
-  }
-
-  private buildPin(scene: Phaser.Scene, x: number, y: number): Phaser.GameObjects.Container {
-    const flagPole = scene.add.rectangle(0, 4, 2, 14, 0x222230)
-    const flag = scene.add.triangle(8, -2, 0, 0, 0, 8, 12, 4, 0xff5a3c)
-    const label = scene.add.text(0, -14, 'YOU ARE HERE', {
-      fontFamily: '"Press Start 2P", monospace',
-      fontSize: '7px',
-      color: '#ffe066',
-      backgroundColor: '#14141f',
-      padding: { x: 3, y: 2 },
-      align: 'center',
-    })
-    label.setOrigin(0.5, 1)
-    label.setResolution(3)
-    return scene.add.container(x, y, [flagPole, flag, label])
   }
 
   private onPointerOver(): void {
@@ -109,7 +87,6 @@ export class LocationSprite extends Phaser.GameObjects.Container {
   setLocationActive(active: boolean): void {
     this.isActive = active
     this.glow.setVisible(active)
-    this.pin.setVisible(active)
     if (active) {
       this.building.clearTint()
       this.scene.tweens.add({

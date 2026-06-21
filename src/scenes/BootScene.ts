@@ -52,6 +52,7 @@ export class BootScene extends Phaser.Scene {
     }
     this.buildAvatar()
     this.buildShadow()
+    this.buildCar()
   }
 
   // --- Avatar (2-frame 8-bit pixel dog) ---------------------------------------
@@ -137,6 +138,42 @@ export class BootScene extends Phaser.Scene {
     g.fillEllipse(14 * PX, 4 * PX, 24 * PX, 6 * PX)
     if (this.textures.exists('soft-shadow')) this.textures.remove('soft-shadow')
     g.generateTexture('soft-shadow', 28 * PX, 8 * PX)
+    g.destroy()
+  }
+
+  // --- Player car (top-down, facing right) ------------------------------------
+
+  private buildCar(): void {
+    const S = 3
+    const g = this.make.graphics({ x: 0, y: 0 })
+
+    // Tires — dark charcoal, two axles (front cols 1-2, rear cols 7-8)
+    g.fillStyle(0x1a1a22, 1)
+    g.fillRect(1 * S, 0 * S, 2 * S, 1 * S)  // front axle top
+    g.fillRect(1 * S, 5 * S, 2 * S, 1 * S)  // front axle bottom
+    g.fillRect(7 * S, 0 * S, 2 * S, 1 * S)  // rear axle top
+    g.fillRect(7 * S, 5 * S, 2 * S, 1 * S)  // rear axle bottom
+
+    // Body — bright yellow
+    g.fillStyle(0xf5c200, 1)
+    g.fillRect(0 * S, 1 * S, 9 * S, 4 * S)
+
+    // Roof / windshields — pale sky blue
+    g.fillStyle(0xadd8f0, 1)
+    g.fillRect(3 * S, 2 * S, 4 * S, 2 * S)
+
+    // Headlights — warm white (front = right)
+    g.fillStyle(0xfffff0, 1)
+    g.fillRect(9 * S, 1 * S, 1 * S, 1 * S)
+    g.fillRect(9 * S, 4 * S, 1 * S, 1 * S)
+
+    // Taillights — red-orange (rear = left)
+    g.fillStyle(0xff4400, 1)
+    g.fillRect(0 * S, 1 * S, 1 * S, 1 * S)
+    g.fillRect(0 * S, 4 * S, 1 * S, 1 * S)
+
+    if (this.textures.exists('car')) this.textures.remove('car')
+    g.generateTexture('car', 10 * S, 6 * S)  // 30 × 18 px
     g.destroy()
   }
 
