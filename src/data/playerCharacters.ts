@@ -3,30 +3,30 @@ export interface PlayerCharacterDef {
   name: string
   gender: 'male' | 'female'
   tagline: string
-  portrait: string  // path relative to BASE_URL, e.g. 'assets/portraits/player_alex.png'
+  portrait: string  // path relative to BASE_URL, e.g. 'assets/portraits/player_tyler.png'
 }
 
 export const PLAYER_CHARACTERS: PlayerCharacterDef[] = [
   {
-    id: 'player_alex',
-    name: 'Alex',
+    id: 'player_tyler',
+    name: 'Tyler',
     gender: 'male',
-    tagline: 'The Everyman',
-    portrait: 'assets/portraits/player_alex.png',
+    tagline: 'The Cool Guy',
+    portrait: 'assets/portraits/player_tyler.png',
   },
   {
-    id: 'player_marcus',
-    name: 'Marcus',
+    id: 'player_rex',
+    name: 'Rex',
     gender: 'male',
-    tagline: 'The Go-Getter',
-    portrait: 'assets/portraits/player_marcus.png',
+    tagline: 'The Punk',
+    portrait: 'assets/portraits/player_rex.png',
   },
   {
-    id: 'player_daniel',
-    name: 'Daniel',
+    id: 'player_ash',
+    name: 'Ash',
     gender: 'male',
-    tagline: 'The Thinker',
-    portrait: 'assets/portraits/player_daniel.png',
+    tagline: 'The Brooder',
+    portrait: 'assets/portraits/player_ash.png',
   },
   {
     id: 'player_victor',
@@ -36,11 +36,11 @@ export const PLAYER_CHARACTERS: PlayerCharacterDef[] = [
     portrait: 'assets/portraits/player_victor.png',
   },
   {
-    id: 'player_emma',
-    name: 'Emma',
+    id: 'player_vera',
+    name: 'Vera',
     gender: 'female',
-    tagline: 'The Optimist',
-    portrait: 'assets/portraits/player_emma.png',
+    tagline: 'The Elder',
+    portrait: 'assets/portraits/player_vera.png',
   },
   {
     id: 'player_zoe',

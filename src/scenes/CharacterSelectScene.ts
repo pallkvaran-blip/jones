@@ -14,8 +14,8 @@ interface SceneData {
 
 export class CharacterSelectScene extends Phaser.Scene {
   private overlay: HTMLElement | null = null
-  private p1CharId = 'player_alex'
-  private p2CharId = 'player_emma'
+  private p1CharId = 'player_tyler'
+  private p2CharId = 'player_vera'
   private selectingPlayer: 1 | 2 = 1
   private sceneData!: SceneData
 
@@ -25,8 +25,8 @@ export class CharacterSelectScene extends Phaser.Scene {
 
   init(data: SceneData): void {
     this.sceneData = data
-    this.p1CharId = 'player_alex'
-    this.p2CharId = 'player_emma'
+    this.p1CharId = 'player_tyler'
+    this.p2CharId = 'player_vera'
     this.selectingPlayer = 1
   }
 
