@@ -33,6 +33,7 @@ export const LOCATION_JOBS: Partial<Record<LocationId, LocationJobDef>> = {
       { rank: 1, requiredEducation: 0 },
       { rank: 2, requiredEducation: 3.0 },
       { rank: 3, requiredEducation: 8.0 },
+      { rank: 4, requiredEducation: 13.0 },
     ],
   },
   grocery: {
@@ -42,6 +43,7 @@ export const LOCATION_JOBS: Partial<Record<LocationId, LocationJobDef>> = {
       { rank: 1, requiredEducation: 0 },
       { rank: 2, requiredEducation: 2.0 },
       { rank: 3, requiredEducation: 5.0 },
+      { rank: 4, requiredEducation: 9.0 },
     ],
   },
   restaurant: {
@@ -51,6 +53,7 @@ export const LOCATION_JOBS: Partial<Record<LocationId, LocationJobDef>> = {
       { rank: 1, requiredEducation: 0 },
       { rank: 2, requiredEducation: 2.0 },
       { rank: 3, requiredEducation: 5.0 },
+      { rank: 4, requiredEducation: 9.0 },
     ],
   },
   pawn: {
@@ -60,6 +63,7 @@ export const LOCATION_JOBS: Partial<Record<LocationId, LocationJobDef>> = {
       { rank: 1, requiredEducation: 0 },
       { rank: 2, requiredEducation: 3.0 },
       { rank: 3, requiredEducation: 6.0 },
+      { rank: 4, requiredEducation: 11.0 },
     ],
   },
   university: {
@@ -69,6 +73,7 @@ export const LOCATION_JOBS: Partial<Record<LocationId, LocationJobDef>> = {
       { rank: 1, requiredEducation: 4.0 },
       { rank: 2, requiredEducation: 7.0 },
       { rank: 3, requiredEducation: 11.0 },
+      { rank: 4, requiredEducation: 16.0 },
     ],
   },
   dealership: {
@@ -78,6 +83,7 @@ export const LOCATION_JOBS: Partial<Record<LocationId, LocationJobDef>> = {
       { rank: 1, requiredEducation: 0 },
       { rank: 2, requiredEducation: 3.0 },
       { rank: 3, requiredEducation: 8.0 },
+      { rank: 4, requiredEducation: 13.0 },
     ],
   },
   hospital: {
@@ -97,6 +103,7 @@ export const LOCATION_JOBS: Partial<Record<LocationId, LocationJobDef>> = {
       { rank: 1, requiredEducation: 4.0 },
       { rank: 2, requiredEducation: 8.0 },
       { rank: 3, requiredEducation: 12.0 },
+      { rank: 4, requiredEducation: 17.0 },
     ],
   },
   electronics: {
@@ -106,6 +113,7 @@ export const LOCATION_JOBS: Partial<Record<LocationId, LocationJobDef>> = {
       { rank: 1, requiredEducation: 4.0 },
       { rank: 2, requiredEducation: 8.0 },
       { rank: 3, requiredEducation: 12.0 },
+      { rank: 4, requiredEducation: 17.0 },
     ],
   },
   realty: {
@@ -115,6 +123,7 @@ export const LOCATION_JOBS: Partial<Record<LocationId, LocationJobDef>> = {
       { rank: 1, requiredEducation: 4.0 },
       { rank: 2, requiredEducation: 8.0 },
       { rank: 3, requiredEducation: 12.0 },
+      { rank: 4, requiredEducation: 17.0 },
     ],
   },
   stockexchange: {
@@ -124,6 +133,7 @@ export const LOCATION_JOBS: Partial<Record<LocationId, LocationJobDef>> = {
       { rank: 1, requiredEducation: 7.0 },
       { rank: 2, requiredEducation: 11.0 },
       { rank: 3, requiredEducation: 16.0 },
+      { rank: 4, requiredEducation: 22.0 },
     ],
   },
 };

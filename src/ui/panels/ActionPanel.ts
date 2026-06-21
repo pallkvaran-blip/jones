@@ -97,14 +97,14 @@ export class ActionPanel {
 
     const btns = actions.map((action) => {
       const avail = action.available(state);
-      const detail = avail ? action.detail : action.unavailableReason(state);
       const willDeplete = avail && (action.energyCost ?? 0) > 0 && state.player.energy <= (action.energyCost ?? 0);
       const disabledClass = avail ? '' : ' disabled';
       const warnClass = willDeplete ? ' warn' : '';
+      const reason = avail ? '' : action.unavailableReason(state);
       return `
-        <button class="action-btn${disabledClass}${warnClass}" data-action-id="${action.id}" ${avail ? '' : 'aria-disabled="true"'}>
+        <button class="action-btn${disabledClass}${warnClass}" data-action-id="${action.id}" data-reason="${reason}" ${avail ? '' : 'aria-disabled="true"'}>
           <span class="action-label">${action.label}</span>
-          <span class="action-detail">${detail}</span>
+          <span class="action-detail">${action.detail}</span>
         </button>
       `;
     }).join('');
@@ -142,7 +142,7 @@ export class ActionPanel {
         e.stopPropagation();
         if (dragged) return;
         if (btn.classList.contains('disabled')) {
-          const reason = btn.querySelector('.action-detail')?.textContent ?? '';
+          const reason = btn.dataset.reason ?? '';
           if (reason && this.onUnavailable) this.onUnavailable(reason);
           return;
         }
@@ -161,15 +161,16 @@ export class ActionPanel {
       if (!action) return;
 
       const avail = action.available(state);
-      const detail = avail ? action.detail : action.unavailableReason(state);
       const willDeplete = avail && (action.energyCost ?? 0) > 0 && state.player.energy <= (action.energyCost ?? 0);
 
       if (avail) {
         btn.classList.remove('disabled');
         btn.removeAttribute('aria-disabled');
+        btn.dataset.reason = '';
       } else {
         btn.classList.add('disabled');
         btn.setAttribute('aria-disabled', 'true');
+        btn.dataset.reason = action.unavailableReason(state);
       }
 
       if (willDeplete) {
@@ -177,9 +178,6 @@ export class ActionPanel {
       } else {
         btn.classList.remove('warn');
       }
-
-      const detailEl = btn.querySelector<HTMLElement>('.action-detail');
-      if (detailEl) detailEl.textContent = detail;
     });
   }
 
