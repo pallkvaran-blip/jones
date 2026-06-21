@@ -299,6 +299,7 @@ export const CHARACTERS: Record<string, CharacterDef> = {
 
   dealership: {
     name: 'Gary',
+    portrait: 'assets/portraits/char_gary.png',
     // Gary: slick car salesman, grey suit, yellow tie, salesman grin
     palette: [
       'transparent', // 0

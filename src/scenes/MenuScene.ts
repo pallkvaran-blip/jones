@@ -508,7 +508,7 @@ export class MenuScene extends Phaser.Scene {
       'assets/portraits/char_sandra.png',
       'assets/portraits/char_dmitri.png',
       'assets/portraits/char_kenji.png',
-      'assets/portraits/char_valentina.png',
+      'assets/portraits/char_gary.png',
       'assets/portraits/char_lenny.png',
       'assets/portraits/char_duke.png',
       'assets/portraits/char_clarissa.png',
