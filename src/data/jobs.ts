@@ -87,6 +87,7 @@ export const LOCATION_JOBS: Partial<Record<LocationId, LocationJobDef>> = {
       { rank: 1, requiredEducation: 5.0 },
       { rank: 2, requiredEducation: 9.0 },
       { rank: 3, requiredEducation: 14.0 },
+      { rank: 4, requiredEducation: 20.0 },
     ],
   },
   bank: {
