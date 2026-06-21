@@ -514,7 +514,7 @@ export class MenuScene extends Phaser.Scene {
 
   private preloadPortraits(): void {
     const base = import.meta.env.BASE_URL;
-    const portraits = [
+    const assets = [
       'assets/portraits/char_harold.png',
       'assets/portraits/char_rex.png',
       'assets/portraits/char_prof_aldric.png',
@@ -531,8 +531,20 @@ export class MenuScene extends Phaser.Scene {
       'assets/portraits/pet_whiskers.png',
       'assets/portraits/pet_polly.png',
       'assets/portraits/pet_bubbles.png',
+      'assets/buildings/building_home.png',
+      'assets/buildings/building_employment.png',
+      'assets/buildings/building_university.png',
+      'assets/buildings/building_bank.png',
+      'assets/buildings/building_grocery.png',
+      'assets/buildings/building_electronics.png',
+      'assets/buildings/building_clothing.png',
+      'assets/buildings/building_restaurant.png',
+      'assets/buildings/building_pawn.png',
+      'assets/buildings/building_realty.png',
+      'assets/buildings/building_hospital.png',
+      'assets/buildings/building_stockexchange.png',
     ];
-    for (const p of portraits) {
+    for (const p of assets) {
       const img = new Image();
       img.src = base + p;
     }

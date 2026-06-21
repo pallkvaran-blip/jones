@@ -13,7 +13,15 @@ export class BootScene extends Phaser.Scene {
   }
 
   preload(): void {
-    // No external assets — everything is generated programmatically.
+    const base = import.meta.env.BASE_URL;
+    const ids = [
+      'home', 'employment', 'university', 'bank', 'grocery',
+      'electronics', 'clothing', 'restaurant', 'pawn', 'realty',
+      'hospital', 'stockexchange',
+    ];
+    for (const id of ids) {
+      this.load.image(`building-${id}`, `${base}assets/buildings/building_${id}.png`);
+    }
   }
 
   async create(): Promise<void> {
@@ -37,9 +45,10 @@ export class BootScene extends Phaser.Scene {
   }
 
   private createTextures(): void {
-    // ASSET: replace generated pixel facades with real sprite sheet here
     for (const loc of locations) {
-      this.buildFacade(loc)
+      if (!this.textures.exists(`building-${loc.id}`)) {
+        this.buildFacade(loc)
+      }
     }
     this.buildAvatar()
     this.buildShadow()
