@@ -731,7 +731,7 @@ function makeStockActions(state: GameState): ActionDef[] {
 const PET_SHOP_ACTIONS: ActionDef[] = PETS.map((pet) => ({
   id: `buy_pet_${pet.id}`,
   label: `Adopt ${pet.name}`,
-  detail: `${pet.species} — $${pet.price} | 10m`,
+  detail: `${pet.species} — $${pet.price} | 10m<br>${pet.description}`,
   timeCost: 10,
   available: (s: GameState) => !s.player.pets.includes(pet.id) && s.player.money >= pet.price,
   unavailableReason: (s: GameState) => {
