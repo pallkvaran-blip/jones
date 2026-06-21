@@ -7,6 +7,7 @@ export interface PetDef {
   homeSleepEnergyBonus: number  // extra energy added when sleeping/resting
   homeStudyEduBonus: number     // extra education when studying at home
   description: string
+  portrait?: string
   palette: string[]
   pixels: number[][]
   sounds: string[]
@@ -22,6 +23,7 @@ export const PETS: PetDef[] = [
     homeSleepEnergyBonus: 0,
     homeStudyEduBonus: 0,
     description: 'Fluffy, loyal, endlessly enthusiastic. Morale+8 on home actions.',
+    portrait: '/assets/portraits/pet_ozzy.png',
     // Ozzy: fluffy cream/wheat colored face, round dark eyes, black nose, floppy ears
     palette: [
       'transparent', // 0
@@ -95,6 +97,7 @@ export const PETS: PetDef[] = [
     homeSleepEnergyBonus: 8,
     homeStudyEduBonus: 0,
     description: 'Aloof but secretly devoted. Morale+5 home, Energy+8 when you sleep.',
+    portrait: '/assets/portraits/pet_whiskers.png',
     // Whiskers: orange striped face, green eyes, white muzzle, pink nose, pointy ears
     palette: [
       'transparent', // 0
@@ -168,6 +171,7 @@ export const PETS: PetDef[] = [
     homeSleepEnergyBonus: 0,
     homeStudyEduBonus: 0.1,
     description: 'Surprisingly motivating. Morale+4 home, Education+0.1 when you study.',
+    portrait: '/assets/portraits/pet_polly.png',
     // Polly: bright green feathers, yellow beak, orange/red around eyes, crest feathers
     palette: [
       'transparent', // 0
@@ -241,6 +245,7 @@ export const PETS: PetDef[] = [
     homeSleepEnergyBonus: 0,
     homeStudyEduBonus: 0,
     description: 'Calming blue light. Morale+3 on every home action.',
+    portrait: '/assets/portraits/pet_bubbles.png',
     // Bubbles: rectangular aquarium frame viewed head-on, blue water, colorful fish inside
     palette: [
       'transparent', // 0

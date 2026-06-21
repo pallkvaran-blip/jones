@@ -34,11 +34,18 @@ export class ActionPanel {
     return canvas.toDataURL();
   }
 
+  private portraitImg(sprite: { palette: string[], pixels: number[][], portrait?: string }, alt: string): string {
+    if (sprite.portrait) {
+      return `<img class="char-portrait char-portrait--photo" src="${sprite.portrait}" width="80" height="80" alt="${alt}">`;
+    }
+    const dataUrl = this.buildPortraitDataUrl(sprite);
+    return `<img class="char-portrait" src="${dataUrl}" width="48" height="60" alt="${alt}">`;
+  }
+
   private buildCharSection(locationId: string, state: GameState): string {
     const char = getCharacter(locationId);
     if (!char) return '';
 
-    const dataUrl = this.buildPortraitDataUrl(char);
     const line = char.lines[Math.floor(Math.random() * char.lines.length)];
     const displayName = locationId === 'home' ? state.player.name : char.name;
 
@@ -48,12 +55,11 @@ export class ActionPanel {
       for (const petId of playerPets) {
         const pet = getPet(petId);
         if (!pet) continue;
-        const petUrl = this.buildPortraitDataUrl(pet);
         const petLine = pet.sounds[Math.floor(Math.random() * pet.sounds.length)];
         petRows += `
           <div class="pet-row">
             <div class="char-header">
-              <img class="char-portrait" src="${petUrl}" width="48" height="60" alt="${pet.name}">
+              ${this.portraitImg(pet, pet.name)}
               <span class="char-name">${pet.name}</span>
             </div>
             <div class="char-speech pet-speech">${petLine}</div>
@@ -65,7 +71,7 @@ export class ActionPanel {
     return `
       <div class="char-section">
         <div class="char-header">
-          <img class="char-portrait" src="${dataUrl}" width="48" height="60" alt="${displayName}">
+          ${this.portraitImg(char, displayName)}
           <span class="char-name">${displayName}</span>
         </div>
         <div class="char-speech">${line}</div>

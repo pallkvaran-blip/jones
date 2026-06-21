@@ -343,6 +343,12 @@ body {
   flex-shrink: 0;
 }
 
+.char-portrait--photo {
+  image-rendering: auto;
+  border-radius: 6px;
+  object-fit: cover;
+}
+
 .char-name {
   font-size: 6px;
   color: var(--color-accent);
