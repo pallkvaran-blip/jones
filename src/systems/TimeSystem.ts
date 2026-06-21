@@ -80,10 +80,12 @@ export function advanceDay(state: GameState): GameState {
   let newDay = state.calendar.day + 1;
   const newTimeUnits = 100;
 
+  const coffeeMakerBonus = state.player.hasCoffeeMaker ? 10 : 0;
   const updatedPlayer = {
     ...state.player,
     morale: Math.max(0, state.player.morale - 5),
-    energy: Math.max(0, state.player.energy - 5),
+    energy: Math.min(100, Math.max(0, state.player.energy - 5) + coffeeMakerBonus),
+    money: state.player.money + (state.player.hasComputer ? 50 : 0),
   };
 
   const nextState: GameState = {

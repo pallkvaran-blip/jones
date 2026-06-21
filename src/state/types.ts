@@ -25,6 +25,9 @@ export interface Player {
   housingId: string;
   wardrobe: number;
   hasComputer: boolean;
+  hasCoffeeMaker: boolean;
+  hasTV: boolean;
+  hasTreadmill: boolean;
   transport: TransportType;
   jobRank: number;
   pets: string[];

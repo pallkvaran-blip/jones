@@ -75,6 +75,12 @@ export function applyWeeklyEconomy(state: GameState): GameState {
     }
   }
 
+  // --- Smart TV weekly morale ---
+  if (s.player.hasTV) {
+    s = { ...s, player: { ...s.player, morale: Math.min(100, s.player.morale + 8) } }
+    entries.push('Smart TV +8 morale')
+  }
+
   // --- Stock price changes ---
   s = tickStockPrices(s)
 

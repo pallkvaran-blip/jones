@@ -73,7 +73,7 @@ const sleepAction: ActionDef = {
   unavailableReason: () => '',
   apply(state) {
     const pets = state.player.pets ?? [];
-    const sleepCap = (getHousingTier(state.player.housingId)?.sleepEnergyCap ?? 100) + petSleepEnergyBonus(pets);
+    const sleepCap = (getHousingTier(state.player.housingId)?.sleepEnergyCap ?? 100) + petSleepEnergyBonus(pets) + (state.player.hasTreadmill ? 10 : 0);
     return {
       ...state,
       player: {
@@ -369,12 +369,12 @@ const quickSnackAction: ActionDef = {
 const buyComputerAction: ActionDef = {
   id: 'buy_computer',
   label: 'Buy Computer',
-  detail: 'HasComputer, Morale+10, -$800 | 8m',
+  detail: '+$50/day passive income | -$350 | 8m',
   timeCost: 8,
-  available: (state) => !state.player.hasComputer && state.player.money >= 800,
+  available: (state) => !state.player.hasComputer && state.player.money >= 350,
   unavailableReason: (state) => {
     if (state.player.hasComputer) return 'Already own a computer';
-    return 'Need $800';
+    return 'Need $350';
   },
   apply(state) {
     return {
@@ -382,8 +382,73 @@ const buyComputerAction: ActionDef = {
       player: {
         ...state.player,
         hasComputer: true,
-        morale: cap(state.player.morale + 10),
-        money: state.player.money - 800,
+        money: state.player.money - 350,
+      },
+    };
+  },
+};
+
+const buyCoffeeMakerAction: ActionDef = {
+  id: 'buy_coffee_maker',
+  label: 'Buy Coffee Maker',
+  detail: '+10 energy every morning | -$200 | 5m',
+  timeCost: 5,
+  available: (state) => !state.player.hasCoffeeMaker && state.player.money >= 200,
+  unavailableReason: (state) => {
+    if (state.player.hasCoffeeMaker) return 'Already own a coffee maker';
+    return 'Need $200';
+  },
+  apply(state) {
+    return {
+      ...state,
+      player: {
+        ...state.player,
+        hasCoffeeMaker: true,
+        money: state.player.money - 200,
+      },
+    };
+  },
+};
+
+const buyTVAction: ActionDef = {
+  id: 'buy_tv',
+  label: 'Buy Smart TV',
+  detail: '+8 morale every week | -$250 | 5m',
+  timeCost: 5,
+  available: (state) => !state.player.hasTV && state.player.money >= 250,
+  unavailableReason: (state) => {
+    if (state.player.hasTV) return 'Already own a smart TV';
+    return 'Need $250';
+  },
+  apply(state) {
+    return {
+      ...state,
+      player: {
+        ...state.player,
+        hasTV: true,
+        money: state.player.money - 250,
+      },
+    };
+  },
+};
+
+const buyTreadmillAction: ActionDef = {
+  id: 'buy_treadmill',
+  label: 'Buy Treadmill',
+  detail: '+10 max energy permanently | -$150 | 5m',
+  timeCost: 5,
+  available: (state) => !state.player.hasTreadmill && state.player.money >= 150,
+  unavailableReason: (state) => {
+    if (state.player.hasTreadmill) return 'Already own a treadmill';
+    return 'Need $150';
+  },
+  apply(state) {
+    return {
+      ...state,
+      player: {
+        ...state.player,
+        hasTreadmill: true,
+        money: state.player.money - 150,
       },
     };
   },
@@ -503,7 +568,7 @@ const fastFoodAction: ActionDef = {
 const pawnComputerAction: ActionDef = {
   id: 'pawn_computer',
   label: 'Pawn Computer',
-  detail: 'Sell computer for $400 | 8m',
+  detail: 'Sell computer for $175 | 8m',
   timeCost: 8,
   available: (state) => state.player.hasComputer,
   unavailableReason: () => 'No computer to pawn',
@@ -513,7 +578,7 @@ const pawnComputerAction: ActionDef = {
       player: {
         ...state.player,
         hasComputer: false,
-        money: state.player.money + 400,
+        money: state.player.money + 175,
       },
     };
   },
@@ -812,7 +877,7 @@ export function getActionsForLocation(locationId: LocationId, state: GameState):
       return [buyGroceriesAction, quickSnackAction, ...getJobActions(locationId, state)];
 
     case 'electronics':
-      return [buyComputerAction, browseElectronicsAction, ...getJobActions(locationId, state)];
+      return [buyComputerAction, buyCoffeeMakerAction, buyTVAction, buyTreadmillAction, browseElectronicsAction, ...getJobActions(locationId, state)];
 
     case 'dealership':
       return [browseDealershipAction, buyBicycleAction, buySUVAction, buySportsCarAction, ...getJobActions(locationId, state)];

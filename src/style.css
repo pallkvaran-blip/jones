@@ -402,6 +402,44 @@ body {
   color: var(--color-text-dim);
 }
 
+/* Electronics section inside home char-section */
+.electronics-section {
+  margin-top: 6px;
+  padding-top: 5px;
+  border-top: 1px dashed var(--color-border);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.electronics-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.electronics-icon {
+  font-size: 14px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.electronics-info {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.electronics-name {
+  font-size: 7px;
+  color: var(--color-text);
+}
+
+.electronics-passive {
+  font-size: 5px;
+  color: var(--color-text-dim);
+}
+
 /* Scale down fonts/padding on narrow tablets */
 @media (max-width: 768px) {
   .action-btn { padding: 5px 4px; }

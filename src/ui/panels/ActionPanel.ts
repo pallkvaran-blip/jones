@@ -44,6 +44,29 @@ export class ActionPanel {
     return `<img class="char-portrait" src="${dataUrl}" width="48" height="60" alt="${alt}">`;
   }
 
+  private buildElectronicsSection(state: GameState): string {
+    const items = [
+      { owned: state.player.hasComputer,    icon: '💻', name: 'Computer',     passive: '+$50/day income' },
+      { owned: state.player.hasCoffeeMaker, icon: '☕', name: 'Coffee Maker', passive: '+10 energy/morning' },
+      { owned: state.player.hasTV,          icon: '📺', name: 'Smart TV',     passive: '+8 morale/week' },
+      { owned: state.player.hasTreadmill,   icon: '🏃', name: 'Treadmill',    passive: '+10 max energy' },
+    ].filter(i => i.owned);
+
+    if (items.length === 0) return '';
+
+    const rows = items.map(item => `
+      <div class="electronics-row">
+        <span class="electronics-icon">${item.icon}</span>
+        <div class="electronics-info">
+          <span class="electronics-name">${item.name}</span>
+          <span class="electronics-passive">${item.passive}</span>
+        </div>
+      </div>
+    `).join('');
+
+    return `<div class="electronics-section">${rows}</div>`;
+  }
+
   private buildCharSection(locationId: string, state: GameState): string {
     const char = getCharacter(locationId);
     if (!char) return '';
@@ -53,6 +76,7 @@ export class ActionPanel {
     const playerPortrait = locationId === 'home' ? `assets/portraits/${state.player.characterId}.png` : undefined;
 
     let petRows = '';
+    let electronicsSection = '';
     if (locationId === 'home') {
       const playerPets = state.player.pets ?? [];
       for (const petId of playerPets) {
@@ -69,6 +93,7 @@ export class ActionPanel {
           </div>
         `;
       }
+      electronicsSection = this.buildElectronicsSection(state);
     }
 
     return `
@@ -79,6 +104,7 @@ export class ActionPanel {
         </div>
         <div class="char-speech">${line}</div>
         ${petRows}
+        ${electronicsSection}
       </div>
     `;
   }
