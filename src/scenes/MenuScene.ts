@@ -18,6 +18,8 @@ export class MenuScene extends Phaser.Scene {
   }
 
   create(): void {
+    this.preloadPortraits();
+
     // Background gradient
     const bg = this.add.graphics();
     bg.fillGradientStyle(0x0d0d17, 0x0d0d17, 0x1a1a3e, 0x1a1a3e, 1);
@@ -508,6 +510,32 @@ export class MenuScene extends Phaser.Scene {
     overlay.addEventListener('pointerdown', (e) => {
       if (e.target === overlay) overlay.parentNode?.removeChild(overlay);
     });
+  }
+
+  private preloadPortraits(): void {
+    const base = import.meta.env.BASE_URL;
+    const portraits = [
+      'assets/portraits/char_harold.png',
+      'assets/portraits/char_rex.png',
+      'assets/portraits/char_prof_aldric.png',
+      'assets/portraits/char_sandra.png',
+      'assets/portraits/char_dmitri.png',
+      'assets/portraits/char_kenji.png',
+      'assets/portraits/char_valentina.png',
+      'assets/portraits/char_lenny.png',
+      'assets/portraits/char_duke.png',
+      'assets/portraits/char_clarissa.png',
+      'assets/portraits/char_dr_chen.png',
+      'assets/portraits/char_max.png',
+      'assets/portraits/pet_ozzy.png',
+      'assets/portraits/pet_whiskers.png',
+      'assets/portraits/pet_polly.png',
+      'assets/portraits/pet_bubbles.png',
+    ];
+    for (const p of portraits) {
+      const img = new Image();
+      img.src = base + p;
+    }
   }
 
   shutdown(): void {
