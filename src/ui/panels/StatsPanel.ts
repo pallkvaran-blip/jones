@@ -22,8 +22,8 @@ export class StatsPanel {
   private buildHTML(): string {
     return `
       <div class="panel-title">
-        JONES
-        <small>IN THE FAST LANE</small>
+        HUSTLE CITY
+        <small>LIFE IN THE FAST LANE</small>
       </div>
 
       <div class="sp-columns">
