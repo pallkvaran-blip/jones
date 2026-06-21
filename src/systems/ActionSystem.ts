@@ -2,7 +2,7 @@ import type { GameState, LocationId, TransportType } from '../state/types'
 import { consumeTime, applyEnergyCheck, applyStarvationEnergyDrain } from './TimeSystem'
 import { CAREER_JOBS, LOCATION_JOBS } from '../data/jobs'
 import { STOCKS, STOCK_NAMES, type StockId } from '../data/stocks'
-import { RENTAL_TIERS, OWN_TIERS, getHousingTier } from '../data/housing'
+import { HOUSING_TIERS, getHousingTier } from '../data/housing'
 import { PETS } from '../data/pets'
 import { rollWorkEvent } from '../data/workEvents'
 import { COURSES } from '../data/courses'
@@ -67,17 +67,18 @@ const studyAtHomeAction: ActionDef = {
 const sleepAction: ActionDef = {
   id: 'sleep',
   label: 'Sleep',
-  detail: 'Fully restores energy | 20m',
+  detail: 'Restores energy to max | 20m',
   timeCost: 20,
   available: () => true,
   unavailableReason: () => '',
   apply(state) {
     const pets = state.player.pets ?? [];
+    const sleepCap = (getHousingTier(state.player.housingId)?.sleepEnergyCap ?? 100) + petSleepEnergyBonus(pets);
     return {
       ...state,
       player: {
         ...state.player,
-        energy: cap(100 + petSleepEnergyBonus(pets)),
+        energy: sleepCap,
         morale: cap(state.player.morale + 5 + petMoraleBonus(pets)),
       },
     };
@@ -538,35 +539,16 @@ const browsePawnAction: ActionDef = {
 
 // --- REALTY actions ---
 
-// Pre-built rental move actions — fixed IDs so partial updates work
-const RENT_ACTIONS: ActionDef[] = RENTAL_TIERS.map((tier) => ({
-  id: `rent_${tier.id}`,
-  label: `Rent: ${tier.name}`,
-  detail: `$${tier.weeklyRent}/wk | E+${tier.dayEnergyBonus}/day | 10m`,
-  timeCost: 10,
-  available: (s: GameState) =>
-    !s.player.isOwner && s.player.housingId !== tier.id && s.player.money >= tier.weeklyRent,
-  unavailableReason: (s: GameState) => {
-    if (s.player.isOwner) return 'Sell property first';
-    if (s.player.housingId === tier.id) return 'Current home';
-    return `Need $${tier.weeklyRent}`;
-  },
-  apply(s: GameState) {
-    return addLog({ ...s, player: { ...s.player, housingId: tier.id } }, `Rented ${tier.name}!`);
-  },
-}));
-
-// Pre-built buy actions — fixed IDs
-const BUY_ACTIONS: ActionDef[] = OWN_TIERS.map((tier) => ({
-  id: `buy_property_${tier.id}`,
+// Buyable housing tiers (skip rental_apt — that's the default starting home)
+const REALTY_BUY_ACTIONS: ActionDef[] = HOUSING_TIERS.filter(t => t.purchaseCost > 0).map((tier) => ({
+  id: `buy_home_${tier.id}`,
   label: `Buy: ${tier.name}`,
-  detail: `$${tier.purchaseCost.toLocaleString()} | E+${tier.dayEnergyBonus}/day | 15m`,
+  detail: `$${tier.purchaseCost.toLocaleString()} | Sleep → ${tier.sleepEnergyCap} energy | 15m\n${tier.description}`,
   timeCost: 15,
   available: (s: GameState) =>
-    !s.player.isOwner && s.player.money + s.player.bankBalance >= tier.purchaseCost,
+    s.player.housingId !== tier.id && s.player.money + s.player.bankBalance >= tier.purchaseCost,
   unavailableReason: (s: GameState) => {
-    if (s.player.isOwner && s.player.housingId === tier.id) return 'Already owned';
-    if (s.player.isOwner) return 'Sell property first';
+    if (s.player.housingId === tier.id) return 'Current home';
     return `Need $${tier.purchaseCost.toLocaleString()}`;
   },
   apply(s: GameState) {
@@ -581,26 +563,10 @@ const BUY_ACTIONS: ActionDef[] = OWN_TIERS.map((tier) => ({
     }
     return addLog({
       ...s,
-      player: { ...s.player, housingId: tier.id, isOwner: true, money: cash, bankBalance: Math.max(0, bank), propertyValue: cost },
-    }, `Bought ${tier.name}!`);
+      player: { ...s.player, housingId: tier.id, money: cash, bankBalance: Math.max(0, bank) },
+    }, `Moved into ${tier.name}!`);
   },
 }));
-
-const sellPropertyAction: ActionDef = {
-  id: 'sell_property',
-  label: 'Sell Property',
-  detail: 'Get 70% back, move to studio | 15m',
-  timeCost: 15,
-  available: (s) => s.player.isOwner,
-  unavailableReason: () => 'No property owned',
-  apply(s) {
-    const proceeds = Math.floor(s.player.propertyValue * 0.7);
-    return addLog({
-      ...s,
-      player: { ...s.player, housingId: 'studio', isOwner: false, money: s.player.money + proceeds, propertyValue: 0 },
-    }, `Sold property for $${proceeds}!`);
-  },
-};
 
 const browseListingsAction: ActionDef = {
   id: 'browse_listings',
@@ -858,7 +824,7 @@ export function getActionsForLocation(locationId: LocationId, state: GameState):
       return [pawnComputerAction, browsePawnAction, ...getJobActions(locationId, state)];
 
     case 'realty':
-      return [...RENT_ACTIONS, ...BUY_ACTIONS, sellPropertyAction, browseListingsAction, ...getJobActions(locationId, state)];
+      return [...REALTY_BUY_ACTIONS, browseListingsAction, ...getJobActions(locationId, state)];
 
     case 'hospital':
       return [medicalCheckupAction, buyMedicineAction, ...getJobActions(locationId, state)];

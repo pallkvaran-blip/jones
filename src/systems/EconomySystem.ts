@@ -1,6 +1,5 @@
 import type { GameState } from '../state/types'
 import { STOCKS, STOCK_VOLATILITY, STOCK_DRIFT, type StockId } from '../data/stocks'
-import { getHousingTier } from '../data/housing'
 
 const BANK_INTEREST_RATE = 0.02
 const DEBT_INTEREST_RATE = 0.05
@@ -13,52 +12,6 @@ function log(state: GameState, msg: string): GameState {
 export function applyWeeklyEconomy(state: GameState): GameState {
   let s = state
   const entries: string[] = []
-
-  // --- Rent ---
-  const housing = getHousingTier(s.player.housingId)
-  const rent = housing?.weeklyRent ?? 0
-  if (rent > 0) {
-    if (s.player.money >= rent) {
-      s = { ...s, player: { ...s.player, money: s.player.money - rent } }
-    } else {
-      const cashAvail = s.player.money
-      const bankNeeded = rent - cashAvail
-      if (s.player.bankBalance >= bankNeeded) {
-        s = { ...s, player: { ...s.player, money: 0, bankBalance: s.player.bankBalance - bankNeeded } }
-      } else {
-        const shortfall = rent - cashAvail - s.player.bankBalance
-        s = { ...s, player: { ...s.player, money: 0, bankBalance: 0, debt: s.player.debt + shortfall } }
-        entries.push(`Missed rent! Debt +$${shortfall.toFixed(0)}`)
-      }
-    }
-    entries.push(`Rent -$${rent}`)
-  }
-
-  // --- Property appreciation (3% / week) ---
-  if (s.player.isOwner && s.player.propertyValue > 0) {
-    const appreciation = Math.floor(s.player.propertyValue * 0.03)
-    s = { ...s, player: { ...s.player, propertyValue: s.player.propertyValue + appreciation } }
-    entries.push(`Property +$${appreciation}`)
-  }
-
-  // --- Housing morale bonus ---
-  const moraleBonus = housing?.weeklyMoraleBonus ?? 0
-  if (moraleBonus > 0) {
-    s = { ...s, player: { ...s.player, morale: Math.min(100, s.player.morale + moraleBonus) } }
-  }
-
-  // --- Eviction: renters above studio with unmanageable debt ---
-  if (!s.player.isOwner && s.player.housingId !== 'studio' && s.player.debt > 10000) {
-    s = { ...s, player: { ...s.player, housingId: 'studio' }, pendingLifeEventId: s.pendingLifeEventId ?? 'evicted' }
-    entries.push('EVICTED! Moved to studio — debt too high.')
-  }
-
-  // --- Foreclosure: owners who let debt spiral ---
-  if (s.player.isOwner && s.player.debt > 80000) {
-    const proceeds = Math.floor(s.player.propertyValue * 0.3)
-    s = { ...s, player: { ...s.player, housingId: 'studio', isOwner: false, money: s.player.money + proceeds, propertyValue: 0 }, pendingLifeEventId: s.pendingLifeEventId ?? 'foreclosed' }
-    entries.push(`FORECLOSED! Distress sale returned $${proceeds}.`)
-  }
 
   // --- Bank interest on savings ---
   if (s.player.bankBalance > 0) {

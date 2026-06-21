@@ -13,7 +13,7 @@ function calcNetWorth(state: GameState): number {
   const portfolioValue = Object.entries(player.portfolio).reduce(
     (sum, [stock, shares]) => sum + shares * (economy.stockPrices[stock] ?? 0), 0
   )
-  return player.money + player.bankBalance + portfolioValue + player.propertyValue - player.debt
+  return player.money + player.bankBalance + portfolioValue - player.debt
 }
 
 function getGrade(netWorth: number, lossReason: string | null): string {
@@ -74,14 +74,13 @@ function moneyBreakdown(state: GameState): string {
     `
   }
 
-  const netWorth = player.money + player.bankBalance + portfolioValue + player.propertyValue - player.debt
+  const netWorth = player.money + player.bankBalance + portfolioValue - player.debt
   const nwColor = netWorth >= 0 ? '#ffd24a' : '#e74c3c'
 
   return `
     ${row('Cash', player.money, '#ffd24a')}
     ${row('Savings', player.bankBalance, '#ffd24a')}
     ${row('Investments', portfolioValue, '#a0d8a0')}
-    ${row('Property', player.propertyValue, '#a0b8d8')}
     ${player.debt > 0 ? row('Debt', -player.debt, '#e74c3c') : ''}
     <div style="border-top:1px solid #3a3a52; margin:6px 0;"></div>
     <div style="display:flex; justify-content:space-between; gap:8px; font-size:8px; font-family:${pf};">

@@ -22,6 +22,10 @@ export class BootScene extends Phaser.Scene {
     for (const id of ids) {
       this.load.image(`building-${id}`, `${base}assets/buildings/building_${id}.png`);
     }
+    // Home building variants — swapped dynamically based on housing tier
+    for (const v of ['rental_apt', 'own_apt', 'house', 'mansion']) {
+      this.load.image(`building-home-${v}`, `${base}assets/buildings/building_home_${v}.png`);
+    }
   }
 
   async create(): Promise<void> {

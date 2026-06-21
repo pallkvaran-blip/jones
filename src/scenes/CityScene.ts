@@ -74,6 +74,7 @@ export class CityScene extends Phaser.Scene {
   private lastLocationId!: LocationId
   private lastCalendarDay!: number
   private lastCalendarWeek!: number
+  private lastHousingId!: string
   private turnHandoffOverlay = new TurnHandoffOverlay()
   private lastHandoffState = false
 
@@ -88,6 +89,7 @@ export class CityScene extends Phaser.Scene {
     this.lastLocationId = state.currentLocationId
     this.lastCalendarDay = state.calendar.day
     this.lastCalendarWeek = state.calendar.week
+    this.lastHousingId = state.player.housingId
 
     // --- Base background ---
     this.add.rectangle(BOARD_W / 2, BOARD_H / 2, BOARD_W, BOARD_H, 0x232733).setDepth(0)
@@ -114,6 +116,9 @@ export class CityScene extends Phaser.Scene {
     // --- Pawn (starts on the current location's doorstep) ---
     const startLoc = getLocationById(state.currentLocationId, this.mapLocations)
     this.pawn = new Pawn(this, startLoc.cx, startLoc.cy, state.player.transport)
+
+    // Set home building tile to match starting housing tier
+    this.updateHomeTile(state.player.housingId)
 
     // --- Beveled board frame (drawn on top of everything board-side) ---
     this.frameGraphics = this.add.graphics().setDepth(40)
@@ -148,6 +153,12 @@ export class CityScene extends Phaser.Scene {
 
       // Sync pawn transport sprite when player acquires a vehicle
       this.pawn.setTransport(newState.player.transport)
+
+      // Sync home building tile when housing tier changes
+      if (newState.player.housingId !== this.lastHousingId) {
+        this.lastHousingId = newState.player.housingId
+        this.updateHomeTile(newState.player.housingId)
+      }
 
       // Sync sprites, pawn, and HUD when location changes outside of player movement
       // (e.g. advanceDay teleports the player home at end of day)
@@ -569,6 +580,10 @@ export class CityScene extends Phaser.Scene {
       },
       moveDuration,
     )
+  }
+
+  private updateHomeTile(housingId: string): void {
+    this.locationSprites.get('home')?.updateBuilding(`building-home-${housingId}`)
   }
 
   private getDayName(day: number): string {

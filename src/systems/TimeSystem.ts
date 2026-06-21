@@ -1,6 +1,5 @@
 import type { GameState, LocationId } from '../state/types'
 import { applyWeeklyEconomy } from './EconomySystem'
-import { getHousingTier } from '../data/housing'
 import { pickRandomWeekendEvent } from '../data/weekendEvents'
 import { pickRoughNightEventId } from '../data/lifeEvents'
 
@@ -81,12 +80,10 @@ export function advanceDay(state: GameState): GameState {
   let newDay = state.calendar.day + 1;
   const newTimeUnits = 100;
 
-  const energyBonus = getHousingTier(state.player.housingId)?.dayEnergyBonus ?? 0;
-
   const updatedPlayer = {
     ...state.player,
     morale: Math.max(0, state.player.morale - 5),
-    energy: Math.min(100, Math.max(0, state.player.energy - 5 + energyBonus)),
+    energy: Math.max(0, state.player.energy - 5),
   };
 
   const nextState: GameState = {

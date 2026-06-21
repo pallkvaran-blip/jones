@@ -247,8 +247,8 @@ export class StatsPanel {
     if (housingEl) {
       const tier = getHousingTier(player.housingId);
       const name = tier?.name ?? player.housingId.replace(/_/g, ' ');
-      housingEl.textContent = player.isOwner ? `${name} *` : name;
-      housingEl.style.color = player.isOwner ? '#f2c94c' : '#9ab4d6';
+      housingEl.textContent = name;
+      housingEl.style.color = '#9ab4d6';
     }
 
     const networthEl = this.el.querySelector<HTMLElement>('#sp-networth');
@@ -257,7 +257,7 @@ export class StatsPanel {
       const portfolioValue = Object.entries(player.portfolio).reduce(
         (sum, [stock, shares]) => sum + shares * (economy.stockPrices[stock] ?? 0), 0
       );
-      const netWorth = player.money + player.bankBalance + portfolioValue + player.propertyValue - player.debt;
+      const netWorth = player.money + player.bankBalance + portfolioValue - player.debt;
       networthEl.textContent = formatMoney(netWorth);
       networthEl.style.color = netWorth >= 0 ? '#ffd24a' : '#e74c3c';
     }

@@ -102,6 +102,10 @@ export class LocationSprite extends Phaser.GameObjects.Container {
     }
   }
 
+  updateBuilding(textureKey: string): void {
+    this.building.setTexture(textureKey)
+  }
+
   getId(): LocationId {
     return this.locationDef.id
   }

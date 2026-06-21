@@ -23,8 +23,6 @@ export interface Player {
   loanWeekTaken: number | null;
   portfolio: Record<string, number>;
   housingId: string;
-  isOwner: boolean;
-  propertyValue: number;
   wardrobe: number;
   hasComputer: boolean;
   transport: TransportType;
