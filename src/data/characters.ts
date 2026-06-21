@@ -393,51 +393,51 @@ export const CHARACTERS: Record<string, CharacterDef> = {
     ],
   },
 
-  pawn: {
-    name: 'Duke',
-    portrait: 'assets/portraits/char_duke.png',
-    // Duke: tough-looking pawn shop owner, stubble, dark vest, sly expression
+  waterpark: {
+    name: 'Marco',
+    portrait: 'assets/portraits/char_marco.png',
+    // Marco: upbeat lifeguard, tan skin, dark hair, red tank top, whistle
     palette: [
       'transparent', // 0
-      '#111111',     // 1 black
-      '#e8b88a',     // 2 skin tone
-      '#333333',     // 3 dark hair (short/scruffy)
-      '#555555',     // 4 grey stubble
-      '#d09068',     // 5 skin shadow
-      '#c0c0c0',     // 6 silver
-      '#3a2010',     // 7 dark vest
-      '#2a1000',     // 8 very dark vest
-      '#ffffff',     // 9 white shirt under vest
-      '#888888',     // 10 stubble shadow
-      '#f0a060',     // 11 skin highlight
+      '#111111',     // 1 black outline
+      '#d4956a',     // 2 tan skin
+      '#2a1a0a',     // 3 dark hair
+      '#c07840',     // 4 skin shadow
+      '#e8b080',     // 5 skin highlight
+      '#c02020',     // 6 red lifeguard top
+      '#901010',     // 7 dark red
+      '#f0c030',     // 8 yellow whistle
+      '#1a1a2a',     // 9 sunglasses dark
+      '#ffffff',     // 10 white teeth
+      '#7ab8e8',     // 11 sky blue
     ],
     pixels: [
-      [0, 0, 1, 3, 3, 3, 3, 3, 3, 3, 3, 3, 1, 0, 0, 0],
-      [0, 1, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 1, 0, 0],
-      [0, 3, 3, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3, 3, 0, 0],
-      [0, 3, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3, 0, 0],
-      [0, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1, 0, 0],
-      [0, 1, 2, 1, 1, 1, 2, 2, 2, 1, 1, 1, 2, 1, 0, 0],
-      [0, 1, 1, 1, 1, 2, 2, 2, 2, 2, 1, 1, 1, 1, 0, 0],
-      [0, 1, 2, 2, 6, 2, 2, 2, 2, 2, 6, 2, 2, 1, 0, 0],
-      [0, 1, 2, 5, 2, 2, 2, 2, 2, 2, 2, 5, 2, 1, 0, 0],
-      [0, 1, 2, 2, 2, 2, 5, 2, 5, 2, 2, 2, 2, 1, 0, 0],
-      [0, 1, 2, 2, 2, 5, 5, 5, 5, 5, 2, 2, 2, 1, 0, 0],
-      [0, 1, 4, 10, 4, 2, 2, 2, 2, 2, 4, 10, 4, 1, 0, 0],
-      [0, 1, 2, 4, 2, 2, 1, 2, 2, 1, 2, 4, 2, 1, 0, 0],
-      [0, 1, 4, 4, 10, 2, 1, 1, 1, 2, 10, 4, 4, 1, 0, 0],
+      [0, 0, 0, 3, 3, 3, 3, 3, 3, 3, 3, 3, 0, 0, 0, 0],
+      [0, 0, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 0, 0, 0],
+      [0, 0, 3, 3, 2, 2, 2, 2, 2, 2, 2, 3, 3, 0, 0, 0],
+      [0, 0, 3, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3, 0, 0, 0],
       [0, 0, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1, 0, 0, 0],
-      [0, 0, 7, 9, 9, 9, 2, 2, 9, 9, 9, 7, 0, 0, 0, 0],
-      [0, 7, 8, 7, 7, 9, 9, 9, 9, 7, 7, 8, 7, 0, 0, 0],
-      [7, 8, 7, 7, 7, 7, 9, 9, 7, 7, 7, 7, 8, 7, 0, 0],
-      [7, 7, 8, 7, 7, 7, 7, 7, 7, 7, 7, 8, 7, 7, 0, 0],
-      [0, 7, 7, 8, 7, 7, 7, 7, 7, 7, 8, 7, 7, 0, 0, 0],
+      [0, 0, 1, 2, 9, 9, 2, 2, 2, 9, 9, 2, 1, 0, 0, 0],
+      [0, 0, 1, 1, 9, 9, 2, 2, 2, 9, 9, 1, 1, 0, 0, 0],
+      [0, 0, 2, 2, 1, 5, 2, 2, 2, 5, 1, 2, 2, 0, 0, 0],
+      [0, 0, 2, 4, 2, 2, 2, 2, 2, 2, 2, 4, 2, 0, 0, 0],
+      [0, 0, 2, 2, 2, 2, 4, 2, 4, 2, 2, 2, 2, 0, 0, 0],
+      [0, 0, 2, 2, 2, 4, 4, 4, 4, 4, 2, 2, 2, 0, 0, 0],
+      [0, 0, 2, 2, 2, 2,10,10, 2, 2, 2, 2, 2, 0, 0, 0],
+      [0, 0, 2, 2, 2, 2, 1, 2, 2, 1, 2, 2, 2, 0, 0, 0],
+      [0, 0, 2, 2, 2, 2, 1, 1, 1, 2, 2, 2, 8, 0, 0, 0],
+      [0, 0, 0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0],
+      [0, 0, 6, 7, 7, 7, 2, 2, 7, 7, 7, 6, 0, 0, 0, 0],
+      [0, 6, 7, 6, 6, 7, 7, 7, 7, 6, 6, 7, 6, 0, 0, 0],
+      [6, 7, 6, 6, 6, 6, 7, 7, 6, 6, 6, 6, 7, 6, 0, 0],
+      [6, 6, 7, 6, 6, 6, 6, 6, 6, 6, 6, 7, 6, 6, 0, 0],
+      [0, 6, 6, 7, 6, 6, 6, 6, 6, 6, 7, 6, 6, 0, 0, 0],
     ],
     lines: [
-      "Everything has value. Absolutely everything.",
-      "One man's junk is my entire inventory.",
-      "I never ask where it came from.",
-      "The economy is organized trading. I'm very organized.",
+      "Sunscreen, hydration, good vibes. That's the formula.",
+      "The water's perfect today. It's always perfect.",
+      "Life's too short to not hit the slides.",
+      "You look stressed. The wave pool fixes that.",
     ],
   },
 

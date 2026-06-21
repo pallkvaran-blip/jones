@@ -10,7 +10,7 @@ export type FacadeKind =
   | 'electronics'
   | 'dealership'
   | 'restaurant'
-  | 'pawn'
+  | 'waterpark'
   | 'realty'
   | 'hospital'
   | 'stockexchange'
@@ -244,26 +244,25 @@ const RAW: RawLoc[] = [
     description: 'Grab a quick meal to restore hunger.',
   },
   {
-    id: 'pawn',
-    name: 'Pawn Shop',
-    icon: '💰',
-    color: '#95A5A6',
-    darkColor: '#717D7E',
+    id: 'waterpark',
+    name: 'Water Park',
+    icon: '🏊',
+    color: '#2980b9',
+    darkColor: '#1a5276',
     col: 0,
     row: 2,
-    facade: 'pawn',
+    facade: 'waterpark',
     palette: {
-      wall: '#7e8a8c',
-      wallDark: '#677173',
-      roof: '#4f5658',
-      gold: '#f2c94c',
-      goldDark: '#c79a2e',
-      glass: '#3a4446',
-      bar: '#2c3234',
-      neon: '#ff5fae',
-      frame: '#2c3234',
+      wall: '#3498db',
+      wallDark: '#2471a3',
+      roof: '#1a5276',
+      accent: '#f1c40f',
+      accentDark: '#d4ac0d',
+      water: '#85c1e9',
+      slide: '#e74c3c',
+      frame: '#1a5276',
     },
-    description: 'Buy and sell second-hand goods.',
+    description: 'Cool off and boost your morale at the water park.',
   },
   {
     id: 'realty',

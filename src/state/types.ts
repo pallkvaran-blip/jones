@@ -2,7 +2,7 @@ export type CareerTrack = 'trades' | 'tech' | 'finance' | 'healthcare' | 'creati
 export type Season = 'spring' | 'summer' | 'fall' | 'winter';
 export type Difficulty = 'short' | 'medium' | 'long';
 export type TransportType = 'walking' | 'bicycle' | 'suv' | 'sportscar';
-export type LocationId = 'home' | 'employment' | 'university' | 'bank' | 'grocery' | 'electronics' | 'dealership' | 'restaurant' | 'pawn' | 'realty' | 'hospital' | 'stockexchange';
+export type LocationId = 'home' | 'employment' | 'university' | 'bank' | 'grocery' | 'electronics' | 'dealership' | 'restaurant' | 'waterpark' | 'realty' | 'hospital' | 'stockexchange';
 
 export interface Player {
   name: string;

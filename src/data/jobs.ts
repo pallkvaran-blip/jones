@@ -56,14 +56,14 @@ export const LOCATION_JOBS: Partial<Record<LocationId, LocationJobDef>> = {
       { rank: 4, requiredEducation: 9.0 },
     ],
   },
-  pawn: {
-    track: 'finance',
-    titles: ['Sales Clerk', 'Buyer', 'Store Mgr', 'Owner'],
+  waterpark: {
+    track: 'creative',
+    titles: ['Lifeguard', 'Sr. Lifeguard', 'Pool Mgr', 'Park Dir'],
     jobTiers: [
       { rank: 1, requiredEducation: 0 },
-      { rank: 2, requiredEducation: 3.0 },
-      { rank: 3, requiredEducation: 6.0 },
-      { rank: 4, requiredEducation: 11.0 },
+      { rank: 2, requiredEducation: 2.0 },
+      { rank: 3, requiredEducation: 5.0 },
+      { rank: 4, requiredEducation: 9.0 },
     ],
   },
   university: {

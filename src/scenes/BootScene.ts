@@ -16,7 +16,7 @@ export class BootScene extends Phaser.Scene {
     const base = import.meta.env.BASE_URL;
     const ids = [
       'home', 'employment', 'university', 'bank', 'grocery',
-      'electronics', 'dealership', 'restaurant', 'pawn', 'realty',
+      'electronics', 'dealership', 'restaurant', 'waterpark', 'realty',
       'hospital', 'stockexchange',
     ];
     for (const id of ids) {
@@ -276,7 +276,7 @@ export class BootScene extends Phaser.Scene {
       electronics: () => this.facadeElectronics(b, p),
       dealership: () => this.facadeDealership(b, p),
       restaurant: () => this.facadeRestaurant(b, p),
-      pawn: () => this.facadePawn(b, p),
+      waterpark: () => this.facadeWaterpark(b, p),
       realty: () => this.facadeRealty(b, p),
       hospital: () => this.facadeHospital(b, p),
       stockexchange: () => this.facadeStock(b, p),
@@ -535,31 +535,26 @@ export class BootScene extends Phaser.Scene {
     b.rect(2, 36, 46, 2, p.yellow)
   }
 
-  // 9. Pawn — grungy, three gold balls, barred windows, neon PAWN.
-  private facadePawn(b: FacadeBuilder, p: Record<string, string>): void {
-    b.rect(2, 6, 46, 4, p.roof)
+  // 9. Water Park — colorful entrance, slide tower, ticket booth.
+  private facadeWaterpark(b: FacadeBuilder, p: Record<string, string>): void {
+    b.rect(2, 4, 46, 6, p.roof)
     b.rect(2, 10, 46, 34, p.wall)
     b.dither(2, 10, 46, 34, p.wall, p.wallDark)
-    // classic three gold balls hanging sign
-    b.rect(36, 6, 1, 3, p.frame)
-    b.circle(34, 11, 3, p.gold)
-    b.circle(38, 11, 3, p.gold)
-    b.circle(36, 14, 3, p.gold)
-    b.circle(34, 11, 1, p.goldDark)
-    b.circle(38, 11, 1, p.goldDark)
-    b.circle(36, 14, 1, p.goldDark)
-    // neon PAWN area
-    b.signBoard(6, 11, 22, 5, '#1a1416', p.frame)
-    b.rect(8, 13, 18, 1, p.neon)
-    // barred windows
+    // slide tower on the right
+    b.rect(34, 4, 12, 30, p.accent)
+    b.rect(36, 6, 8, 28, p.slide)
+    b.rect(36, 6, 8, 2, p.accentDark)
+    // sign board
+    b.signBoard(6, 11, 22, 5, p.water, p.frame)
+    b.rect(8, 13, 18, 1, p.accent)
+    // ticket windows
     for (let c = 0; c < 2; c++) {
-      const wx = 7 + c * 13
-      b.rect(wx, 20, 10, 12, p.frame)
-      b.rect(wx + 1, 21, 8, 10, p.glass)
-      for (let i = 0; i < 4; i++) b.rect(wx + 1 + i * 2, 21, 1, 10, p.bar)
+      const wx = 7 + c * 12
+      b.rect(wx, 20, 9, 10, p.frame)
+      b.rect(wx + 1, 21, 7, 8, p.water)
     }
-    // door
-    b.door(34, 26, 8, 16, p.frame, p.roof)
+    // entrance arch
+    b.door(25, 26, 8, 16, p.accentDark, p.water)
     b.rect(3, 43, 44, 1, p.wallDark)
   }
 

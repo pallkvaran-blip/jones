@@ -564,31 +564,12 @@ const fastFoodAction: ActionDef = {
   },
 };
 
-// --- PAWN actions ---
-const pawnComputerAction: ActionDef = {
-  id: 'pawn_computer',
-  label: 'Pawn Computer',
-  detail: 'Sell computer for $175 | 8m',
-  timeCost: 8,
-  available: (state) => state.player.hasComputer,
-  unavailableReason: () => 'No computer to pawn',
-  apply(state) {
-    return {
-      ...state,
-      player: {
-        ...state.player,
-        hasComputer: false,
-        money: state.player.money + 175,
-      },
-    };
-  },
-};
-
-const browsePawnAction: ActionDef = {
-  id: 'browse_pawn',
-  label: 'Browse Pawn Shop',
-  detail: 'Morale+3 | 4m',
-  timeCost: 4,
+// --- WATER PARK actions ---
+const splashPadAction: ActionDef = {
+  id: 'splash_pad',
+  label: 'Splash Pad',
+  detail: 'Free | Morale+15 | 6m',
+  timeCost: 6,
   available: () => true,
   unavailableReason: () => '',
   apply(state) {
@@ -596,7 +577,55 @@ const browsePawnAction: ActionDef = {
       ...state,
       player: {
         ...state.player,
-        morale: cap(state.player.morale + 3),
+        morale: cap(state.player.morale + 15),
+      },
+    };
+  },
+};
+
+const swimAction: ActionDef = {
+  id: 'swim',
+  label: 'Swim',
+  detail: 'Morale+25, Energy-10 | -$10 | 10m',
+  timeCost: 10,
+  energyCost: 10,
+  available: (state) => state.player.money >= 10 && state.player.energy >= 10,
+  unavailableReason: (state) => {
+    if (state.player.money < 10) return 'Need $10';
+    return 'Need 10 energy';
+  },
+  apply(state) {
+    return {
+      ...state,
+      player: {
+        ...state.player,
+        morale: cap(state.player.morale + 25),
+        energy: state.player.energy - 10,
+        money: state.player.money - 10,
+      },
+    };
+  },
+};
+
+const waterSlidesAction: ActionDef = {
+  id: 'water_slides',
+  label: 'Waterslides',
+  detail: 'Morale+40, Energy-20 | -$20 | 12m',
+  timeCost: 12,
+  energyCost: 20,
+  available: (state) => state.player.money >= 20 && state.player.energy >= 20,
+  unavailableReason: (state) => {
+    if (state.player.money < 20) return 'Need $20';
+    return 'Need 20 energy';
+  },
+  apply(state) {
+    return {
+      ...state,
+      player: {
+        ...state.player,
+        morale: cap(state.player.morale + 40),
+        energy: state.player.energy - 20,
+        money: state.player.money - 20,
       },
     };
   },
@@ -885,8 +914,8 @@ export function getActionsForLocation(locationId: LocationId, state: GameState):
     case 'restaurant':
       return [eatMealAction, fastFoodAction, ...getJobActions(locationId, state)];
 
-    case 'pawn':
-      return [pawnComputerAction, browsePawnAction, ...getJobActions(locationId, state)];
+    case 'waterpark':
+      return [splashPadAction, swimAction, waterSlidesAction, ...getJobActions(locationId, state)];
 
     case 'realty':
       return [...REALTY_BUY_ACTIONS, browseListingsAction, ...getJobActions(locationId, state)];
