@@ -11,7 +11,7 @@ export interface CharacterDef {
 export const CHARACTERS: Record<string, CharacterDef> = {
   home: {
     name: 'Harold',
-    portrait: '/assets/portraits/char_harold.png',
+    portrait: 'assets/portraits/char_harold.png',
     // Harold: casual middle-aged guy, messy brown hair, stubble, home clothes
     palette: [
       'transparent', // 0
@@ -59,7 +59,7 @@ export const CHARACTERS: Record<string, CharacterDef> = {
 
   employment: {
     name: 'Rex',
-    portrait: '/assets/portraits/char_rex.png',
+    portrait: 'assets/portraits/char_rex.png',
     // Rex: pet shop owner, dark hair, green apron, friendly smile
     palette: [
       'transparent', // 0
@@ -107,7 +107,7 @@ export const CHARACTERS: Record<string, CharacterDef> = {
 
   university: {
     name: 'Prof. Aldric',
-    portrait: '/assets/portraits/char_prof_aldric.png',
+    portrait: 'assets/portraits/char_prof_aldric.png',
     // Prof. Aldric: elderly professor, grey hair, round glasses, dark academic robes
     palette: [
       'transparent', // 0
@@ -155,7 +155,7 @@ export const CHARACTERS: Record<string, CharacterDef> = {
 
   bank: {
     name: 'Sandra',
-    portrait: '/assets/portraits/char_sandra.png',
+    portrait: 'assets/portraits/char_sandra.png',
     // Sandra: professional banker, dark styled hair, navy suit, small earrings
     palette: [
       'transparent', // 0
@@ -203,7 +203,7 @@ export const CHARACTERS: Record<string, CharacterDef> = {
 
   grocery: {
     name: 'Dmitri',
-    portrait: '/assets/portraits/char_dmitri.png',
+    portrait: 'assets/portraits/char_dmitri.png',
     // Dmitri: grocery worker, dark hair, green apron/cap, friendly look
     palette: [
       'transparent', // 0
@@ -251,7 +251,7 @@ export const CHARACTERS: Record<string, CharacterDef> = {
 
   electronics: {
     name: 'Kenji',
-    portrait: '/assets/portraits/char_kenji.png',
+    portrait: 'assets/portraits/char_kenji.png',
     // Kenji: tech store guy, black hair, glasses (blue tint), blue shirt
     palette: [
       'transparent', // 0
@@ -299,7 +299,7 @@ export const CHARACTERS: Record<string, CharacterDef> = {
 
   clothing: {
     name: 'Valentina',
-    portrait: '/assets/portraits/char_valentina.png',
+    portrait: 'assets/portraits/char_valentina.png',
     // Valentina: fashionable, red-tipped dark hair, big earrings, pink jacket
     palette: [
       'transparent', // 0
@@ -347,7 +347,7 @@ export const CHARACTERS: Record<string, CharacterDef> = {
 
   restaurant: {
     name: 'Lenny',
-    portrait: '/assets/portraits/char_lenny.png',
+    portrait: 'assets/portraits/char_lenny.png',
     // Lenny: fast food worker, chef's hat, red shirt, cheerful grin
     palette: [
       'transparent', // 0
@@ -395,7 +395,7 @@ export const CHARACTERS: Record<string, CharacterDef> = {
 
   pawn: {
     name: 'Duke',
-    portrait: '/assets/portraits/char_duke.png',
+    portrait: 'assets/portraits/char_duke.png',
     // Duke: tough-looking pawn shop owner, stubble, dark vest, sly expression
     palette: [
       'transparent', // 0
@@ -443,7 +443,7 @@ export const CHARACTERS: Record<string, CharacterDef> = {
 
   realty: {
     name: 'Clarissa',
-    portrait: '/assets/portraits/char_clarissa.png',
+    portrait: 'assets/portraits/char_clarissa.png',
     // Clarissa: real estate agent, styled brown hair, navy blazer, pearl necklace
     palette: [
       'transparent', // 0
@@ -491,7 +491,7 @@ export const CHARACTERS: Record<string, CharacterDef> = {
 
   hospital: {
     name: 'Dr. Chen',
-    portrait: '/assets/portraits/char_dr_chen.png',
+    portrait: 'assets/portraits/char_dr_chen.png',
     // Dr. Chen: doctor, dark hair, white coat, stethoscope visible
     palette: [
       'transparent', // 0
@@ -539,7 +539,7 @@ export const CHARACTERS: Record<string, CharacterDef> = {
 
   stockexchange: {
     name: 'Max',
-    portrait: '/assets/portraits/char_max.png',
+    portrait: 'assets/portraits/char_max.png',
     // Max: wall street trader, slicked back hair, expensive tie, intense eyes
     palette: [
       'transparent', // 0

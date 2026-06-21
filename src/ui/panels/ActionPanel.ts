@@ -36,7 +36,8 @@ export class ActionPanel {
 
   private portraitImg(sprite: { palette: string[], pixels: number[][], portrait?: string }, alt: string): string {
     if (sprite.portrait) {
-      return `<img class="char-portrait char-portrait--photo" src="${sprite.portrait}" width="80" height="80" alt="${alt}">`;
+      const src = import.meta.env.BASE_URL + sprite.portrait;
+      return `<img class="char-portrait char-portrait--photo" src="${src}" width="80" height="80" alt="${alt}">`;
     }
     const dataUrl = this.buildPortraitDataUrl(sprite);
     return `<img class="char-portrait" src="${dataUrl}" width="48" height="60" alt="${alt}">`;
