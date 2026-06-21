@@ -1,7 +1,8 @@
 export type CareerTrack = 'trades' | 'tech' | 'finance' | 'healthcare' | 'creative';
 export type Season = 'spring' | 'summer' | 'fall' | 'winter';
 export type Difficulty = 'short' | 'medium' | 'long';
-export type LocationId = 'home' | 'employment' | 'university' | 'bank' | 'grocery' | 'electronics' | 'clothing' | 'restaurant' | 'pawn' | 'realty' | 'hospital' | 'stockexchange';
+export type TransportType = 'walking' | 'bicycle' | 'suv' | 'sportscar';
+export type LocationId = 'home' | 'employment' | 'university' | 'bank' | 'grocery' | 'electronics' | 'dealership' | 'restaurant' | 'pawn' | 'realty' | 'hospital' | 'stockexchange';
 
 export interface Player {
   name: string;
@@ -26,7 +27,7 @@ export interface Player {
   propertyValue: number;
   wardrobe: number;
   hasComputer: boolean;
-  hasTransport: boolean;
+  transport: TransportType;
   jobRank: number;
   pets: string[];
   completedCourses: string[];

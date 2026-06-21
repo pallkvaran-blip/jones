@@ -158,7 +158,7 @@ export const ALL_WEEKEND_EVENTS: WeekendEvent[] = [
     description: 'Perfect beach weather and you\'ve just remembered you live 40 minutes from the coast. The only question is how committed you are to this plan.',
     options: [
       { id: 'full_day', label: 'Full beach day, packed lunch and all', description: 'Sunscreen applied. Towel secured.', resultText: 'Sunscreen, towel, three swims, and a genuinely good sandwich. You return a different shade and fully recharged.', effects: { health: 15, morale: 25, energy: -15, hunger: -15 } },
-      { id: 'afternoon', label: 'Quick afternoon trip', description: 'Two hours. Maximum efficiency.', resultText: 'Two hours of real sea air. The commute cost more time than the beach was long, but still absolutely worth it.', effects: { health: 10, morale: 15, energy: -10 }, available: p => p.hasTransport },
+      { id: 'afternoon', label: 'Quick afternoon trip', description: 'Two hours. Maximum efficiency.', resultText: 'Two hours of real sea air. The commute cost more time than the beach was long, but still absolutely worth it.', effects: { health: 10, morale: 15, energy: -10 }, available: p => p.transport !== 'walking' },
       { id: 'stay_home', label: 'Watch beach videos on your couch', description: 'Sounds the same. Costs less.', resultText: 'You found a two-hour documentary about tidal ecosystems. It was excellent. The couch held.', effects: { morale: 5, energy: 15 } },
     ],
   },

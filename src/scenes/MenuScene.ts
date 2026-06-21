@@ -532,7 +532,7 @@ export class MenuScene extends Phaser.Scene {
       'assets/buildings/building_bank.png',
       'assets/buildings/building_grocery.png',
       'assets/buildings/building_electronics.png',
-      'assets/buildings/building_clothing.png',
+      'assets/buildings/building_dealership.png',
       'assets/buildings/building_restaurant.png',
       'assets/buildings/building_pawn.png',
       'assets/buildings/building_realty.png',

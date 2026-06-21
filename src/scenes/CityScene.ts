@@ -5,7 +5,7 @@ import type { LocationDef } from '../data/locations'
 import { consumeTime, advanceWeek, applyEnergyCheck, applyStarvationEnergyDrain } from '../systems/TimeSystem'
 import { executeAction } from '../systems/ActionSystem'
 import { audioSystem } from '../systems/AudioSystem'
-import { Car, buildRoute, routeLength } from '../entities/Car'
+import { Pawn, buildRoute, routeLength } from '../entities/Pawn'
 import { LocationSprite } from '../entities/LocationSprite'
 import { HUD } from '../ui/HUD'
 import type { LocationId, GameState } from '../state/types'
@@ -57,7 +57,7 @@ function stateToChips(before: GameState, after: GameState): EffectChip[] {
 const BOARD_H = 540
 
 export class CityScene extends Phaser.Scene {
-  private car!: Car
+  private pawn!: Pawn
   private mapLocations: LocationDef[] = []
   private locationSprites: Map<LocationId, LocationSprite> = new Map()
   private hud!: HUD
@@ -111,9 +111,9 @@ export class CityScene extends Phaser.Scene {
     const activeLoc = this.locationSprites.get(state.currentLocationId)
     if (activeLoc) activeLoc.setLocationActive(true)
 
-    // --- Car (starts on the current location's doorstep) ---
+    // --- Pawn (starts on the current location's doorstep) ---
     const startLoc = getLocationById(state.currentLocationId, this.mapLocations)
-    this.car = new Car(this, startLoc.cx, startLoc.cy)
+    this.pawn = new Pawn(this, startLoc.cx, startLoc.cy, state.player.transport)
 
     // --- Beveled board frame (drawn on top of everything board-side) ---
     this.frameGraphics = this.add.graphics().setDepth(40)
@@ -146,14 +146,17 @@ export class CityScene extends Phaser.Scene {
 
       this.hud.update(newState)
 
-      // Sync sprites, car, and HUD when location changes outside of player movement
+      // Sync pawn transport sprite when player acquires a vehicle
+      this.pawn.setTransport(newState.player.transport)
+
+      // Sync sprites, pawn, and HUD when location changes outside of player movement
       // (e.g. advanceDay teleports the player home at end of day)
-      if (newState.currentLocationId !== this.lastLocationId && !this.car.isCurrentlyMoving()) {
+      if (newState.currentLocationId !== this.lastLocationId && !this.pawn.isCurrentlyMoving()) {
         this.locationSprites.forEach((sprite, locId) => {
           sprite.setLocationActive(locId === newState.currentLocationId)
         })
         const teleportLoc = getLocationById(newState.currentLocationId, this.mapLocations)
-        this.car.setPosition(teleportLoc.cx, teleportLoc.cy)
+        this.pawn.setPosition(teleportLoc.cx, teleportLoc.cy)
         this.hud.showActions(
           newState.currentLocationId,
           newState,
@@ -502,7 +505,7 @@ export class CityScene extends Phaser.Scene {
       return
     }
 
-    if (this.car.isCurrentlyMoving()) return
+    if (this.pawn.isCurrentlyMoving()) return
 
     const targetSprite = this.locationSprites.get(id)
     if (!targetSprite) return
@@ -519,14 +522,23 @@ export class CityScene extends Phaser.Scene {
     const route = buildRoute(sourceLoc, targetLoc)
     const dist = routeLength(route)
 
-    const timeCost = Math.max(3, Math.min(12, Math.round(dist / 50)))
-    const energyCost = Math.max(2, Math.ceil(timeCost * 0.4))
-    const moveDuration = Math.max(400, Math.min(1400, Math.round(dist * 2.2)))
+    // Transport multipliers: walking is slowest, sportscar fastest
+    const transportMult: Record<string, { time: number; energy: number; speed: number }> = {
+      walking:   { time: 2.0, energy: 1.5, speed: 0.6 },
+      bicycle:   { time: 1.3, energy: 1.1, speed: 0.9 },
+      suv:       { time: 1.0, energy: 1.0, speed: 1.0 },
+      sportscar: { time: 0.7, energy: 0.8, speed: 1.5 },
+    }
+    const mult = transportMult[state.player.transport] ?? transportMult.suv
+
+    const timeCost = Math.max(3, Math.min(20, Math.round(dist / 50 * mult.time)))
+    const energyCost = Math.max(2, Math.ceil(timeCost * 0.4 * mult.energy))
+    const moveDuration = Math.max(300, Math.min(2200, Math.round(dist * 2.2 / mult.speed)))
     const startTimeUnits = state.calendar.timeUnits
 
     audioSystem.playSFX('move')
 
-    this.car.driveRoute(
+    this.pawn.driveRoute(
       route,
       () => {
         // Finalize: rebase on startTimeUnits so consumeTime handles day/week correctly.
@@ -546,7 +558,7 @@ export class CityScene extends Phaser.Scene {
         this.hud.showActions(arrivedAt, newState, (actionId) => this.handleAction(actionId), (msg) => this.showToast(msg))
       },
       (progress) => {
-        // Smoothly interpolate timeUnits as the car drives.
+        // Smoothly interpolate timeUnits as the pawn moves.
         store.setState((s) => ({
           ...s,
           calendar: {

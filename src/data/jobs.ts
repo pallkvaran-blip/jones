@@ -71,9 +71,9 @@ export const LOCATION_JOBS: Partial<Record<LocationId, LocationJobDef>> = {
       { rank: 3, requiredEducation: 11.0 },
     ],
   },
-  clothing: {
-    track: 'creative',
-    titles: ['Sales Assoc', 'Buyer', 'Designer', 'Creative Dir'],
+  dealership: {
+    track: 'finance',
+    titles: ['Lot Attendant', 'Sales Agent', 'Finance Mgr', 'General Mgr'],
     jobTiers: [
       { rank: 1, requiredEducation: 0 },
       { rank: 2, requiredEducation: 3.0 },

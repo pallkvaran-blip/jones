@@ -297,51 +297,50 @@ export const CHARACTERS: Record<string, CharacterDef> = {
     ],
   },
 
-  clothing: {
-    name: 'Valentina',
-    portrait: 'assets/portraits/char_valentina.png',
-    // Valentina: fashionable, red-tipped dark hair, big earrings, pink jacket
+  dealership: {
+    name: 'Gary',
+    // Gary: slick car salesman, grey suit, yellow tie, salesman grin
     palette: [
       'transparent', // 0
-      '#220000',     // 1 very dark
+      '#0d0d0d',     // 1 near black (hair/outline)
       '#f5c8a0',     // 2 skin tone
-      '#cc2200',     // 3 red hair tips
-      '#111111',     // 4 dark hair base
+      '#2a2a2a',     // 3 dark hair
+      '#444444',     // 4 hair highlight
       '#e8b888',     // 5 skin highlight
       '#c89868',     // 6 skin shadow
-      '#e91e8c',     // 7 pink jacket
-      '#c0156e',     // 8 dark pink
-      '#ffd700',     // 9 gold earrings
-      '#ff6060',     // 10 lipstick
-      '#ff8080',     // 11 lip highlight
+      '#5a6070',     // 7 grey suit
+      '#404850',     // 8 dark grey suit
+      '#f5c200',     // 9 yellow tie
+      '#f0f0f0',     // 10 white shirt
+      '#d4aa00',     // 11 tie shadow
     ],
     pixels: [
-      [0, 0, 3, 4, 4, 4, 4, 4, 4, 4, 4, 4, 3, 0, 0, 0],
-      [0, 3, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 3, 0, 0],
-      [3, 4, 4, 3, 2, 2, 2, 2, 2, 2, 3, 4, 4, 4, 3, 0],
-      [3, 4, 3, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3, 4, 3, 0],
-      [0, 4, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 4, 0, 0],
+      [0, 0, 1, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 1, 0, 0],
+      [0, 1, 3, 4, 3, 3, 3, 3, 3, 3, 3, 3, 4, 3, 1, 0],
+      [0, 3, 4, 3, 2, 2, 2, 2, 2, 2, 2, 3, 4, 3, 0, 0],
+      [0, 3, 3, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3, 3, 0, 0],
+      [0, 3, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3, 0, 0],
       [0, 1, 2, 2, 1, 1, 2, 2, 2, 1, 1, 2, 2, 1, 0, 0],
-      [0, 4, 2, 1, 1, 1, 2, 2, 2, 1, 1, 1, 2, 4, 0, 0],
-      [9, 4, 2, 2, 1, 2, 5, 2, 5, 2, 1, 2, 2, 4, 9, 0],
-      [9, 4, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 4, 9, 0],
-      [9, 4, 5, 2, 2, 2, 6, 2, 6, 2, 2, 2, 5, 4, 9, 0],
-      [9, 4, 2, 2, 2, 6, 6, 6, 6, 6, 2, 2, 2, 4, 9, 0],
-      [0, 4, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 4, 0, 0],
-      [0, 4, 5, 2, 10, 10, 11, 10, 11, 10, 10, 2, 5, 4, 0, 0],
-      [0, 4, 2, 2, 2, 2, 1, 1, 1, 2, 2, 2, 2, 4, 0, 0],
-      [0, 0, 4, 2, 2, 2, 2, 2, 2, 2, 2, 2, 4, 0, 0, 0],
-      [0, 0, 7, 2, 2, 2, 2, 2, 2, 2, 2, 2, 7, 0, 0, 0],
-      [0, 7, 8, 7, 7, 2, 2, 2, 2, 7, 7, 8, 7, 0, 0, 0],
-      [7, 8, 7, 7, 7, 7, 2, 2, 7, 7, 7, 7, 8, 7, 0, 0],
-      [7, 7, 8, 7, 7, 7, 7, 7, 7, 7, 7, 8, 7, 7, 0, 0],
-      [3, 7, 7, 8, 7, 7, 7, 7, 7, 7, 8, 7, 7, 3, 0, 0],
+      [0, 3, 2, 1, 1, 1, 2, 2, 2, 1, 1, 1, 2, 3, 0, 0],
+      [0, 3, 2, 2, 1, 2, 2, 2, 2, 2, 1, 2, 2, 3, 0, 0],
+      [0, 3, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3, 0, 0],
+      [0, 3, 5, 2, 2, 2, 6, 2, 6, 2, 2, 2, 5, 3, 0, 0],
+      [0, 3, 2, 2, 2, 6, 6, 6, 6, 6, 2, 2, 2, 3, 0, 0],
+      [0, 3, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3, 0, 0],
+      [0, 3, 5, 2, 2, 5, 5, 5, 5, 5, 2, 2, 5, 3, 0, 0],
+      [0, 3, 2, 2, 2, 2, 1, 1, 1, 2, 2, 2, 2, 3, 0, 0],
+      [0, 0, 3, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3, 0, 0, 0],
+      [0, 0, 7, 10, 10, 9, 10, 10, 9, 10, 10, 7, 0, 0, 0, 0],
+      [0, 7, 8, 7, 10, 9, 11, 10, 9, 11, 7, 8, 7, 0, 0, 0],
+      [7, 8, 7, 7, 7, 9, 11, 10, 9, 7, 7, 7, 8, 7, 0, 0],
+      [7, 7, 8, 7, 7, 9, 11, 10, 7, 7, 7, 8, 7, 7, 0, 0],
+      [0, 7, 7, 8, 7, 9, 7, 7, 7, 7, 8, 7, 7, 0, 0, 0],
     ],
     lines: [
-      "Dress for the job you want, not the debt you have.",
-      "Confidence is an outfit. Wear it every single day.",
-      "Fashion fades. Style is eternal.",
-      "We can't put a price on fabulous. Actually we can.",
+      "Today is a great day to drive something you can't afford.",
+      "Zero percent financing on your dreams.",
+      "I can get you into this vehicle by end of day.",
+      "The important thing is the monthly payment, not the total.",
     ],
   },
 

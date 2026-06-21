@@ -41,7 +41,7 @@ export function createInitialState(name: string, difficulty: Difficulty, charact
       propertyValue: 0,
       wardrobe: 1,
       hasComputer: false,
-      hasTransport: false,
+      transport: 'walking',
       pets: [],
       completedCourses: [],
       isStarving: false,

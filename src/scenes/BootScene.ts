@@ -16,7 +16,7 @@ export class BootScene extends Phaser.Scene {
     const base = import.meta.env.BASE_URL;
     const ids = [
       'home', 'employment', 'university', 'bank', 'grocery',
-      'electronics', 'clothing', 'restaurant', 'pawn', 'realty',
+      'electronics', 'dealership', 'restaurant', 'pawn', 'realty',
       'hospital', 'stockexchange',
     ];
     for (const id of ids) {
@@ -52,6 +52,8 @@ export class BootScene extends Phaser.Scene {
     }
     this.buildAvatar()
     this.buildShadow()
+    this.buildWalker()
+    this.buildBicycle()
     this.buildCar()
   }
 
@@ -141,6 +143,85 @@ export class BootScene extends Phaser.Scene {
     g.destroy()
   }
 
+  // --- Walking pawn (top-down person, facing right) ---------------------------
+
+  private buildWalker(): void {
+    const S = 3
+    const g = this.make.graphics({ x: 0, y: 0 })
+
+    // Shoes/feet at back (leftmost = rear when facing right)
+    g.fillStyle(0x1a1a22, 1)
+    g.fillRect(0 * S, 1 * S, 1 * S, 4 * S)
+
+    // Legs/pants
+    g.fillStyle(0x253550, 1)
+    g.fillRect(1 * S, 1 * S, 2 * S, 4 * S)
+
+    // Arms extending to sides (top/bottom) from shirt area
+    g.fillStyle(0xd4956a, 1)
+    g.fillRect(4 * S, 0 * S, 2 * S, 1 * S)  // top arm
+    g.fillRect(4 * S, 5 * S, 2 * S, 1 * S)  // bottom arm
+
+    // Shirt / torso
+    g.fillStyle(0x4a7cd4, 1)
+    g.fillRect(3 * S, 1 * S, 4 * S, 4 * S)
+
+    // Head (skin, at front = right)
+    g.fillStyle(0xd4956a, 1)
+    g.fillRect(7 * S, 1 * S, 3 * S, 4 * S)
+
+    // Hair (dark stripe on top of head)
+    g.fillStyle(0x2c1a0e, 1)
+    g.fillRect(7 * S, 1 * S, 3 * S, 1 * S)
+    g.fillRect(9 * S, 2 * S, 1 * S, 2 * S)
+
+    if (this.textures.exists('walker')) this.textures.remove('walker')
+    g.generateTexture('walker', 10 * S, 6 * S)  // 30×18 px
+    g.destroy()
+  }
+
+  // --- Bicycle pawn (top-down, facing right) ----------------------------------
+
+  private buildBicycle(): void {
+    const S = 3
+    const g = this.make.graphics({ x: 0, y: 0 })
+
+    // Rear wheel (back = left side)
+    g.fillStyle(0x2a2a38, 1)
+    g.fillRect(0 * S, 1 * S, 2 * S, 4 * S)
+    g.fillRect(1 * S, 0 * S, 1 * S, 6 * S)  // vertical spoke
+
+    // Front wheel (front = right side)
+    g.fillStyle(0x2a2a38, 1)
+    g.fillRect(8 * S, 1 * S, 2 * S, 4 * S)
+    g.fillRect(8 * S, 0 * S, 1 * S, 6 * S)  // vertical spoke
+
+    // Wheel highlights
+    g.fillStyle(0x6a6a80, 1)
+    g.fillRect(0 * S, 3 * S, 2 * S, 1 * S)   // rear spoke H
+    g.fillRect(8 * S, 3 * S, 2 * S, 1 * S)   // front spoke H
+
+    // Bike frame (dark grey bar connecting wheels)
+    g.fillStyle(0x6a7080, 1)
+    g.fillRect(2 * S, 2 * S, 6 * S, 2 * S)
+
+    // Rider body/shirt
+    g.fillStyle(0x3a7f3a, 1)  // green cycling jersey
+    g.fillRect(3 * S, 1 * S, 3 * S, 3 * S)
+
+    // Rider head
+    g.fillStyle(0xd4956a, 1)
+    g.fillRect(6 * S, 0 * S, 2 * S, 3 * S)
+
+    // Helmet (dark band on head)
+    g.fillStyle(0xcc4400, 1)
+    g.fillRect(6 * S, 0 * S, 2 * S, 1 * S)
+
+    if (this.textures.exists('bicycle')) this.textures.remove('bicycle')
+    g.generateTexture('bicycle', 10 * S, 6 * S)  // 30×18 px
+    g.destroy()
+  }
+
   // --- Player car (top-down, facing right) ------------------------------------
 
   private buildCar(): void {
@@ -189,7 +270,7 @@ export class BootScene extends Phaser.Scene {
       university: () => this.facadeUniversity(b, p),
       grocery: () => this.facadeGrocery(b, p),
       electronics: () => this.facadeElectronics(b, p),
-      clothing: () => this.facadeClothing(b, p),
+      dealership: () => this.facadeDealership(b, p),
       restaurant: () => this.facadeRestaurant(b, p),
       pawn: () => this.facadePawn(b, p),
       realty: () => this.facadeRealty(b, p),
@@ -382,30 +463,46 @@ export class BootScene extends Phaser.Scene {
     b.rect(37, 24, 6, 8, p.glow)
   }
 
-  // 7. Clothing — boutique, scalloped awning, mannequin, hanging sign.
-  private facadeClothing(b: FacadeBuilder, p: Record<string, string>): void {
+  // 7. Car Dealership — showroom, large glass windows with cars on display.
+  private facadeDealership(b: FacadeBuilder, p: Record<string, string>): void {
+    // Clean wall
     b.rect(2, 6, 46, 38, p.wall)
-    b.dither(2, 30, 46, 14, p.wall, p.wallDark)
+    b.dither(2, 32, 46, 12, p.wall, p.wallDark)
     b.rect(2, 6, 46, 2, p.wallDark)
-    // scalloped fancy awning
-    b.awning(4, 13, 42, 5, p.awningA, p.awningB)
-    // hanging sign with shirt emblem
-    b.rect(33, 8, 1, 4, p.frame)
-    b.signBoard(30, 4, 14, 5, p.sign, p.frame)
-    b.rect(35, 5, 4, 3, p.wallDark) // shirt emblem
-    b.rect(34, 5, 1, 1, p.wallDark)
-    b.rect(39, 5, 1, 1, p.wallDark)
-    // big display window with mannequin silhouette
-    b.rect(6, 20, 22, 22, p.frame)
-    b.rect(7, 21, 20, 20, p.glass)
-    // mannequin
-    b.circle(16, 26, 2, p.mannequin)
-    b.rect(14, 28, 5, 8, p.mannequin)
-    b.rect(13, 29, 1, 4, p.mannequin)
-    b.rect(19, 29, 1, 4, p.mannequin)
-    // door
-    b.door(32, 24, 10, 18, p.frame, p.wallDark)
-    b.rect(34, 26, 6, 6, p.glass)
+    // Sign band at top
+    b.signBoard(5, 6, 40, 5, p.signBg, p.frame)
+    b.rect(7, 8, 36, 1, p.sign)  // sign highlight line
+    // Red accent racing stripe across middle
+    b.rect(2, 26, 46, 3, p.stripe)
+    b.rect(2, 27, 46, 1, '#ff6666')  // highlight on stripe
+    // Chrome trim strip below stripe
+    b.rect(2, 29, 46, 2, p.chrome)
+    // Left showroom window — large glass with yellow car inside
+    b.rect(5, 13, 17, 14, p.frame)
+    b.rect(6, 14, 15, 12, p.glass)
+    b.rect(7, 15, 13, 10, p.glassRefl)  // glass reflection
+    // Yellow car silhouette inside left window
+    b.rect(8, 20, 10, 3, p.car1)   // car body
+    b.rect(9, 18, 8, 3, p.car1)    // car roof
+    b.rect(8, 22, 2, 1, p.frame)   // left wheel
+    b.rect(15, 22, 2, 1, p.frame)  // right wheel
+    // Right showroom window — large glass with red car inside
+    b.rect(28, 13, 17, 14, p.frame)
+    b.rect(29, 14, 15, 12, p.glass)
+    b.rect(30, 15, 13, 10, p.glassRefl)
+    // Red car silhouette inside right window
+    b.rect(31, 20, 10, 3, p.car2)
+    b.rect(32, 18, 8, 3, p.car2)
+    b.rect(31, 22, 2, 1, p.frame)
+    b.rect(38, 22, 2, 1, p.frame)
+    // Central entrance door
+    b.door(21, 31, 8, 12, p.frame, p.wallDark)
+    b.rect(22, 33, 6, 4, p.glass)
+    // Flagpoles on roof
+    b.rect(10, 0, 1, 7, p.chrome)
+    b.rect(11, 1, 5, 3, p.stripe)  // flag
+    b.rect(40, 0, 1, 7, p.chrome)
+    b.rect(36, 1, 4, 3, p.car1)   // yellow flag
   }
 
   // 8. Fast Food — rooftop burger sign, red/yellow facade, menu windows.

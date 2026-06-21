@@ -8,7 +8,7 @@ export type FacadeKind =
   | 'university'
   | 'grocery'
   | 'electronics'
-  | 'clothing'
+  | 'dealership'
   | 'restaurant'
   | 'pawn'
   | 'realty'
@@ -198,25 +198,28 @@ const RAW: RawLoc[] = [
     description: 'Buy computers and tech equipment.',
   },
   {
-    id: 'clothing',
-    name: 'Clothing Store',
-    icon: '👔',
-    color: '#F39C12',
-    darkColor: '#B7770D',
+    id: 'dealership',
+    name: 'Car Dealership',
+    icon: '🚗',
+    color: '#4A90D9',
+    darkColor: '#2A6AAA',
     col: 2,
     row: 1,
-    facade: 'clothing',
+    facade: 'dealership',
     palette: {
-      wall: '#d24a8a',
-      wallDark: '#b03a72',
-      awningA: '#f2a23c',
-      awningB: '#f7e1c4',
-      glass: '#e6d2e6',
-      frame: '#5a2240',
-      mannequin: '#c9b8cf',
-      sign: '#f2c94c',
+      wall: '#e0e4ec',
+      wallDark: '#c4cad6',
+      glass: '#90c4e0',
+      glassRefl: '#b8d8f0',
+      frame: '#1a1a2e',
+      car1: '#f5c200',
+      car2: '#cc2244',
+      sign: '#ffe066',
+      signBg: '#0a0a1e',
+      stripe: '#cc2244',
+      chrome: '#c8d0dc',
     },
-    description: 'Buy clothes to improve your appearance.',
+    description: 'Buy a vehicle and cut your travel time.',
   },
   {
     id: 'restaurant',

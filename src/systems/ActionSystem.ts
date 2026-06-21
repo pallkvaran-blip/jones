@@ -1,4 +1,4 @@
-import type { GameState, LocationId } from '../state/types'
+import type { GameState, LocationId, TransportType } from '../state/types'
 import { consumeTime, applyEnergyCheck, applyStarvationEnergyDrain } from './TimeSystem'
 import { CAREER_JOBS, LOCATION_JOBS } from '../data/jobs'
 import { STOCKS, STOCK_NAMES, type StockId } from '../data/stocks'
@@ -406,44 +406,55 @@ const browseElectronicsAction: ActionDef = {
   },
 };
 
-// --- CLOTHING actions ---
-const buyOutfitAction: ActionDef = {
-  id: 'buy_outfit',
-  label: 'Buy an Outfit',
-  detail: 'Wardrobe+1, Morale+15, -$60 | 5m',
-  timeCost: 5,
-  available: (state) => state.player.money >= 60,
-  unavailableReason: () => 'Need $60',
-  apply(state) {
-    return {
-      ...state,
-      player: {
-        ...state.player,
-        wardrobe: state.player.wardrobe + 1,
-        morale: cap(state.player.morale + 15),
-        money: state.player.money - 60,
-      },
-    };
-  },
-};
+// --- DEALERSHIP actions ---
 
-const windowShopAction: ActionDef = {
-  id: 'window_shop',
-  label: 'Window Shop',
+function makeBuyVehicleAction(
+  id: string,
+  label: string,
+  transport: TransportType,
+  price: number,
+  timeCost: number,
+): ActionDef {
+  return {
+    id,
+    label,
+    detail: `Transport: ${transport.toUpperCase()} | -$${price.toLocaleString()} | ${timeCost}m`,
+    timeCost,
+    available(state) {
+      return state.player.transport !== transport && state.player.money >= price
+    },
+    unavailableReason(state) {
+      if (state.player.transport === transport) return 'Already owned'
+      return `Need $${price.toLocaleString()}`
+    },
+    apply(state) {
+      return addLog({
+        ...state,
+        player: {
+          ...state.player,
+          transport,
+          money: state.player.money - price,
+        },
+      }, `Bought a ${label} — travel time reduced.`)
+    },
+  }
+}
+
+const browseDealershipAction: ActionDef = {
+  id: 'browse_dealership',
+  label: 'Browse Inventory',
   detail: 'Morale+5 | 3m',
   timeCost: 3,
   available: () => true,
   unavailableReason: () => '',
   apply(state) {
-    return {
-      ...state,
-      player: {
-        ...state.player,
-        morale: cap(state.player.morale + 5),
-      },
-    };
+    return addLog({ ...state, player: { ...state.player, morale: cap(state.player.morale + 5) } }, 'Browsed the showroom.')
   },
-};
+}
+
+const buyBicycleAction = makeBuyVehicleAction('buy_bicycle', 'Bicycle', 'bicycle', 800, 8)
+const buySUVAction     = makeBuyVehicleAction('buy_suv', 'SUV', 'suv', 25000, 10)
+const buySportsCarAction = makeBuyVehicleAction('buy_sportscar', 'Sports Car', 'sportscar', 50000, 10)
 
 // --- RESTAURANT actions ---
 const eatMealAction: ActionDef = {
@@ -837,8 +848,8 @@ export function getActionsForLocation(locationId: LocationId, state: GameState):
     case 'electronics':
       return [buyComputerAction, browseElectronicsAction, ...getJobActions(locationId, state)];
 
-    case 'clothing':
-      return [buyOutfitAction, windowShopAction, ...getJobActions(locationId, state)];
+    case 'dealership':
+      return [browseDealershipAction, buyBicycleAction, buySUVAction, buySportsCarAction, ...getJobActions(locationId, state)];
 
     case 'restaurant':
       return [eatMealAction, fastFoodAction, ...getJobActions(locationId, state)];
