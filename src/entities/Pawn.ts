@@ -78,9 +78,11 @@ export class Pawn {
     this.shadow = scene.add.image(0, 5, 'soft-shadow')
     this.shadow.setOrigin(0.5, 0.5)
     this.shadow.setScale(transport === 'walking' ? 0.4 : 0.55)
+    this.shadow.setAngle(-90)
 
     this.sprite = scene.add.image(0, 0, textureKeyFor(transport))
     this.sprite.setOrigin(0.5, 0.5)
+    this.sprite.setAngle(-90)
 
     this.container = scene.add.container(x, y, [this.shadow, this.sprite])
     this.container.setDepth(20)
@@ -123,6 +125,8 @@ export class Pawn {
 
     const driveSegment = (idx: number, distSoFar: number): void => {
       if (idx >= waypoints.length - 1) {
+        this.sprite.setAngle(-90)
+        this.shadow.setAngle(-90)
         this.isMoving = false
         onComplete()
         return
