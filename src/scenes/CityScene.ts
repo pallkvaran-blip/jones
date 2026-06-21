@@ -558,9 +558,15 @@ export class CityScene extends Phaser.Scene {
           const rebased = { ...s, calendar: { ...s.calendar, timeUnits: startTimeUnits } }
           // Energy deducted first so advanceDay's rough-night check sees the real energy
           const prevEnergy = rebased.player.energy
+          const energyDeficit = energyCost - prevEnergy  // positive = overspent
           const withEnergy = { ...rebased, player: { ...rebased.player, energy: Math.max(0, prevEnergy - energyCost) } }
           const withStarvation = applyStarvationEnergyDrain(prevEnergy, withEnergy)
-          const afterMove = consumeTime(withStarvation, timeCost)
+          // When heading home within a 5-energy grace window, treat location as 'home'
+          // during consumeTime so advanceDay doesn't fire a rough-night event.
+          const locationForConsume = (id === 'home' && energyDeficit <= 5)
+            ? { ...withStarvation, currentLocationId: 'home' as LocationId }
+            : withStarvation
+          const afterMove = consumeTime(locationForConsume, timeCost)
           return applyEnergyCheck({ ...afterMove, currentLocationId: id })
         })
         const newState = store.getState()
