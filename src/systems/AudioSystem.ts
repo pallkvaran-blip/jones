@@ -12,12 +12,14 @@ interface NoteEvent {
 
 class AudioSystem {
   private ctx: AudioContext | null = null;
-  private bgmNodes: AudioNode[] = [];
   private bgmScheduleId: ReturnType<typeof setTimeout> | null = null;
+  private sfxResumeId: ReturnType<typeof setTimeout> | null = null;
   private muted = false;
-  private bgmPlaying = false;
+  private bgmPlaying = false;   // loop is actively scheduling notes right now
+  private bgmEnabled = false;   // scene wants BGM on (stays true while suppressed by SFX)
+  private bgmOscillators: OscillatorNode[] = [];  // current loop's oscillators, for hard-stop
   private masterGain: GainNode | null = null;
-  private bgmGain: GainNode | null = null;   // BGM-only gain, ducked during SFX
+  private bgmGain: GainNode | null = null;   // BGM-only gain
   private sfxGain: GainNode | null = null;   // SFX-only gain
   private currentMood: 'normal' | 'danger' = 'normal';
   private normalTrackIndex = 0;
@@ -78,7 +80,7 @@ class AudioSystem {
     type: OscillatorType = 'square',
     gainValue = 0.15,
     target?: AudioNode,
-  ): void {
+  ): OscillatorNode {
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
 
@@ -95,17 +97,54 @@ class AudioSystem {
 
     osc.start(startTime);
     osc.stop(startTime + duration + 0.05);
+    return osc;
   }
 
-  /** Temporarily lower BGM volume so SFX can be heard clearly, then restore. */
-  private duckBGM(durationSecs: number): void {
-    if (!this.bgmGain || !this.ctx) return;
+  /** Hard-stop every BGM oscillator currently scheduled, with a tiny fade to avoid clicks. */
+  private stopBGMOscillators(): void {
+    if (!this.ctx) {
+      this.bgmOscillators = [];
+      return;
+    }
     const now = this.ctx.currentTime;
-    this.bgmGain.gain.cancelScheduledValues(now);
-    this.bgmGain.gain.setValueAtTime(this.bgmGain.gain.value, now);
-    this.bgmGain.gain.linearRampToValueAtTime(0.08, now + 0.04);
-    this.bgmGain.gain.setValueAtTime(0.08, now + Math.max(durationSecs - 0.15, 0.1));
-    this.bgmGain.gain.linearRampToValueAtTime(1.0, now + durationSecs + 0.1);
+    if (this.bgmGain) {
+      this.bgmGain.gain.cancelScheduledValues(now);
+      this.bgmGain.gain.setValueAtTime(this.bgmGain.gain.value, now);
+      this.bgmGain.gain.linearRampToValueAtTime(0, now + 0.03);
+      // Restore full BGM gain once the oscillators are gone, ready for the next loop.
+      this.bgmGain.gain.setValueAtTime(1.0, now + 0.06);
+    }
+    for (const osc of this.bgmOscillators) {
+      try { osc.stop(now + 0.04); } catch { /* already stopped */ }
+    }
+    this.bgmOscillators = [];
+  }
+
+  /** Stop BGM playback (oscillators + loop timer) without changing whether BGM is desired. */
+  private haltBGMPlayback(): void {
+    this.bgmPlaying = false;
+    if (this.bgmScheduleId !== null) {
+      clearTimeout(this.bgmScheduleId);
+      this.bgmScheduleId = null;
+    }
+    this.stopBGMOscillators();
+  }
+
+  /**
+   * Fully stop the music for the duration of a non-bleep SFX, then restart it.
+   * Overlapping SFX simply extend the silence — the resume timer is reset each time.
+   */
+  private suppressBGM(durationSecs: number): void {
+    if (!this.bgmEnabled || !this.ctx) return;
+    this.haltBGMPlayback();
+    if (this.sfxResumeId !== null) clearTimeout(this.sfxResumeId);
+    this.sfxResumeId = setTimeout(() => {
+      this.sfxResumeId = null;
+      if (this.bgmEnabled && !this.muted && this.ctx) {
+        this.bgmPlaying = true;
+        this.scheduleBGMLoop(this.ctx.currentTime + 0.05);
+      }
+    }, durationSecs * 1000 + 120);
   }
 
   private scheduleBGMLoop(startTime: number): void {
@@ -248,11 +287,17 @@ class AudioSystem {
     const loopDuration = 4.25;
 
     const bgm = this.bgmGain ?? this.masterGain ?? ctx.destination
+    // Track only this loop's oscillators so a hard-stop can silence them instantly.
+    this.bgmOscillators = []
     for (const note of track.melody) {
-      this.playNote(ctx, note.freq, startTime + note.time, note.duration, track.oscType, track.gain, bgm);
+      this.bgmOscillators.push(
+        this.playNote(ctx, note.freq, startTime + note.time, note.duration, track.oscType, track.gain, bgm),
+      )
     }
     for (const note of track.bass) {
-      this.playNote(ctx, note.freq, startTime + note.time, note.duration, 'triangle', 0.08, bgm);
+      this.bgmOscillators.push(
+        this.playNote(ctx, note.freq, startTime + note.time, note.duration, 'triangle', 0.08, bgm),
+      )
     }
 
     // Advance to next track after this loop completes
@@ -270,9 +315,16 @@ class AudioSystem {
   }
 
   playBGM(mood: 'normal' | 'danger' = 'normal'): void {
+    this.bgmEnabled = true;
     if (this.bgmPlaying && this.currentMood === mood) return;
-    // Stop current BGM if playing with a different mood
-    this.stopBGM();
+    // Stop the current track's oscillators before starting a new one so the two
+    // never ring at the same time (the cause of mood-switch overlap).
+    this.haltBGMPlayback();
+    // Cancel any pending SFX resume so it can't double-start the loop.
+    if (this.sfxResumeId !== null) {
+      clearTimeout(this.sfxResumeId);
+      this.sfxResumeId = null;
+    }
     this.currentMood = mood;
     const ctx = this.ensureContext();
     this.bgmPlaying = true;
@@ -280,11 +332,12 @@ class AudioSystem {
   }
 
   stopBGM(): void {
-    this.bgmPlaying = false;
-    if (this.bgmScheduleId !== null) {
-      clearTimeout(this.bgmScheduleId);
-      this.bgmScheduleId = null;
+    this.bgmEnabled = false;
+    if (this.sfxResumeId !== null) {
+      clearTimeout(this.sfxResumeId);
+      this.sfxResumeId = null;
     }
+    this.haltBGMPlayback();
   }
 
   setDangerMode(danger: boolean): void {
@@ -329,7 +382,7 @@ class AudioSystem {
       }
 
       case 'weekEnd':
-        this.duckBGM(1.1);
+        this.suppressBGM(1.1);
         this.playNote(ctx, 523.25, now,        0.15, 'triangle', 0.2);
         this.playNote(ctx, 659.25, now + 0.16, 0.15, 'triangle', 0.2);
         this.playNote(ctx, 784.00, now + 0.32, 0.15, 'triangle', 0.2);
@@ -338,7 +391,7 @@ class AudioSystem {
 
       case 'eventGood':
         // Bright ascending 3-note chime: C5 → E5 → G5, sine wave
-        this.duckBGM(0.55);
+        this.suppressBGM(0.55);
         this.playNote(ctx, this.NOTES.C5, now,        0.08, 'sine', 0.18);
         this.playNote(ctx, this.NOTES.E5, now + 0.09, 0.08, 'sine', 0.18);
         this.playNote(ctx, this.NOTES.G5, now + 0.18, 0.12, 'sine', 0.18);
@@ -346,7 +399,7 @@ class AudioSystem {
 
       case 'eventBad':
         // Low descending thud: G3 → E3 → C3, triangle wave
-        this.duckBGM(0.55);
+        this.suppressBGM(0.55);
         this.playNote(ctx, this.NOTES.G3, now,        0.06, 'triangle', 0.2);
         this.playNote(ctx, this.NOTES.E3, now + 0.07, 0.06, 'triangle', 0.2);
         this.playNote(ctx, this.NOTES.C3, now + 0.14, 0.12, 'triangle', 0.2);
@@ -354,7 +407,7 @@ class AudioSystem {
 
       case 'levelUp':
         // Ascending arpeggio: C4→E4→G4→C5, small gap between notes
-        this.duckBGM(0.7);
+        this.suppressBGM(0.7);
         this.playNote(ctx, this.NOTES.C4, now,        0.1, 'square', 0.15);
         this.playNote(ctx, this.NOTES.E4, now + 0.12, 0.1, 'square', 0.15);
         this.playNote(ctx, this.NOTES.G4, now + 0.24, 0.1, 'square', 0.15);
@@ -363,7 +416,7 @@ class AudioSystem {
 
       case 'demotion':
         // Descending sad tones: C4→A3→F3, triangle wave
-        this.duckBGM(0.65);
+        this.suppressBGM(0.65);
         this.playNote(ctx, this.NOTES.C4, now,        0.12, 'triangle', 0.18);
         this.playNote(ctx, this.NOTES.A3, now + 0.13, 0.12, 'triangle', 0.18);
         this.playNote(ctx, this.NOTES.F3, now + 0.26, 0.12, 'triangle', 0.18);
@@ -378,7 +431,7 @@ class AudioSystem {
 
       case 'gameWin':
         // Triumphant 5-note fanfare: C4→E4→G4→C5→E5, square wave
-        this.duckBGM(1.2);
+        this.suppressBGM(1.2);
         this.playNote(ctx, this.NOTES.C4, now,        0.15, 'square', 0.2);
         this.playNote(ctx, this.NOTES.E4, now + 0.16, 0.15, 'square', 0.2);
         this.playNote(ctx, this.NOTES.G4, now + 0.32, 0.15, 'square', 0.2);
@@ -388,7 +441,7 @@ class AudioSystem {
 
       case 'gameLose': {
         // 4 slow descending notes with a slight delay/reverb effect
-        this.duckBGM(1.8);
+        this.suppressBGM(1.8);
         const dest = this.masterGain ?? ctx.destination;
 
         // Create a tiny delay node for reverb effect
