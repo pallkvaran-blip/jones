@@ -34,10 +34,11 @@ export class ActionPanel {
     return canvas.toDataURL();
   }
 
-  private portraitImg(sprite: { palette: string[], pixels: number[][], portrait?: string }, alt: string): string {
-    if (sprite.portrait) {
-      const src = import.meta.env.BASE_URL + sprite.portrait;
-      return `<img class="char-portrait char-portrait--photo" src="${src}" width="80" height="80" alt="${alt}">`;
+  private portraitImg(sprite: { palette: string[], pixels: number[][], portrait?: string }, alt: string, portraitOverride?: string): string {
+    const src = portraitOverride ?? sprite.portrait;
+    if (src) {
+      const url = import.meta.env.BASE_URL + src;
+      return `<img class="char-portrait char-portrait--photo" src="${url}" width="80" height="80" alt="${alt}">`;
     }
     const dataUrl = this.buildPortraitDataUrl(sprite);
     return `<img class="char-portrait" src="${dataUrl}" width="48" height="60" alt="${alt}">`;
@@ -49,6 +50,7 @@ export class ActionPanel {
 
     const line = char.lines[Math.floor(Math.random() * char.lines.length)];
     const displayName = locationId === 'home' ? state.player.name : char.name;
+    const playerPortrait = locationId === 'home' ? `assets/portraits/${state.player.characterId}.png` : undefined;
 
     let petRows = '';
     if (locationId === 'home') {
@@ -72,7 +74,7 @@ export class ActionPanel {
     return `
       <div class="char-section">
         <div class="char-header">
-          ${this.portraitImg(char, displayName)}
+          ${this.portraitImg(char, displayName, playerPortrait)}
           <span class="char-name">${displayName}</span>
         </div>
         <div class="char-speech">${line}</div>

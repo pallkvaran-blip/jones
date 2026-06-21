@@ -1,6 +1,4 @@
 import Phaser from 'phaser'
-import { initStore, getStore } from '../state/store'
-import { createInitialState } from '../state/initialState'
 import { audioSystem } from '../systems/AudioSystem'
 import { getHighScores } from '../data/highScores'
 import { formatMoney } from '../utils/format'
@@ -368,29 +366,18 @@ export class MenuScene extends Phaser.Scene {
       return;
     }
 
-    const state1 = createInitialState(p1Name, this.selectedDifficulty);
-    state1.numPlayers = this.numPlayers;
-    state1.activePlayer = 1;
-
-    initStore(state1);
-
-    if (this.numPlayers === 2) {
-      const state2 = createInitialState(p2Name, this.selectedDifficulty);
-      state2.numPlayers = 2;
-      state2.activePlayer = 1;
-      getStore().initTwoPlayer(state1, state2);
-    }
-
-    // Start audio (must be on user gesture)
-    audioSystem.playBGM();
-
-    // Remove menu DOM
+    // Remove menu DOM before transitioning
     if (this.menuContainer?.parentNode) {
       this.menuContainer.parentNode.removeChild(this.menuContainer);
     }
     this.menuContainer = null;
 
-    this.scene.start('CityScene');
+    this.scene.start('CharacterSelectScene', {
+      p1Name,
+      p2Name,
+      numPlayers: this.numPlayers,
+      difficulty: this.selectedDifficulty,
+    });
   }
 
   private async showHighScores(): Promise<void> {
@@ -531,6 +518,14 @@ export class MenuScene extends Phaser.Scene {
       'assets/portraits/pet_whiskers.png',
       'assets/portraits/pet_polly.png',
       'assets/portraits/pet_bubbles.png',
+      'assets/portraits/player_alex.png',
+      'assets/portraits/player_marcus.png',
+      'assets/portraits/player_daniel.png',
+      'assets/portraits/player_victor.png',
+      'assets/portraits/player_emma.png',
+      'assets/portraits/player_zoe.png',
+      'assets/portraits/player_maya.png',
+      'assets/portraits/player_rosa.png',
       'assets/buildings/building_home.png',
       'assets/buildings/building_employment.png',
       'assets/buildings/building_university.png',

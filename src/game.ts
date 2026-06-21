@@ -1,6 +1,7 @@
 import Phaser from 'phaser'
 import { BootScene } from './scenes/BootScene'
 import { MenuScene } from './scenes/MenuScene'
+import { CharacterSelectScene } from './scenes/CharacterSelectScene'
 import { CityScene } from './scenes/CityScene'
 import { GameOverScene } from './scenes/GameOverScene'
 
@@ -16,7 +17,7 @@ export function createGame(): Phaser.Game {
       mode: Phaser.Scale.FIT,
       autoCenter: Phaser.Scale.CENTER_BOTH,
     },
-    scene: [BootScene, MenuScene, CityScene, GameOverScene],
+    scene: [BootScene, MenuScene, CharacterSelectScene, CityScene, GameOverScene],
     render: {
       antialias: false,
       pixelArt: true,

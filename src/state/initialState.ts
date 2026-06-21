@@ -1,7 +1,7 @@
 import type { GameState, Difficulty, CareerTrack } from './types'
 import { STOCK_INITIAL_PRICES, STOCKS } from '../data/stocks'
 
-export function createInitialState(name: string, difficulty: Difficulty): GameState {
+export function createInitialState(name: string, difficulty: Difficulty, characterId = 'player_alex'): GameState {
   const difficultySettings = {
     short:  { money: 0, maxWeeks: 4  },
     medium: { money: 0, maxWeeks: 8  },
@@ -19,6 +19,7 @@ export function createInitialState(name: string, difficulty: Difficulty): GameSt
   return {
     player: {
       name,
+      characterId,
       money: settings.money,
       hunger: 80,
       energy: 80,

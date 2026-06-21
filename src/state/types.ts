@@ -5,6 +5,7 @@ export type LocationId = 'home' | 'employment' | 'university' | 'bank' | 'grocer
 
 export interface Player {
   name: string;
+  characterId: string;  // key into PLAYER_CHARACTERS
   money: number;
   hunger: number;    // 0-100
   energy: number;   // 0-100
