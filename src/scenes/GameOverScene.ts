@@ -4,16 +4,30 @@ import { createInitialState } from '../state/initialState'
 import { audioSystem } from '../systems/AudioSystem'
 import { formatMoney } from '../utils/format'
 import { addHighScore } from '../data/highScores'
-import type { GameState, Player } from '../state/types'
+import type { GameState, Player, TransportType } from '../state/types'
+import { getHousingTier } from '../data/housing'
 
 // ── Net worth / Grade helpers ─────────────────────────────────────────────────
+
+const VEHICLE_VALUE: Record<TransportType, number> = {
+  walking:   0,
+  bicycle:   200,
+  suv:       1000,
+  sportscar: 2500,
+}
 
 function calcNetWorth(state: GameState): number {
   const { player, economy } = state
   const portfolioValue = Object.entries(player.portfolio).reduce(
     (sum, [stock, shares]) => sum + shares * (economy.stockPrices[stock] ?? 0), 0
   )
-  return player.money + player.bankBalance + portfolioValue - player.debt
+  const housingValue   = getHousingTier(player.housingId)?.purchaseCost ?? 0
+  const vehicleValue   = VEHICLE_VALUE[player.transport] ?? 0
+  const electronicsValue = (player.hasComputer  ? 350 : 0)
+                         + (player.hasCoffeeMaker ? 200 : 0)
+                         + (player.hasTV          ? 250 : 0)
+                         + (player.hasTreadmill   ? 150 : 0)
+  return player.money + player.bankBalance + portfolioValue + housingValue + vehicleValue + electronicsValue - player.debt
 }
 
 function getGrade(netWorth: number, lossReason: string | null): string {

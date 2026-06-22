@@ -104,6 +104,14 @@ export class MenuScene extends Phaser.Scene {
           margin-top: 14px;
           font-family:${pf};
         ">Life in the Fast Lane</p>
+        <p style="
+          color: #6a6a86;
+          font-size: 7px;
+          letter-spacing: 1px;
+          margin-top: 10px;
+          font-family:${pf};
+          line-height: 1.6;
+        ">Grow your net worth as high as possible.<br>Job, invest, upgrade — 12 weeks.</p>
       </div>
 
       <div style="

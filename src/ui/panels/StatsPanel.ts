@@ -1,7 +1,14 @@
-import type { GameState } from '../../state/types'
+import type { GameState, TransportType } from '../../state/types'
 import { formatMoney, formatTime, dayName } from '../../utils/format'
 import { CAREER_JOBS, LOCATION_JOBS } from '../../data/jobs'
 import { getHousingTier } from '../../data/housing'
+
+const VEHICLE_VALUE: Record<TransportType, number> = {
+  walking:   0,
+  bicycle:   200,
+  suv:       1000,
+  sportscar: 2500,
+}
 
 function getBarClass(value: number): string {
   if (value >= 60) return 'high';
@@ -257,7 +264,13 @@ export class StatsPanel {
       const portfolioValue = Object.entries(player.portfolio).reduce(
         (sum, [stock, shares]) => sum + shares * (economy.stockPrices[stock] ?? 0), 0
       );
-      const netWorth = player.money + player.bankBalance + portfolioValue - player.debt;
+      const housingValue     = getHousingTier(player.housingId)?.purchaseCost ?? 0;
+      const vehicleValue     = VEHICLE_VALUE[player.transport] ?? 0;
+      const electronicsValue = (player.hasComputer    ? 350 : 0)
+                             + (player.hasCoffeeMaker  ? 200 : 0)
+                             + (player.hasTV           ? 250 : 0)
+                             + (player.hasTreadmill    ? 150 : 0);
+      const netWorth = player.money + player.bankBalance + portfolioValue + housingValue + vehicleValue + electronicsValue - player.debt;
       networthEl.textContent = formatMoney(netWorth);
       networthEl.style.color = netWorth >= 0 ? '#ffd24a' : '#e74c3c';
     }
