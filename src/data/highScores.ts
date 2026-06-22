@@ -75,7 +75,7 @@ async function sbGetTop(difficulty: Difficulty): Promise<HighScoreEntry[]> {
 // ---------------------------------------------------------------------------
 
 const STORAGE_KEY = 'jones_high_scores'
-const MAX_LOCAL = 5
+const MAX_LOCAL = 10
 
 function loadLocal(): HighScoreEntry[] {
   try {

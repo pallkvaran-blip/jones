@@ -3,6 +3,7 @@ import { getStore, initStore } from '../state/store'
 import { createInitialState } from '../state/initialState'
 import { audioSystem } from '../systems/AudioSystem'
 import { formatMoney } from '../utils/format'
+import { showHighScoresOverlay } from '../ui/HighScoresOverlay'
 import { addHighScore } from '../data/highScores'
 import type { GameState, Player, TransportType } from '../state/types'
 import { getHousingTier } from '../data/housing'
@@ -423,6 +424,19 @@ export class GameOverScene extends Phaser.Scene {
               text-transform: uppercase;
               flex-shrink: 0;
             ">PLAY AGAIN</button>
+            <button id="view-scores-btn" style="
+              padding: 12px 28px;
+              background: #1a1a2e;
+              border: 3px solid #4a4a66;
+              box-shadow: inset -3px -3px 0 #06060c;
+              color: #8a8aa6;
+              font-size: 9px;
+              letter-spacing: 2px;
+              cursor: pointer;
+              font-family: ${pf};
+              text-transform: uppercase;
+              flex-shrink: 0;
+            ">HIGH SCORES</button>
           </div>
         </div>
       `;
@@ -447,6 +461,19 @@ export class GameOverScene extends Phaser.Scene {
       btn.addEventListener('mouseleave', () => {
         (btn as HTMLElement).style.background = '#F5A623';
         (btn as HTMLElement).style.transform = 'scale(1)';
+      });
+    }
+
+    const hsBtn = document.getElementById('view-scores-btn');
+    if (hsBtn) {
+      hsBtn.addEventListener('click', () => showHighScoresOverlay());
+      hsBtn.addEventListener('mouseenter', () => {
+        (hsBtn as HTMLElement).style.borderColor = '#8a8aa6';
+        (hsBtn as HTMLElement).style.color = '#e8e8f0';
+      });
+      hsBtn.addEventListener('mouseleave', () => {
+        (hsBtn as HTMLElement).style.borderColor = '#4a4a66';
+        (hsBtn as HTMLElement).style.color = '#8a8aa6';
       });
     }
   }
