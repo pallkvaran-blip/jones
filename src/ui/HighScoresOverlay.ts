@@ -23,7 +23,7 @@ function buildTable(diff: Difficulty, entries: HighScoreEntry[]): string {
         const medal = i === 0 ? '&#x1F947;'
                     : i === 1 ? '&#x1F948;'
                     : i === 2 ? '&#x1F949;'
-                    : `<span style="color:#6a6a88">${i + 1}.</span>`
+                    : `<span style="color:#b0b0c8">${i + 1}.</span>`
         return `
           <div style="display:flex; align-items:center; gap:10px; padding:6px 0; border-bottom:1px solid #1a1a2e; font-size:7px;">
             <span style="min-width:20px; text-align:center;">${medal}</span>
