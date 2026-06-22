@@ -409,7 +409,6 @@ export class MenuScene extends Phaser.Scene {
                 <span style="min-width:20px; text-align:center;">${medal}</span>
                 <span style="flex:1; color:#e8e8f0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${e.playerName}</span>
                 <span style="color:#ffd24a; min-width:70px; text-align:right;">${formatMoney(e.money)}</span>
-                <span style="color:${outcomeColor}; min-width:12px; text-align:center;">${outcomeIcon}</span>
               </div>
             `;
           }).join('')
