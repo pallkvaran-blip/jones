@@ -160,7 +160,7 @@ export class GameOverScene extends Phaser.Scene {
           difficulty: s.difficulty,
           money: nw,
           score: nw,
-          grade: getGrade(nw, s.lossReason),
+          grade: '',
           winCondition: s.winCondition,
           weeksReached: Math.max(0, s.calendar.week - 1),
           timestamp: Date.now(),
@@ -174,9 +174,6 @@ export class GameOverScene extends Phaser.Scene {
         const outcomeText = survived2 ? 'SURVIVED' : 'LOST';
         const borderColor = highlight ? '#F5A623' : '#4a4a66';
         const nameColor = highlight ? '#F5A623' : '#8a8aa6';
-        const grade = getGrade(nw, s.lossReason)
-        const gColor = gradeColor(grade)
-
         return `
           <div style="
             background: #14141f;
@@ -192,7 +189,6 @@ export class GameOverScene extends Phaser.Scene {
           ">
             <div style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
               <div style="color:${nameColor}; font-size:9px; letter-spacing:1px;">${s.player.name}</div>
-              <div style="font-size:20px; color:${gColor}; text-shadow:2px 2px 0 #000;">${grade}</div>
             </div>
             <div style="color:${outcomeColor}; font-size:8px; letter-spacing:1px;">${outcomeText}</div>
             <hr style="border:none; border-top:1px solid #3a3a52;" />
@@ -259,21 +255,18 @@ export class GameOverScene extends Phaser.Scene {
 
     } else {
       const netWorth = calcNetWorth(state)
-      const grade = getGrade(netWorth, state.lossReason)
-      const gColor = gradeColor(grade)
 
       addHighScore({
         playerName: state.player.name,
         difficulty: state.difficulty,
         money: netWorth,
         score: netWorth,
-        grade,
+        grade: '',
         winCondition: state.winCondition,
         weeksReached: Math.max(0, state.calendar.week - 1),
         timestamp: Date.now(),
       });
 
-      const tagline = gradeTagline(grade)
       const titleColor = survived ? '#F5A623' : '#E74C3C'
       const titleText = survived ? "TIME'S UP!" : 'GAME OVER'
       const subtitleText = state.lossReason ?? 'Final net worth is your score.'
@@ -316,16 +309,6 @@ export class GameOverScene extends Phaser.Scene {
             padding: 14px 20px;
             margin-bottom: 12px;
           ">
-            <!-- Grade -->
-            <div style="
-              font-size: 48px;
-              color: ${gColor};
-              text-shadow: 3px 3px 0 #000, 0 0 16px ${gColor}88;
-              line-height: 1;
-              min-width: 60px;
-              text-align: center;
-            ">${grade}</div>
-
             <!-- Title -->
             <div style="text-align:center; flex:1; padding: 0 16px;">
               <div style="
@@ -427,7 +410,6 @@ export class GameOverScene extends Phaser.Scene {
             margin-top:12px;
             gap:12px;
           ">
-            <div style="font-size:7px; color:#6a6a88; font-style:italic;">${tagline}</div>
             <button id="play-again-btn" style="
               padding: 12px 28px;
               background: #F5A623;

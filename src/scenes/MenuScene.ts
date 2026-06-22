@@ -111,7 +111,7 @@ export class MenuScene extends Phaser.Scene {
           margin-top: 10px;
           font-family:${pf};
           line-height: 1.6;
-        ">Grow your net worth as high as possible.<br>Job, invest, upgrade — beat the clock.</p>
+        ">Grow your net worth as high as possible.<br>Work, invest, upgrade — beat the clock.</p>
       </div>
 
       <div style="
@@ -410,7 +410,6 @@ export class MenuScene extends Phaser.Scene {
                 <span style="flex:1; color:#e8e8f0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${e.playerName}</span>
                 <span style="color:#ffd24a; min-width:70px; text-align:right;">${formatMoney(e.money)}</span>
                 <span style="color:${outcomeColor}; min-width:12px; text-align:center;">${outcomeIcon}</span>
-                <span style="color:${color}; min-width:14px; text-align:right;">${e.grade}</span>
               </div>
             `;
           }).join('')
@@ -462,7 +461,7 @@ export class MenuScene extends Phaser.Scene {
             font-family:${pf};
           ">CLOSE</button>
         </div>
-        <div style="font-size:6px; color:#4a4a66; letter-spacing:1px;">RANKED BY TOTAL CASH &amp; SAVINGS</div>
+        <div style="font-size:6px; color:#4a4a66; letter-spacing:1px;">RANKED BY NET WORTH (CASH + BANK + ASSETS − DEBT)</div>
         <div id="${tablesId}" style="display:flex; gap:20px; flex-wrap:wrap; align-items:flex-start;">
           <div style="color:#4a4a66; font-size:8px; width:100%; text-align:center; padding:20px 0;">Loading...</div>
         </div>
