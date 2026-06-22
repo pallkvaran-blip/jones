@@ -111,7 +111,7 @@ export class MenuScene extends Phaser.Scene {
           margin-top: 10px;
           font-family:${pf};
           line-height: 1.6;
-        ">Grow your net worth as high as possible.<br>Job, invest, upgrade — 12 weeks.</p>
+        ">Grow your net worth as high as possible.<br>Job, invest, upgrade — beat the clock.</p>
       </div>
 
       <div style="
