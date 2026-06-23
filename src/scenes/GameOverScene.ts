@@ -348,6 +348,19 @@ export class GameOverScene extends Phaser.Scene {
           font-family:${pf};
           text-transform: uppercase;
         ">PLAY AGAIN</button>
+
+        <div style="
+          text-align:center;
+          margin-top:16px;
+          font-size:6px;
+          color:#8a8aa6;
+          letter-spacing:1px;
+          line-height:1.8;
+        ">
+          <span style="color:#ffd24a;">&#x2605;</span>
+          Enjoyed Hustle City? Please consider leaving a rating &mdash; it really helps!
+          <span style="color:#ffd24a;">&#x2605;</span>
+        </div>
       `;
 
     } else {
@@ -552,6 +565,20 @@ export class GameOverScene extends Phaser.Scene {
               text-transform: uppercase;
               flex-shrink: 0;
             ">HIGH SCORES</button>
+          </div>
+
+          <!-- RATING NUDGE -->
+          <div style="
+            text-align:center;
+            margin-top:14px;
+            font-size:6px;
+            color:#8a8aa6;
+            letter-spacing:1px;
+            line-height:1.8;
+          ">
+            <span style="color:#ffd24a;">&#x2605;</span>
+            Enjoyed Hustle City? Please consider leaving a rating &mdash; it really helps!
+            <span style="color:#ffd24a;">&#x2605;</span>
           </div>
         </div>
       `;
