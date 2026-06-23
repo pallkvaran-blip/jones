@@ -143,3 +143,22 @@ export async function getHighScores(): Promise<Record<Difficulty, HighScoreEntry
   }
   return getLocal()
 }
+
+export async function getPlayerRank(difficulty: Difficulty, score: number): Promise<number> {
+  if (supabaseEnabled()) {
+    try {
+      const res = await fetch(
+        `${SB_URL}/rest/v1/${TABLE}?difficulty=eq.${difficulty}&money=gt.${score}&select=score`,
+        { headers: sbHeaders() },
+      )
+      if (res.ok) {
+        const rows = (await res.json()) as unknown[]
+        return rows.length + 1
+      }
+    } catch {
+      // fall through to local
+    }
+  }
+  const local = getLocal()
+  return local[difficulty].filter((e) => e.score > score).length + 1
+}

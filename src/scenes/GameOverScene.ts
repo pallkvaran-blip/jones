@@ -4,7 +4,7 @@ import { createInitialState } from '../state/initialState'
 import { audioSystem } from '../systems/AudioSystem'
 import { formatMoney } from '../utils/format'
 import { showHighScoresOverlay } from '../ui/HighScoresOverlay'
-import { addHighScore } from '../data/highScores'
+import { addHighScore, getHighScores, getPlayerRank } from '../data/highScores'
 import type { GameState, Player, TransportType } from '../state/types'
 import { getHousingTier } from '../data/housing'
 
@@ -137,6 +137,64 @@ function moneyBreakdown(state: GameState): string {
   `
 }
 
+function buildInlineLeaderboard(
+  entries: Array<{ playerName: string; score: number }>,
+  highlightIdx: number,
+  outsideRank: number,
+  playerName: string,
+  playerScore: number,
+  diff: string,
+): string {
+  const pf = `'Press Start 2P', 'Courier New', monospace`
+  const diffLabel = diff === 'short' ? 'SHORT' : diff === 'medium' ? 'MEDIUM' : 'LONG'
+  const diffColor = diff === 'short' ? '#E74C3C' : diff === 'medium' ? '#F5A623' : '#2ECC71'
+
+  const renderRow = (name: string, score: number, idx: number, highlight: boolean): string => {
+    const medal =
+      idx === 0 ? '&#x1F947;'
+      : idx === 1 ? '&#x1F948;'
+      : idx === 2 ? '&#x1F949;'
+      : `<span style="color:#b0b0c8; font-size:5px; font-family:${pf};">${idx + 1}.</span>`
+    const bg = highlight ? '#1c1c0e' : 'transparent'
+    const nameColor = highlight ? '#F5A623' : '#e8e8f0'
+    const border = highlight ? 'border-left:3px solid #F5A623;' : 'border-left:3px solid transparent;'
+    return `
+      <div style="display:flex; align-items:center; gap:8px; padding:4px 6px; background:${bg}; ${border}">
+        <span style="min-width:20px; text-align:center; font-size:9px;">${medal}</span>
+        <span style="flex:1; color:${nameColor}; font-size:6px; font-family:${pf}; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${name}</span>
+        <span style="color:#ffd24a; font-size:6px; font-family:${pf}; white-space:nowrap;">${formatMoney(score)}</span>
+      </div>
+    `
+  }
+
+  const topRows = entries.slice(0, 10).map((e, i) => renderRow(e.playerName, e.score, i, i === highlightIdx)).join('')
+
+  let tail = ''
+  if (outsideRank > 0) {
+    tail = `
+      <div style="color:#3a3a5a; font-size:5px; padding:3px 8px; letter-spacing:2px; font-family:${pf};">• • •</div>
+      <div style="display:flex; align-items:center; gap:8px; padding:4px 6px; background:#1c1c0e; border-left:3px solid #F5A623;">
+        <span style="min-width:20px; text-align:right; color:#b0b0c8; font-size:5px; font-family:${pf};">${outsideRank}.</span>
+        <span style="flex:1; color:#F5A623; font-size:6px; font-family:${pf}; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${playerName}</span>
+        <span style="color:#ffd24a; font-size:6px; font-family:${pf}; white-space:nowrap;">${formatMoney(playerScore)}</span>
+      </div>
+    `
+  }
+
+  const empty = entries.length === 0
+    ? `<div style="color:#4a4a66; font-size:6px; font-family:${pf}; padding:20px 0; text-align:center;">No scores yet.</div>`
+    : ''
+
+  return `
+    <div style="font-size:5px; color:${diffColor}; letter-spacing:2px; text-transform:uppercase; font-family:${pf}; margin-bottom:8px; padding-bottom:4px; border-bottom:1px solid ${diffColor}44;">
+      High Scores — ${diffLabel}
+    </div>
+    ${empty}
+    ${topRows}
+    ${tail}
+  `
+}
+
 // ── Scene ─────────────────────────────────────────────────────────────────────
 
 export class GameOverScene extends Phaser.Scene {
@@ -155,6 +213,12 @@ export class GameOverScene extends Phaser.Scene {
 
     const store = getStore();
     const state = store.getState();
+
+    // Hide side panels — they're not relevant on the game-over screen
+    const leftSlot = document.getElementById('left-slot')
+    const rightSlot = document.getElementById('right-slot')
+    if (leftSlot) leftSlot.style.visibility = 'hidden'
+    if (rightSlot) rightSlot.style.visibility = 'hidden'
 
     const survived = state.winCondition === 'won';
 
@@ -321,21 +385,6 @@ export class GameOverScene extends Phaser.Scene {
           `).join('')
         : `<div style="color:#4a4a66; font-size:7px; font-style:italic;">No milestones this run — aim higher next time.</div>`;
 
-      // Last 8 event log entries
-      const recentLog = [...state.eventLog].slice(0, 8);
-      const logRows = recentLog.length > 0
-        ? recentLog.map(entry => `
-            <div style="
-              color:#9090b0;
-              font-size:6px;
-              line-height:1.8;
-              border-left:2px solid #2a2a4a;
-              padding-left:8px;
-              word-break:break-word;
-            ">&#x25AA; ${entry}</div>
-          `).join('')
-        : `<div style="color:#4a4a66; font-size:6px; font-style:italic;">No events logged.</div>`;
-
       const weeksPlayed = Math.max(0, state.calendar.week - 1);
 
       this.uiContainer.innerHTML = `
@@ -411,7 +460,7 @@ export class GameOverScene extends Phaser.Scene {
           <!-- MAIN BODY -->
           <div style="display:flex; gap:12px; align-items:flex-start;">
 
-            <!-- LEFT: YOUR STORY -->
+            <!-- LEFT: LEADERBOARD -->
             <div style="
               flex: 1.2;
               background: #10101a;
@@ -419,15 +468,8 @@ export class GameOverScene extends Phaser.Scene {
               padding: 14px;
               min-height: 220px;
             ">
-              <div style="
-                font-size:6px;
-                color:#4a4a66;
-                text-transform:uppercase;
-                letter-spacing:2px;
-                margin-bottom:10px;
-              ">How It Went Down</div>
-              <div style="display:flex; flex-direction:column; gap:4px;">
-                ${logRows}
+              <div id="go-leaderboard" style="display:flex; flex-direction:column; gap:2px;">
+                <div style="color:#4a4a66; font-size:6px; font-family:${pf}; text-align:center; padding:20px 0;">Loading scores...</div>
               </div>
             </div>
 
@@ -513,6 +555,40 @@ export class GameOverScene extends Phaser.Scene {
           </div>
         </div>
       `;
+
+      // Async leaderboard: load scores for this run's difficulty
+      ;(async () => {
+        await Promise.resolve() // yield so uiRoot.appendChild runs first
+        const lbEl = document.getElementById('go-leaderboard')
+        if (!lbEl) return
+        const _diff = state.difficulty
+        const _name = state.player.name
+        const _score = netWorth
+        try {
+          const scores = await getHighScores()
+          const entries = scores[_diff]
+          const lastScore = entries.length > 0 ? entries[entries.length - 1].score : -Infinity
+          const inTop10ByScore = entries.length < 10 || _score >= lastScore
+          let highlightIdx = entries.findIndex(e => e.playerName === _name)
+          if (highlightIdx < 0 && inTop10ByScore) {
+            // Race condition fallback: score qualifies but name not yet returned
+            highlightIdx = entries.filter(e => e.score > _score).length
+          }
+          let outsideRank = -1
+          if (highlightIdx < 0) {
+            outsideRank = await getPlayerRank(_diff, _score)
+          }
+          const el2 = document.getElementById('go-leaderboard')
+          if (el2?.isConnected) {
+            el2.innerHTML = buildInlineLeaderboard(entries, highlightIdx, outsideRank, _name, _score, _diff)
+          }
+        } catch {
+          const el2 = document.getElementById('go-leaderboard')
+          if (el2?.isConnected) {
+            el2.innerHTML = `<div style="color:#4a4a66; font-size:6px; text-align:center; padding:20px 0;">Scores unavailable.</div>`
+          }
+        }
+      })()
     }
 
     uiRoot.appendChild(this.uiContainer);
@@ -622,6 +698,10 @@ export class GameOverScene extends Phaser.Scene {
   }
 
   shutdown(): void {
+    const leftSlot = document.getElementById('left-slot')
+    const rightSlot = document.getElementById('right-slot')
+    if (leftSlot) leftSlot.style.visibility = ''
+    if (rightSlot) rightSlot.style.visibility = ''
     if (this.uiContainer?.parentNode) {
       this.uiContainer.parentNode.removeChild(this.uiContainer);
       this.uiContainer = null;
