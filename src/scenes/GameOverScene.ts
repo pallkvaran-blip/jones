@@ -31,36 +31,68 @@ function calcNetWorth(state: GameState): number {
   return player.money + player.bankBalance + portfolioValue + housingValue + vehicleValue + electronicsValue - player.debt
 }
 
-function getGrade(netWorth: number, lossReason: string | null): string {
-  if (lossReason?.includes('starved') || lossReason?.includes('health failed')) return 'F'
-  if (netWorth >= 50000) return 'S'
-  if (netWorth >= 20000) return 'A'
-  if (netWorth >= 8000)  return 'B'
-  if (netWorth >= 2000)  return 'C'
-  if (netWorth >= 0)     return 'D'
-  return 'F'
+function getRankTitle(netWorth: number, won: boolean): { title: string; color: string; blurb: string } {
+  if (!won) {
+    if (netWorth >= 8000)  return { title: 'CUT SHORT', color: '#F5A623', blurb: 'Doing well — until it all caught up with you.' }
+    if (netWorth >= 0)     return { title: 'ROUGH RUN', color: '#FF8C00', blurb: 'The city is unforgiving. Run it back.' }
+    return { title: 'IN THE RED', color: '#E74C3C', blurb: 'Buried in debt. Next time, watch the basics.' }
+  }
+  if (netWorth >= 50000) return { title: 'TYCOON',        color: '#FFD700', blurb: 'Absolutely loaded. The city is yours.' }
+  if (netWorth >= 20000) return { title: 'MOGUL',         color: '#2ECC71', blurb: 'Seriously wealthy. Hard to argue with that.' }
+  if (netWorth >= 8000)  return { title: 'ENTREPRENEUR',  color: '#00BFFF', blurb: 'A solid fortune built from nothing.' }
+  if (netWorth >= 2000)  return { title: 'GO-GETTER',     color: '#F5A623', blurb: 'In the black and climbing.' }
+  if (netWorth >= 0)     return { title: 'SURVIVOR',      color: '#FF8C00', blurb: 'You made it to the finish — barely.' }
+  return { title: 'IN THE RED', color: '#E74C3C', blurb: 'Survived, but the debts outweigh the wins.' }
 }
 
-function gradeColor(grade: string): string {
-  switch (grade) {
-    case 'S': return '#FFD700'
-    case 'A': return '#2ECC71'
-    case 'B': return '#00BFFF'
-    case 'C': return '#F5A623'
-    case 'D': return '#FF8C00'
-    default:  return '#E74C3C'
-  }
-}
+interface Achievement { icon: string; label: string }
 
-function gradeTagline(grade: string): string {
-  switch (grade) {
-    case 'S': return 'Loaded. Pure profit.'
-    case 'A': return 'Comfortable. Very comfortable.'
-    case 'B': return 'Solid earnings.'
-    case 'C': return 'Could be worse.'
-    case 'D': return "You're barely in the green."
-    default:  return 'In the red. Again.'
-  }
+function getAchievements(state: GameState): Achievement[] {
+  const { player, economy } = state
+  const out: Achievement[] = []
+  const portfolioValue = Object.entries(player.portfolio).reduce(
+    (sum, [stock, shares]) => sum + shares * (economy.stockPrices[stock] ?? 0), 0
+  )
+  const netWorth = calcNetWorth(state)
+
+  // Housing
+  if (player.housingId === 'mansion')       out.push({ icon: '&#x1F3DB;&#xFE0F;', label: 'Mansion Owner' })
+  else if (player.housingId === 'house')    out.push({ icon: '&#x1F3E1;', label: 'Homeowner' })
+  else if (player.housingId === 'own_apt')  out.push({ icon: '&#x1F3E0;', label: 'Own Place' })
+
+  // Career
+  if (player.jobRank >= 4)      out.push({ icon: '&#x1F451;', label: 'Top of the Ladder' })
+  else if (player.jobRank >= 1) out.push({ icon: '&#x1F4BC;', label: 'Worker' })
+
+  // Education
+  if (player.education >= 20)      out.push({ icon: '&#x1F393;', label: 'Academic' })
+  else if (player.education >= 10) out.push({ icon: '&#x1F393;', label: 'Scholar' })
+  else if (player.education >= 4)  out.push({ icon: '&#x1F4DA;', label: 'Educated' })
+
+  // Investments
+  if (portfolioValue >= 5000)    out.push({ icon: '&#x1F4C8;', label: 'Big Investor' })
+  else if (portfolioValue > 0)   out.push({ icon: '&#x1F4C8;', label: 'Investor' })
+
+  // Transport
+  if (player.transport === 'sportscar')    out.push({ icon: '&#x1F3CE;&#xFE0F;', label: 'Sports Car' })
+  else if (player.transport === 'suv')     out.push({ icon: '&#x1F699;', label: 'Got Wheels' })
+
+  // Pets
+  if (player.pets.length >= 2)      out.push({ icon: '&#x1F43E;', label: 'Pet Lover' })
+  else if (player.pets.length === 1) out.push({ icon: '&#x1F43E;', label: 'Pet Parent' })
+
+  // Electronics
+  const gadgets = [player.hasComputer, player.hasCoffeeMaker, player.hasTV, player.hasTreadmill].filter(Boolean).length
+  if (gadgets >= 4)      out.push({ icon: '&#x1F5A5;&#xFE0F;', label: 'Fully Equipped' })
+
+  // Wealth milestones
+  if (netWorth >= 50000)      out.push({ icon: '&#x1F48E;', label: 'Big League' })
+  else if (netWorth >= 10000) out.push({ icon: '&#x1F4B0;', label: 'Five Figures' })
+
+  // Debt free finisher
+  if (player.debt === 0 && state.winCondition === 'won') out.push({ icon: '&#x2705;', label: 'Debt Free' })
+
+  return out
 }
 
 function statBar(value: number, max = 100, color = '#4a9eff'): string {
@@ -268,10 +300,26 @@ export class GameOverScene extends Phaser.Scene {
         timestamp: Date.now(),
       });
 
+      const rank = getRankTitle(netWorth, survived)
       const titleColor = survived ? '#F5A623' : '#E74C3C'
-      const titleText = survived ? "TIME'S UP!" : 'GAME OVER'
-      const subtitleText = state.lossReason ?? 'Final net worth is your score.'
+      const titleText = survived ? 'YOU MADE IT!' : 'GAME OVER'
+      const subtitleText = state.lossReason ?? rank.blurb
       const nwColor = netWorth >= 0 ? '#ffd24a' : '#e74c3c'
+      const achievements = getAchievements(state)
+
+      const achievementBadges = achievements.length > 0
+        ? achievements.map(a => `
+            <div style="
+              display:flex; align-items:center; gap:6px;
+              background:#1a1a2e; border:2px solid #3a3a52;
+              box-shadow: inset -2px -2px 0 #06060c;
+              padding:6px 9px; font-size:7px; color:#e8e8f0;
+            ">
+              <span style="font-size:11px; line-height:1;">${a.icon}</span>
+              <span style="letter-spacing:1px;">${a.label}</span>
+            </div>
+          `).join('')
+        : `<div style="color:#4a4a66; font-size:7px; font-style:italic;">No milestones this run — aim higher next time.</div>`;
 
       // Last 8 event log entries
       const recentLog = [...state.eventLog].slice(0, 8);
@@ -305,11 +353,23 @@ export class GameOverScene extends Phaser.Scene {
             align-items: center;
             justify-content: space-between;
             background: #14141f;
-            border: 3px solid #4a4a66;
-            box-shadow: inset -3px -3px 0 #06060c;
+            border: 3px solid ${rank.color};
+            box-shadow: inset -3px -3px 0 #06060c, 0 0 16px ${rank.color}44;
             padding: 14px 20px;
             margin-bottom: 12px;
           ">
+            <!-- Rank badge -->
+            <div style="text-align:center; min-width:96px;">
+              <div style="font-size:5px; color:#8a8aa6; text-transform:uppercase; letter-spacing:2px; margin-bottom:6px;">Final Rank</div>
+              <div style="
+                font-size: 14px;
+                color: ${rank.color};
+                text-shadow: 2px 2px 0 #000, 0 0 10px ${rank.color}88;
+                letter-spacing: 1px;
+                line-height: 1.2;
+              ">${rank.title}</div>
+            </div>
+
             <!-- Title -->
             <div style="text-align:center; flex:1; padding: 0 16px;">
               <div style="
@@ -331,7 +391,20 @@ export class GameOverScene extends Phaser.Scene {
             <!-- Net Worth -->
             <div style="text-align:right; min-width:110px;">
               <div style="font-size:6px; color:#8a8aa6; text-transform:uppercase; letter-spacing:1px; margin-bottom:4px;">Net Worth</div>
-              <div style="font-size:14px; color:${nwColor}; text-shadow:2px 2px 0 #000;">${formatMoney(netWorth)}</div>
+              <div id="go-networth" style="font-size:16px; color:${nwColor}; text-shadow:2px 2px 0 #000;">${formatMoney(0)}</div>
+            </div>
+          </div>
+
+          <!-- ACHIEVEMENTS -->
+          <div style="
+            background: #10101a;
+            border: 2px solid #2a2a42;
+            padding: 12px 14px;
+            margin-bottom: 12px;
+          ">
+            <div style="font-size:6px; color:#4a4a66; text-transform:uppercase; letter-spacing:2px; margin-bottom:10px;">What You Built</div>
+            <div style="display:flex; flex-wrap:wrap; gap:8px;">
+              ${achievementBadges}
             </div>
           </div>
 
@@ -352,7 +425,7 @@ export class GameOverScene extends Phaser.Scene {
                 text-transform:uppercase;
                 letter-spacing:2px;
                 margin-bottom:10px;
-              ">Your Story</div>
+              ">How It Went Down</div>
               <div style="display:flex; flex-direction:column; gap:4px;">
                 ${logRows}
               </div>
@@ -476,6 +549,76 @@ export class GameOverScene extends Phaser.Scene {
         (hsBtn as HTMLElement).style.color = '#8a8aa6';
       });
     }
+
+    // Net worth count-up (single player)
+    if (state.numPlayers === 1) {
+      const nwEl = document.getElementById('go-networth');
+      if (nwEl) this.animateCountUp(nwEl, calcNetWorth(state));
+    }
+
+    // Confetti payoff for a win
+    if (survived && this.uiContainer) {
+      this.launchConfetti(this.uiContainer);
+    }
+  }
+
+  private animateCountUp(el: HTMLElement, target: number): void {
+    const duration = 1100;
+    const start = performance.now();
+    const tick = (now: number) => {
+      const t = Math.min(1, (now - start) / duration);
+      const eased = 1 - Math.pow(1 - t, 3); // easeOutCubic
+      const value = Math.round(target * eased);
+      el.textContent = formatMoney(value);
+      if (t < 1) requestAnimationFrame(tick);
+      else el.textContent = formatMoney(target);
+    };
+    requestAnimationFrame(tick);
+  }
+
+  private launchConfetti(container: HTMLElement): void {
+    if (!document.getElementById('go-confetti-style')) {
+      const style = document.createElement('style');
+      style.id = 'go-confetti-style';
+      style.textContent = `
+        @keyframes go-confetti-fall {
+          0%   { transform: translateY(-20px) rotate(0deg); opacity: 1; }
+          100% { transform: translateY(105vh) rotate(720deg); opacity: 0.9; }
+        }
+      `;
+      document.head.appendChild(style);
+    }
+
+    const colors = ['#F5A623', '#FFD700', '#2ECC71', '#00BFFF', '#9B59B6', '#E74C3C', '#ffffff'];
+    const layer = document.createElement('div');
+    layer.style.cssText = `position:absolute; inset:0; overflow:hidden; pointer-events:none; z-index:0;`;
+
+    for (let i = 0; i < 70; i++) {
+      const piece = document.createElement('div');
+      const size = 5 + Math.floor(Math.random() * 7);
+      const color = colors[Math.floor(Math.random() * colors.length)];
+      const left = Math.random() * 100;
+      const dur = 2.2 + Math.random() * 2.0;
+      const delay = Math.random() * 2.5;
+      piece.style.cssText = `
+        position:absolute;
+        top:-20px;
+        left:${left}%;
+        width:${size}px;
+        height:${size * (Math.random() > 0.5 ? 1 : 1.6)}px;
+        background:${color};
+        opacity:0;
+        animation: go-confetti-fall ${dur}s linear ${delay}s infinite;
+      `;
+      layer.appendChild(piece);
+    }
+    // Ensure existing content paints above the confetti layer
+    Array.from(container.children).forEach((child) => {
+      const el = child as HTMLElement;
+      el.style.position = el.style.position || 'relative';
+      el.style.zIndex = '1';
+    });
+    container.insertBefore(layer, container.firstChild);
   }
 
   shutdown(): void {
