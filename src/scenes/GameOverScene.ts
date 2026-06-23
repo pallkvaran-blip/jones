@@ -17,18 +17,32 @@ const VEHICLE_VALUE: Record<TransportType, number> = {
   sportscar: 2500,
 }
 
-function calcNetWorth(state: GameState): number {
-  const { player, economy } = state
-  const portfolioValue = Object.entries(player.portfolio).reduce(
-    (sum, [stock, shares]) => sum + shares * (economy.stockPrices[stock] ?? 0), 0
-  )
+function assetsValue(player: Player): number {
   const housingValue   = getHousingTier(player.housingId)?.purchaseCost ?? 0
   const vehicleValue   = VEHICLE_VALUE[player.transport] ?? 0
   const electronicsValue = (player.hasComputer  ? 350 : 0)
                          + (player.hasCoffeeMaker ? 200 : 0)
                          + (player.hasTV          ? 250 : 0)
                          + (player.hasTreadmill   ? 150 : 0)
-  return player.money + player.bankBalance + portfolioValue + housingValue + vehicleValue + electronicsValue - player.debt
+  return housingValue + vehicleValue + electronicsValue
+}
+
+function calcNetWorth(state: GameState): number {
+  const { player, economy } = state
+  const portfolioValue = Object.entries(player.portfolio).reduce(
+    (sum, [stock, shares]) => sum + shares * (economy.stockPrices[stock] ?? 0), 0
+  )
+  return player.money + player.bankBalance + portfolioValue + assetsValue(player) - player.debt
+}
+
+/** A thin colored bar that animates from empty to `pct`% when the screen mounts. */
+function animFillBar(pct: number, color: string, delayMs = 0): string {
+  const p = Math.min(100, Math.max(0, Math.round(pct)))
+  return `
+    <div style="height:6px; background:#2a2a3e; border:1px solid #3a3a52; overflow:hidden; margin:3px 0 2px;">
+      <div class="go-fill" data-pct="${p}" style="width:0; height:100%; background:${color}; transition:width 1100ms cubic-bezier(0.2,0.8,0.2,1) ${delayMs}ms;"></div>
+    </div>
+  `
 }
 
 function getRankTitle(netWorth: number, won: boolean): { title: string; color: string; blurb: string } {
@@ -95,20 +109,21 @@ function getAchievements(state: GameState): Achievement[] {
   return out
 }
 
-function statBar(value: number, max = 100, color = '#4a9eff'): string {
+function statBar(value: number, max = 100, color = '#4a9eff', delayMs = 0): string {
   const pct = Math.min(100, Math.max(0, Math.round((value / max) * 100)))
   return `
     <div style="flex:1; height:6px; background:#2a2a3e; border:1px solid #3a3a52; overflow:hidden;">
-      <div style="width:${pct}%; height:100%; background:${color};"></div>
+      <div class="go-fill" data-pct="${pct}" style="width:0; height:100%; background:${color}; transition:width 1100ms cubic-bezier(0.2,0.8,0.2,1) ${delayMs}ms;"></div>
     </div>
   `
 }
 
-function moneyBreakdown(state: GameState): string {
+function moneyBreakdown(state: GameState, animated = false): string {
   const { player, economy } = state
   const portfolioValue = Object.entries(player.portfolio).reduce(
     (sum, [stock, shares]) => sum + shares * (economy.stockPrices[stock] ?? 0), 0
   )
+  const assets = assetsValue(player)
   const pf = `'Press Start 2P', 'Courier New', monospace`
 
   const row = (label: string, value: number, color = '#e8e8f0') => {
@@ -121,19 +136,28 @@ function moneyBreakdown(state: GameState): string {
     `
   }
 
-  const netWorth = player.money + player.bankBalance + portfolioValue - player.debt
+  const netWorth = player.money + player.bankBalance + portfolioValue + assets - player.debt
   const nwColor = netWorth >= 0 ? '#ffd24a' : '#e74c3c'
+
+  // $10k cash on hand fills the bar; $50k net worth (TYCOON) fills the net-worth bar.
+  const cashBar = animated ? animFillBar((player.money / 10000) * 100, '#ffd24a', 350) : ''
+  const nwBar = animated
+    ? animFillBar(netWorth > 0 ? (netWorth / 50000) * 100 : 0, netWorth >= 0 ? '#2ECC71' : '#e74c3c', 650)
+    : ''
 
   return `
     ${row('Cash', player.money, '#ffd24a')}
+    ${cashBar}
     ${row('Savings', player.bankBalance, '#ffd24a')}
     ${row('Investments', portfolioValue, '#a0d8a0')}
+    ${row('Assets', assets, '#a0d8a0')}
     ${player.debt > 0 ? row('Debt', -player.debt, '#e74c3c') : ''}
     <div style="border-top:1px solid #3a3a52; margin:6px 0;"></div>
     <div style="display:flex; justify-content:space-between; gap:8px; font-size:8px; font-family:${pf};">
       <span style="color:#8a8aa6;">NET WORTH</span>
       <span style="color:${nwColor}; font-weight:bold;">${formatMoney(netWorth)}</span>
     </div>
+    ${nwBar}
   `
 }
 
@@ -503,11 +527,12 @@ export class GameOverScene extends Phaser.Scene {
                 <span style="color:#8a8aa6; font-size:7px; text-transform:uppercase;">Weeks</span>
                 <span style="color:#e8e8f0; font-size:7px;">${weeksPlayed} / ${state.calendar.maxWeeks}</span>
               </div>
+              ${animFillBar((weeksPlayed / Math.max(1, state.calendar.maxWeeks)) * 100, '#00BFFF', 100)}
 
               <hr style="border:none; border-top:1px solid #2a2a42; margin:2px 0;" />
 
               <!-- Money breakdown -->
-              ${moneyBreakdown(state)}
+              ${moneyBreakdown(state, true)}
 
               <hr style="border:none; border-top:1px solid #2a2a42; margin:2px 0;" />
 
@@ -517,7 +542,7 @@ export class GameOverScene extends Phaser.Scene {
                   <span style="color:#8a8aa6; font-size:6px; text-transform:uppercase;">Health</span>
                   <span style="color:#e8e8f0; font-size:6px;">${state.player.health}</span>
                 </div>
-                ${statBar(state.player.health, 100, '#2ECC71')}
+                ${statBar(state.player.health, 100, '#2ECC71', 850)}
               </div>
 
               <!-- Morale bar -->
@@ -526,7 +551,7 @@ export class GameOverScene extends Phaser.Scene {
                   <span style="color:#8a8aa6; font-size:6px; text-transform:uppercase;">Morale</span>
                   <span style="color:#e8e8f0; font-size:6px;">${state.player.morale}</span>
                 </div>
-                ${statBar(state.player.morale, 100, '#9B59B6')}
+                ${statBar(state.player.morale, 100, '#9B59B6', 1000)}
               </div>
             </div>
           </div>
@@ -619,6 +644,15 @@ export class GameOverScene extends Phaser.Scene {
     }
 
     uiRoot.appendChild(this.uiContainer);
+
+    // Trigger the accomplishment bars to fill once the layout has painted at width:0
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        this.uiContainer?.querySelectorAll<HTMLElement>('.go-fill').forEach((el) => {
+          el.style.width = (el.getAttribute('data-pct') ?? '0') + '%';
+        });
+      });
+    });
 
     const btn = document.getElementById('play-again-btn');
     if (btn) {
