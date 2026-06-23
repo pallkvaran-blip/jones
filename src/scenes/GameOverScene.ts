@@ -238,7 +238,10 @@ export class GameOverScene extends Phaser.Scene {
     const store = getStore();
     const state = store.getState();
 
-    // Hide side panels — they're not relevant on the game-over screen
+    // Hide side panels — they're not relevant on the game-over screen.
+    // Phaser does not auto-invoke shutdown(), so wire it to the event to
+    // guarantee the slots are restored when we leave this scene.
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, this.shutdown, this)
     const leftSlot = document.getElementById('left-slot')
     const rightSlot = document.getElementById('right-slot')
     if (leftSlot) leftSlot.style.visibility = 'hidden'

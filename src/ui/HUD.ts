@@ -25,6 +25,9 @@ export class HUD {
     // Panels live in their dedicated layout slots — not inside the canvas overlay.
     const leftSlot  = document.getElementById('left-slot')  ?? this.root;
     const rightSlot = document.getElementById('right-slot') ?? this.root;
+    // Ensure the slots are visible — the game-over screen hides them.
+    leftSlot.style.visibility = '';
+    rightSlot.style.visibility = '';
     leftSlot.appendChild(this.actionPanel.getElement());
     rightSlot.appendChild(this.statsPanel.getElement());
     this.mounted = true;
