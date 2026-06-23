@@ -191,7 +191,20 @@ function buildInlineLeaderboard(
     `
   }
 
-  const topRows = entries.slice(0, 10).map((e, i) => renderRow(e.playerName, e.score, i, i === highlightIdx)).join('')
+  // If the player is in top 10 (highlightIdx >= 0) but their current score
+  // isn't at that position yet (Supabase race condition), inject a synthetic
+  // row so the player always sees their own name highlighted.
+  const display = entries.slice(0, 10).map(e => ({ ...e }))
+  if (highlightIdx >= 0) {
+    const slotEntry = display[highlightIdx]
+    const slotMatchesCurrent = slotEntry && slotEntry.playerName === playerName && slotEntry.score === playerScore
+    if (!slotMatchesCurrent) {
+      display.splice(highlightIdx, 0, { playerName, score: playerScore })
+      if (display.length > 10) display.pop()
+    }
+  }
+
+  const topRows = display.map((e, i) => renderRow(e.playerName, e.score, i, i === highlightIdx)).join('')
 
   let tail = ''
   if (outsideRank > 0) {
@@ -622,17 +635,22 @@ export class GameOverScene extends Phaser.Scene {
         try {
           const scores = await getHighScores()
           const entries = scores[_diff]
-          const lastScore = entries.length > 0 ? entries[entries.length - 1].score : -Infinity
-          const inTop10ByScore = entries.length < 10 || _score >= lastScore
-          let highlightIdx = entries.findIndex(e => e.playerName === _name)
-          if (highlightIdx < 0 && inTop10ByScore) {
-            // Race condition fallback: score qualifies but name not yet returned
-            highlightIdx = entries.filter(e => e.score > _score).length
-          }
+
+          // Rank by score, not by name. Name matching is unreliable: a player
+          // who has a previous (better) run in the top 10 would be found there
+          // and incorrectly treated as "in top 10" for their current (worse) run.
+          const betterCount = entries.filter(e => e.score > _score).length
+          const inTop10 = betterCount < 10  // fewer than 10 scored strictly higher
+
+          let highlightIdx = -1
           let outsideRank = -1
-          if (highlightIdx < 0) {
+
+          if (inTop10) {
+            highlightIdx = betterCount  // 0-indexed position for this score
+          } else {
             outsideRank = await getPlayerRank(_diff, _score)
           }
+
           const el2 = document.getElementById('go-leaderboard')
           if (el2?.isConnected) {
             el2.innerHTML = buildInlineLeaderboard(entries, highlightIdx, outsideRank, _name, _score, _diff)
